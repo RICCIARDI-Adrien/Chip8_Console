@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <Serial_Port.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -35,5 +36,19 @@
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
-	while (1);
+	// Set oscillator frequency to 64MHz
+	OSCCON = 0x78; // Core enters sleep mode when issuing a SLEEP instruction, select 16MHz frequency for high frequency internal oscillator, device is running from primary clock (set as "internal oscillator" in configuration registers)
+	while (!OSCCONbits.HFIOFS); // Wait for the internal oscillator to stabilize
+	OSCCON2 = 0x04; // Turn off secondary oscillator, enable primary oscillator drive circuit
+	OSCTUNEbits.PLLEN = 1; // Enable 4x PLL
+
+	// Initialize all needed modules
+	SerialPortInitialize();
+
+	// TEST
+	while (1)
+	{
+		SerialPortWriteString("Bonjour !\r\n");
+		__delay_ms(1000);
+	}
 }

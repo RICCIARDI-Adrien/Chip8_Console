@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <Serial_Port.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -39,10 +40,14 @@ void main(void)
 	LATCbits.LATC0 = 0;
 	TRISCbits.TRISC0 = 0;
 
+	// Initialize all needed modules
+	SerialPortInitialize();
+
 	// TEST
 	while (1)
 	{
 		LATCbits.LATC0 = !LATCbits.LATC0;
+		SerialPortWriteString("Bonjour !\r\n");
 		__delay_ms(1000);
 	}
 }

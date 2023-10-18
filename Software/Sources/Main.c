@@ -2,53 +2,47 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
-#include <Serial_Port.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
 // Microcontroller configuration
 //-------------------------------------------------------------------------------------------------
+// CONFIG1L register
+#pragma config RSTOSC = HFINTOSC_64MHZ, FEXTOSC = OFF  // Use the internal oscillator at 64MHz on reset, disable external oscillator
 // CONFIG1H register
-#pragma config FOSC = INTIO67, PLLCFG = ON, PRICLKEN = ON, FCMEN = OFF, IESO = OFF // Use internal oscillator, multiply oscillator frequency by 4 by enabling the PLL, enable primary clock, disable fail-safe clock monitor, disable oscillator switchover mode
+#pragma config FCMEN = OFF, CSWEN = ON, PR1WAY = OFF, CLKOUTEN = OFF // Disable Fail-Safe Clock Monitor, allow writing to the OSCCON register to change the oscillator settings, allow the DMA priority bit PRLOCK to be written several times, disable the CLKOUT feature
 // CONFIG2L register
-#pragma config PWRTEN = ON, BOREN = SBORDIS, BORV = 285 // Enable power up timer, enable brown-out reset in hardware only (so it can't be disabled by software), set highest value for brown-out voltage (2.85V)
+#pragma config BOREN = SBORDIS, LPBOREN = OFF, IVT1WAY = OFF, MVECEN = ON, PWRTS = PWRT_64, MCLRE = EXTMCLR // Always enable the Brown-out Reset, disable Low Power Brown-out Reset, IVTLOCK bit can be cleared and set repeatedly, enable interrupts vector table, configure the Power-up timer to 64ms, enable /MCLR
 // CONFIG2H register
-#pragma config WDTEN = OFF // Disable watchdog timer
+#pragma config XINST = OFF, DEBUG = OFF, STVREN = ON, PPS1WAY = OFF, ZCD = OFF, BORV = VBOR_2P85 // Disable Extended Instruction Set (it is not yet supported by the compiler), disable the Background debugger, reset on stack overflow or underflow, PPSLOCK bit can be set and cleared repeatedly, disable the unused Zero-cross Detection module, set the Brown-out voltage to the highest available (2.85V)
+// CONFIG3L register
+#pragma config WDTE = OFF // Disable the Watchdog timer
 // CONFIG3H register
-#pragma config PBADEN = OFF, HFOFST = OFF, MCLRE = EXTMCLR // Port B pin 5..0 are configured as digital I/O on reset, wait for the oscillator to become stable before starting executing code, enable MCLR pin
+#pragma config WDTCCS = SC, WDTCWS = WDTCWS_7 // Set default values (all '1') as the watchdog timer is not used
 // CONFIG4L register
-#pragma config STVREN = ON, LVP = OFF, XINST = OFF, DEBUG = OFF // Reset on stack underflow or overflow, disable single supply ICSP, disable extended instruction set, disable background debug
-// CONFIG5L register
-#pragma config CP0 = OFF, CP1 = OFF, CP2 = OFF, CP3 = OFF // Disable all code protections
-// CONFIG5H register
-#pragma config CPB = OFF, CPD = OFF // Disable boot block code protection, disable data EEPROM code protection
-// CONFIG6L register
-#pragma config WRT0 = OFF, WRT1 = OFF, WRT2 = OFF, WRT3 = OFF // Disable all write protections
-// CONFIG6H register
-#pragma config WRTC = OFF, WRTB = OFF, WRTD = OFF // Disable configuration registers write protection, disable boot block write protection, disable data EEPROM write protection
-// CONFIG7L register
-#pragma config EBTR0 = OFF, EBTR1 = OFF, EBTR2 = OFF, EBTR3 = OFF // Disable all table read protections
-// CONFIG7H register
-#pragma config EBTRB = OFF // Disable boot block table read protection
+#pragma config WRTAPP = OFF, SAFEN = OFF, BBEN = OFF // Allow writing to the Application Block, disable the Storage Area Flash, disable the Boot Block
+// CONFIG4H register
+#pragma config LVP = ON, WRTSAF = OFF, WRTD = OFF, WRTC = ON, WRTB = OFF // Enable Low-Voltage Programming to avoid needing to apply a high voltage on the /MCLR pin during programming, Storage Area Flash is not write-protected, Data EEPROM is not write-protected, Configuration Registers are write-protected, Boot Block is not write-protected
+// CONFIG5L
+#pragma config CP = OFF // Disable program and data code protection
 
 //-------------------------------------------------------------------------------------------------
 // Entry point
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
-	// Set oscillator frequency to 64MHz
-	OSCCON = 0x78; // Core enters sleep mode when issuing a SLEEP instruction, select 16MHz frequency for high frequency internal oscillator, device is running from primary clock (set as "internal oscillator" in configuration registers)
-	while (!OSCCONbits.HFIOFS); // Wait for the internal oscillator to stabilize
-	OSCCON2 = 0x04; // Turn off secondary oscillator, enable primary oscillator drive circuit
-	OSCTUNEbits.PLLEN = 1; // Enable 4x PLL
+	// Wait for the internal oscillator to stabilize
+	while (!OSCSTATbits.HFOR);
 
-	// Initialize all needed modules
-	SerialPortInitialize();
+	// TEST
+	ANSELCbits.ANSELC0 = 0;
+	LATCbits.LATC0 = 0;
+	TRISCbits.TRISC0 = 0;
 
 	// TEST
 	while (1)
 	{
-		SerialPortWriteString("Bonjour !\r\n");
+		LATCbits.LATC0 = !LATCbits.LATC0;
 		__delay_ms(1000);
 	}
 }

@@ -4,10 +4,10 @@ PATH_OBJECTS = $(shell realpath .)/Objects
 PATH_SOURCES = $(shell realpath .)/Sources
 
 BINARY_NAME = Chip8_Console_Firmware.hex
-SOURCES = $(PATH_SOURCES)/Main.c $(PATH_SOURCES)/Serial_Port.c
+SOURCES = $(PATH_SOURCES)/Main.c
 
 CC = xc8-cc
-CFLAGS = -mcpu=18F26K22 -D_XTAL_FREQ=64000000
+CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000
 
 all: $(PATH_BINARIES) $(PATH_OBJECTS)
 	cd $(PATH_OBJECTS) && $(CC) $(CFLAGS) -I$(PATH_INCLUDES) $(SOURCES) -o $(BINARY_NAME)

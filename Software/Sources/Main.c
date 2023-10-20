@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <NCO.h>
 #include <Serial_Port.h>
 #include <xc.h>
 
@@ -42,6 +43,15 @@ void main(void)
 
 	// Initialize all needed modules
 	SerialPortInitialize();
+	NCOInitialize();
+
+	// TEST
+	// Select the RC1 pin for the NCO
+	RC1PPS = 0x26;
+	// Configure the pin as digital
+	ANSELCbits.ANSELC1 = 0;
+	// Set the pin as output
+	TRISCbits.TRISC1 = 0;
 
 	// TEST
 	while (1)

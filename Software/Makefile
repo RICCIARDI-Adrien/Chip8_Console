@@ -4,7 +4,7 @@ PATH_OBJECTS = $(shell realpath .)/Objects
 PATH_SOURCES = $(shell realpath .)/Sources
 
 BINARY_NAME = Chip8_Console_Firmware.hex
-SOURCES = $(PATH_SOURCES)/Main.c $(PATH_SOURCES)/NCO.c $(PATH_SOURCES)/Serial_Port.c
+SOURCES = $(PATH_SOURCES)/Main.c $(PATH_SOURCES)/NCO.c $(PATH_SOURCES)/Serial_Port.c $(PATH_SOURCES)/Sound.c
 
 CC = xc8-cc
 CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000

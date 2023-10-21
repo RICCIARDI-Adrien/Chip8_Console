@@ -4,6 +4,7 @@
  */
 #include <NCO.h>
 #include <Serial_Port.h>
+#include <Sound.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -44,6 +45,7 @@ void main(void)
 	// Initialize all needed modules
 	SerialPortInitialize();
 	NCOInitialize();
+	SoundInitialize();
 
 	// TEST
 	// Select the RC1 pin for the NCO

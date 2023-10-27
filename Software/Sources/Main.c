@@ -44,16 +44,8 @@ void main(void)
 
 	// Initialize all needed modules
 	SerialPortInitialize();
-	NCOInitialize();
+	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
-
-	// TEST
-	// Select the RC1 pin for the NCO
-	RC1PPS = 0x26;
-	// Configure the pin as digital
-	ANSELCbits.ANSELC1 = 0;
-	// Set the pin as output
-	TRISCbits.TRISC1 = 0;
 
 	// TEST
 	while (1)
@@ -61,5 +53,17 @@ void main(void)
 		LATCbits.LATC0 = !LATCbits.LATC0;
 		SerialPortWriteString("Bonjour !\r\n");
 		__delay_ms(1000);
+
+		SoundPlay(255);
+		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
+
+		SoundPlay(127);
+		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
+
+		SoundPlay(64);
+		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
+
+		SoundPlay(1);
+		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
 	}
 }

@@ -5,6 +5,7 @@
 #include <NCO.h>
 #include <Serial_Port.h>
 #include <Sound.h>
+#include <SPI.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -34,36 +35,36 @@
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
+	unsigned char a = '0';
+
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
 
 	// TEST
-	ANSELCbits.ANSELC0 = 0;
-	LATCbits.LATC0 = 0;
-	TRISCbits.TRISC0 = 0;
+	ANSELBbits.ANSELB0 = 0;
+	LATBbits.LATB0 = 1;
+	TRISBbits.TRISB0 = 0;
 
 	// Initialize all needed modules
 	SerialPortInitialize();
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
+	SPIInitialize();
 
 	// TEST
+	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 	while (1)
 	{
-		LATCbits.LATC0 = !LATCbits.LATC0;
+		LATBbits.LATB0 = !LATBbits.LATB0;
 		SerialPortWriteString("Bonjour !\r\n");
+
+		SPITransferByte(a);
+		SPITransferByte(~a);
+		SerialPortWriteByte(a);
+		SerialPortWriteString("\r\n");
+		a++;
+		if (a > '9') a = '0';
+
 		__delay_ms(1000);
-
-		SoundPlay(255);
-		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
-
-		SoundPlay(127);
-		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
-
-		SoundPlay(64);
-		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
-
-		SoundPlay(1);
-		__delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000); __delay_ms(1000);
 	}
 }

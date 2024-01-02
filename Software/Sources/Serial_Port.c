@@ -3,6 +3,10 @@
  * @author Adrien RICCIARDI
  */
 #include <Serial_Port.h>
+#ifdef SERIAL_PORT_ENABLE_LOGGING
+	#include <stdarg.h>
+	#include <stdio.h>
+#endif
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -28,6 +32,9 @@ void SerialPortInitialize(void)
 	// Disable pin output driver (set them as input)
 	TRISCbits.TRISC6 = 1;
 	TRISCbits.TRISC7 = 1;
+
+	// Display the following message only if the serial port logging feature is enabled
+	SERIAL_PORT_LOG("Serial port logging is enabled.\r\n");
 }
 
 void SerialPortWriteByte(unsigned char Data)
@@ -50,3 +57,17 @@ void SerialPortWriteString(const char *Pointer_String)
 		Pointer_String++;
 	}
 }
+
+#ifdef SERIAL_PORT_ENABLE_LOGGING
+	void SerialPortWriteLog(const char *Pointer_String_Format, ...)
+	{
+		char String_Message[256];
+		va_list Arguments_List;
+
+		va_start(Arguments_List, Pointer_String_Format);
+		vsnprintf(String_Message, sizeof(String_Message), Pointer_String_Format, Arguments_List);
+		va_end(Arguments_List);
+
+		SerialPortWriteString(String_Message);
+	}
+#endif

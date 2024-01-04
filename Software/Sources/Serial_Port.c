@@ -19,13 +19,15 @@ void SerialPortInitialize(void)
 	U1BRGL = 138; // With this value we get 115107.9 bit/s, which is a 0.08% error
 
 	// Configure the UART for asynchronous operation
-	U1CON0 = 0xA0; // Select the high-speed baud rate generator, disable auto-baud detection, enable transmission, select the asynchronous 8-bit UART mode without parity
+	U1CON0 = 0xB0; // Select the high-speed baud rate generator, disable auto-baud detection, enable transmission, enable reception, select the asynchronous 8-bit UART mode without parity
 	U1CON1 = 0x80; // Enable the serial port, disable the wake-up feature
 	U1CON2 = 0; // Configure 1 stop bit, disable checksum, do not invert transmitted data, disable flow control
 
 	// Configure the UART pins
 	// Select the RC6 pin for the UART transmission
 	RC6PPS = 0x13;
+	// Select the RC7 pin for the UART reception
+	U1RXPPS = 0x17;
 	// Configure the pins as digital
 	ANSELCbits.ANSELC6 = 0;
 	ANSELCbits.ANSELC7 = 0;
@@ -35,6 +37,15 @@ void SerialPortInitialize(void)
 
 	// Display the following message only if the serial port logging feature is enabled
 	SERIAL_PORT_LOG("Serial port logging is enabled.\r\n");
+}
+
+unsigned char SerialPortReadByte(void)
+{
+	// Wait for a byte to be received
+	while (!PIR3bits.U1RXIF);
+
+	// Retrieve the byte from the FIFO
+	return U1RXB;
 }
 
 void SerialPortWriteByte(unsigned char Data)

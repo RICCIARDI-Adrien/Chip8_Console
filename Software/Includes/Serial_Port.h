@@ -24,6 +24,11 @@
 /** Initialize the EUSART module for the required operations. */
 void SerialPortInitialize(void);
 
+/** Wait for a byte of data to be received from the serial port.
+ * @return The received byte.
+ */
+unsigned char SerialPortReadByte(void);
+
 /** Send a single byte of data through the serial port.
  * @param Data The byte to send.
  */

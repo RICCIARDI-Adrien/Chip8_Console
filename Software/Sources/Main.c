@@ -3,6 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <NCO.h>
+#include <SD_Card.h>
 #include <Serial_Port.h>
 #include <Sound.h>
 #include <SPI.h>
@@ -49,21 +50,14 @@ void main(void)
 	SerialPortInitialize();
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
-	SPIInitialize();
+	SPIInitialize(); // The SPI module must be initialized before the SD card module
+	SDCardInitialize();
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 	while (1)
 	{
 		LATBbits.LATB0 = !LATBbits.LATB0;
-		SerialPortWriteString("Bonjour !\r\n");
-
-		SPITransferByte(a);
-		SPITransferByte(~a);
-		SerialPortWriteByte(a);
-		SerialPortWriteString("\r\n");
-		a++;
-		if (a > '9') a = '0';
 
 		__delay_ms(1000);
 	}

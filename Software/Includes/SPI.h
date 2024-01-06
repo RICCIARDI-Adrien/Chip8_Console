@@ -14,7 +14,8 @@
 typedef enum
 {
 	SPI_DEVICE_ID_SD_CARD,
-	SPI_DEVICE_ID_DISPLAY
+	SPI_DEVICE_ID_DISPLAY,
+	SPI_DEVICE_ID_NONE // All /SS pins are disabled (set to high)
 } TSPIDeviceID;
 
 //-------------------------------------------------------------------------------------------------

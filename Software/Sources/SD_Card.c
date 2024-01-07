@@ -86,7 +86,7 @@ unsigned char SDCardWaitForR1Response(void)
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
-void SDCardInitialize(void)
+unsigned char SDCardInitialize(void)
 {
 	unsigned char i, Buffer[16], Result;
 	unsigned long Command_Argument;
@@ -108,7 +108,7 @@ void SDCardInitialize(void)
 	{
 		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD0.\r\n");
 		else SERIAL_PORT_LOG("Error : initialization failed (R1 response : 0x%02X).\r\n", Result);
-		return;
+		return 1;
 	}
 	SERIAL_PORT_LOG("CMD0 was successful.\r\n");
 	__delay_ms(1);
@@ -135,7 +135,7 @@ void SDCardInitialize(void)
 		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
 		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
 		else SERIAL_PORT_LOG("Error : the card does not support version 1.x nor version 2.00 of the specifications (R1 response : 0x%02X).\r\n", Result);
-		return;
+		return 1;
 	}
 	// Retrieve the R7 reponse remaining bytes (only if the command was valid because the supported protocol version is recent enough)
 	if (SD_Card_Is_Version_2_Protocol)
@@ -146,12 +146,12 @@ void SDCardInitialize(void)
 		if (!(Buffer[2] & 0x01))
 		{
 			SERIAL_PORT_LOG("Error : the card did not confirm the voltage range.\r\n");
-			return;
+			return 1;
 		}
 		if (Buffer[3] != 0xAA)
 		{
 			SERIAL_PORT_LOG("Error : the check pattern returned by the card is wrong.\r\n");
-			return;
+			return 1;
 		}
 	}
 	SERIAL_PORT_LOG("CMD8 was successful.\r\n");
@@ -172,7 +172,7 @@ void SDCardInitialize(void)
 		{
 			if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
 			else SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
-			return;
+			return 1;
 		}
 		SERIAL_PORT_LOG("CMD55 was successful.\r\n");
 		__delay_ms(1);
@@ -187,7 +187,7 @@ void SDCardInitialize(void)
 		if (Result & 0xFE) // Check for any error bit but the "idle" one
 		{
 			SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
-			return;
+			return 1;
 		}
 		if (Result == 0x01)
 		{

@@ -8,7 +8,10 @@
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
-/** Switch the SD card to SPI mode and configure it for operation. */
-void SDCardInitialize(void);
+/** Switch the SD card to SPI mode and configure it for operation.
+ * @return 1 if no SD card was found or if the SD card was not successfully initialized,
+ * @return 0 if the SD card is successfully initialized and ready for operations.
+ */
+unsigned char SDCardInitialize(void);
 
 #endif

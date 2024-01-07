@@ -35,21 +35,23 @@
  */
 void SDCardSendCommand(unsigned char Command_Bit_Pattern, unsigned long Argument, unsigned char Checksum)
 {
-	unsigned char Buffer[SD_CARD_COMMAND_SIZE], i;
+	unsigned char Buffer[SD_CARD_COMMAND_SIZE + 1], i;
 
 	// Create the command token
+	Buffer[0] = 0xFF; // Add a dummy transfer at the beginning of the command to make sure the card is ready
+	// Append the Start Bit and the Transmission Bit to the command code
 	Command_Bit_Pattern &= 0x3F; // Only the 6 lower bits are meaningful
-	Buffer[0] = 0x40 | Command_Bit_Pattern; // Configure the Start Bit and the Transmission Bit at the same time
+	Buffer[1] = 0x40 | Command_Bit_Pattern; // Configure the Start Bit and the Transmission Bit at the same time
 	// Fill the argument
-	Buffer[1] = (unsigned char) (Argument >> 24);
-	Buffer[2] = (unsigned char) (Argument >> 16);
-	Buffer[3] = (unsigned char) (Argument >> 8);
-	Buffer[4] = (unsigned char) Argument;
+	Buffer[2] = (unsigned char) (Argument >> 24);
+	Buffer[3] = (unsigned char) (Argument >> 16);
+	Buffer[4] = (unsigned char) (Argument >> 8);
+	Buffer[5] = (unsigned char) Argument;
 	// Append the CRC and the End Bit
-	Buffer[5] = Checksum | 0x01;
+	Buffer[6] = Checksum | 0x01;
 
 	// Send the command
-	for (i = 0; i < SD_CARD_COMMAND_SIZE; i++) SPITransferByte(Buffer[i]);
+	for (i = 0; i < sizeof(Buffer); i++) SPITransferByte(Buffer[i]);
 }
 
 /** Clock the SD card until a valid response is received. The response is using the R1 format, meaning that bit 7 must be zero.

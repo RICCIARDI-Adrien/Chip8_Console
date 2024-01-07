@@ -19,6 +19,8 @@
 #define SD_CARD_CMD8_SEND_IF_COND 8
 /** The command 17 bit pattern. */
 #define SD_CARD_CMD17_READ_SINGLE_BLOCK 17
+/** The command 58 bit pattern. */
+#define SD_CARD_CMD58_READ_OCR 58
 /** The command 55 bit pattern. */
 #define SD_CARD_CMD55_APP_CMD 55
 /** The application specific command 41 bit pattern. */
@@ -88,7 +90,7 @@ unsigned char SDCardWaitForR1Response(void)
 //-------------------------------------------------------------------------------------------------
 unsigned char SDCardInitialize(void)
 {
-	unsigned char i, Buffer[16], Result;
+	unsigned char i, Buffer[4], Result;
 	unsigned long Command_Argument;
 
 	// Switch the SD card to SPI mode
@@ -200,4 +202,39 @@ unsigned char SDCardInitialize(void)
 		__delay_ms(9);
 	}
 	__delay_ms(1);
+
+	// Reading the OCR register is part of the initialization process of the protocol V2.00 and later
+	if (SD_Card_Is_Version_2_Protocol)
+	{
+		SERIAL_PORT_LOG("Sending CMD58 to the SD card...\r\n");
+		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		Command_Argument = 0;
+		SDCardSendCommand(SD_CARD_CMD58_READ_OCR, Command_Argument, 0);
+		Result = SDCardWaitForR1Response();
+		if (Result & 0xFE) // Check for any error (not taking into account the "idle" bit)
+		{
+			SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+			if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD58.\r\n");
+			else SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
+			return 1;
+		}
+		// The OCR register is provided on additional 4 bytes
+		for (i = 0; i < 4; i++) Buffer[i] = SPITransferByte(0xFF);
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		// Display some card features for debugging purposes
+		// Card power up status bit (bit 31)
+		if (Buffer[0] & 0x80) SERIAL_PORT_LOG("OCR card power up status bit is set, card is ready.\r\n");
+		else
+		{
+			SERIAL_PORT_LOG("Error : OCR card power up status bit is cleared, card is busy.\r\n");
+			return 1;
+		}
+		// Card Capacity Status (bit 30), this bit is valid only if the Card power up status bit is set
+		if (Buffer[0] & 0x40) SERIAL_PORT_LOG("Card is High Capacity or Extended Capacity (CCS bit is set).\r\n");
+		else SERIAL_PORT_LOG("Card is Standard Capacity.\r\n");
+		SERIAL_PORT_LOG("CMD58 was successful.\r\n");
+		__delay_ms(1);
+	}
+
+	return 0;
 }

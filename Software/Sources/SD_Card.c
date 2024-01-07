@@ -19,6 +19,10 @@
 #define SD_CARD_CMD8_SEND_IF_COND 8
 /** The command 17 bit pattern. */
 #define SD_CARD_CMD17_READ_SINGLE_BLOCK 17
+/** The command 55 bit pattern. */
+#define SD_CARD_CMD55_APP_CMD 55
+/** The application specific command 41 bit pattern. */
+#define SD_CARD_ACMD41_SD_SEND_OP_COND 41
 
 /** Select the SD card (/SS pin is logic low). */
 #define SD_CARD_SPI_SLAVE_SELECT_ENABLE() LATCbits.LATC0 = 0
@@ -78,7 +82,7 @@ unsigned char SDCardWaitForR1Response(void)
 //-------------------------------------------------------------------------------------------------
 void SDCardInitialize(void)
 {
-	unsigned char i, Buffer[16];
+	unsigned char i, Buffer[16], Result;
 	unsigned long Command_Argument;
 
 	// Switch the SD card to SPI mode
@@ -92,15 +96,15 @@ void SDCardInitialize(void)
 	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
 	Command_Argument = 0;
 	SDCardSendCommand(SD_CARD_CMD0_GO_IDLE_STATE, Command_Argument, 0x94);
-	i = SDCardWaitForR1Response();
+	Result = SDCardWaitForR1Response();
 	SD_CARD_SPI_SLAVE_SELECT_DISABLE();
-	if (i != 0x01)
+	if (Result != 0x01)
 	{
-		if (i == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD0.\r\n");
-		else SERIAL_PORT_LOG("Error : initialization failed (R1 response : 0x%02X).\r\n", i);
+		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD0.\r\n");
+		else SERIAL_PORT_LOG("Error : initialization failed (R1 response : 0x%02X).\r\n", Result);
 		return;
 	}
-	else SERIAL_PORT_LOG("CMD0 was successful.\r\n");
+	SERIAL_PORT_LOG("CMD0 was successful.\r\n");
 	__delay_ms(1);
 
 	// Send the CMD8 (SEND_IF_COND) to determine whether the card is first generation or V2.00
@@ -109,12 +113,12 @@ void SDCardInitialize(void)
 	Command_Argument = 0x01UL << 8; // Tell that the supplied voltage (VHS) is in range 2.7V-3.6V
 	Command_Argument |= 0xAAUL; // Use the recommended check pattern
 	SDCardSendCommand(SD_CARD_CMD8_SEND_IF_COND, Command_Argument, 0x86);
-	i = SDCardWaitForR1Response();
-	if (i != 0x01)
+	Result = SDCardWaitForR1Response();
+	if (Result != 0x01)
 	{
 		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
-		if (i == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
-		else SERIAL_PORT_LOG("Error : the card does not support version 2.00 of the specifications (R1 response : 0x%02X).\r\n", i);
+		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
+		else SERIAL_PORT_LOG("Error : the card does not support version 2.00 of the specifications (R1 response : 0x%02X).\r\n", Result);
 		return;
 	}
 	// Retrieve the R7 reponse remaining bytes
@@ -128,8 +132,50 @@ void SDCardInitialize(void)
 	}
 	if (Buffer[3] != 0xAA)
 	{
-		SERIAL_PORT_LOG("Error : the check pattern return by the card is wrong.\r\n");
+		SERIAL_PORT_LOG("Error : the check pattern returned by the card is wrong.\r\n");
 		return;
+	}
+	SERIAL_PORT_LOG("CMD8 was successful.\r\n");
+	__delay_ms(1);
+
+	// Run the card initialization process until the card is ready
+	SERIAL_PORT_LOG("Looping through the initialization process...\r\n");
+	for (i = 0; i < 128; i++) // Stop after a reasonable amount of attempts
+	{
+		// Tell the card that an application specific command will be sent
+		SERIAL_PORT_LOG("Sending CMD55 to the SD card...\r\n");
+		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		Command_Argument = 0;
+		SDCardSendCommand(SD_CARD_CMD55_APP_CMD, Command_Argument, 0);
+		Result = SDCardWaitForR1Response();
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		if (Result != 0x01)
+		{
+			if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
+			else SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
+			return;
+		}
+		SERIAL_PORT_LOG("CMD55 was successful.\r\n");
+		__delay_ms(1);
+
+		// Run the initialization process
+		SERIAL_PORT_LOG("Sending ACMD41 to the SD card...\r\n");
+		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		Command_Argument = 0xFFFFFFFF; // Set all reserved bits to 1 as asked by specification, set the bit 30 (HCS) to tell that high capacity cards are supported
+		SDCardSendCommand(SD_CARD_ACMD41_SD_SEND_OP_COND, Command_Argument, 0);
+		Result = SDCardWaitForR1Response();
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		if (Result & 0xFE) // Check for any error bit but the "idle" one
+		{
+			SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
+			return;
+		}
+		if (Result == 0x01)
+		{
+			SERIAL_PORT_LOG("ACMD41 was successful.\r\n");
+			break;
+		}
+		SERIAL_PORT_LOG("Card is not ready yet (attempt %d).\r\n", i + 1);
 	}
 	__delay_ms(1);
 }

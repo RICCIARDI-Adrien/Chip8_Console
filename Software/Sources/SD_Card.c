@@ -30,6 +30,12 @@
 #define SD_CARD_SPI_SLAVE_SELECT_DISABLE() LATCbits.LATC0 = 1
 
 //-------------------------------------------------------------------------------------------------
+// Private variables
+//-------------------------------------------------------------------------------------------------
+/** Tell whether the SD card supports protocol version 1.x or protocol V2.00 and later. */
+static unsigned char SD_Card_Is_Version_2_Protocol;
+
+//-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
 /** Prepare the command at the SD format and transmit it on the SPI bus.
@@ -114,26 +120,39 @@ void SDCardInitialize(void)
 	Command_Argument |= 0xAAUL; // Use the recommended check pattern
 	SDCardSendCommand(SD_CARD_CMD8_SEND_IF_COND, Command_Argument, 0x86);
 	Result = SDCardWaitForR1Response();
-	if (Result != 0x01)
+	if (Result == 0x01)
+	{
+		SD_Card_Is_Version_2_Protocol = 1;
+		SERIAL_PORT_LOG("The card supports version 2.00 or later of the specifications (R1 response : 0x%02X).\r\n", Result);
+	}
+	else if (Result == 0x05) // The CMD8 does not exist in protocol version 1.x, so the "illegal command" error is returned by the card
+	{
+		SD_Card_Is_Version_2_Protocol = 0;
+		SERIAL_PORT_LOG("The card supports version 1.x of the specifications (R1 response : 0x%02X).\r\n", Result);
+	}
+	else
 	{
 		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
 		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD8.\r\n");
-		else SERIAL_PORT_LOG("Error : the card does not support version 2.00 of the specifications (R1 response : 0x%02X).\r\n", Result);
+		else SERIAL_PORT_LOG("Error : the card does not support version 1.x nor version 2.00 of the specifications (R1 response : 0x%02X).\r\n", Result);
 		return;
 	}
-	// Retrieve the R7 reponse remaining bytes
-	for (i = 0; i < 4; i++) Buffer[i] = SPITransferByte(0xFF);
-	SD_CARD_SPI_SLAVE_SELECT_DISABLE();
-	// The command execution is successful if the voltage range is confirmed by the card and the check pattern is returned
-	if (!(Buffer[2] & 0x01))
+	// Retrieve the R7 reponse remaining bytes (only if the command was valid because the supported protocol version is recent enough)
+	if (SD_Card_Is_Version_2_Protocol)
 	{
-		SERIAL_PORT_LOG("Error : the card did not confirm the voltage range.\r\n");
-		return;
-	}
-	if (Buffer[3] != 0xAA)
-	{
-		SERIAL_PORT_LOG("Error : the check pattern returned by the card is wrong.\r\n");
-		return;
+		for (i = 0; i < 4; i++) Buffer[i] = SPITransferByte(0xFF);
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		// The command execution is successful if the voltage range is confirmed by the card and the check pattern is returned
+		if (!(Buffer[2] & 0x01))
+		{
+			SERIAL_PORT_LOG("Error : the card did not confirm the voltage range.\r\n");
+			return;
+		}
+		if (Buffer[3] != 0xAA)
+		{
+			SERIAL_PORT_LOG("Error : the check pattern returned by the card is wrong.\r\n");
+			return;
+		}
 	}
 	SERIAL_PORT_LOG("CMD8 was successful.\r\n");
 	__delay_ms(1);

@@ -159,7 +159,7 @@ unsigned char SDCardInitialize(void)
 
 	// Run the card initialization process until the card is ready
 	SERIAL_PORT_LOG("Looping through the initialization process...\r\n");
-	for (i = 0; i < 128; i++) // Stop after a reasonable amount of attempts
+	for (i = 0; i < 100; i++) // The minimum timeout specified by the specifications is 1s
 	{
 		// Tell the card that an application specific command will be sent
 		SERIAL_PORT_LOG("Sending CMD55 to the SD card...\r\n");
@@ -189,12 +189,15 @@ unsigned char SDCardInitialize(void)
 			SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
 			return 1;
 		}
-		if (Result == 0x01)
+		if (Result == 0) // The "idle" bit is cleared when the initialization process is completed
 		{
 			SERIAL_PORT_LOG("ACMD41 was successful.\r\n");
 			break;
 		}
 		SERIAL_PORT_LOG("Card is not ready yet (attempt %d).\r\n", i + 1);
+
+		// Wait 10 milliseconds (taking into account the 1 millisecond of delay that has already been spent during the CMD55 execution)
+		__delay_ms(9);
 	}
 	__delay_ms(1);
 }

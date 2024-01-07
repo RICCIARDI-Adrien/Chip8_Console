@@ -7,6 +7,8 @@
 #include <Serial_Port.h>
 #include <Sound.h>
 #include <SPI.h>
+#include <stdio.h>
+#include <string.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -37,6 +39,9 @@
 void main(void)
 {
 	unsigned char a = '0';
+	unsigned short i, j;
+	static unsigned char buf[SD_CARD_BLOCK_SIZE];
+	static char str[256], str2[128];
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -51,10 +56,29 @@ void main(void)
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	SPIInitialize(); // The SPI module must be initialized before the SD card module
-	SDCardInitialize();
+	if (SDCardInitialize() != 0)
+	{
+		SerialPortWriteString("\033[31mFailed to initialize the SD card.\033[0m\r\n");
+		while (1);
+	}
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
+	if (SDCardReadBlock(0, buf) != 0) SerialPortWriteString("Failed to read SD card block.\r\n");
+	else
+	{
+		for (i = 0; i < SD_CARD_BLOCK_SIZE; i += 16)
+		{
+			str[0] = 0;
+			for (j = 0; j < 16; j++)
+			{
+				sprintf(str2, "0x%02X ", buf[i + j]);
+				strcat(str, str2);
+			}
+			SERIAL_PORT_LOG("0x%04X : %s\r\n", i, str);
+		}
+	}
+
 	while (1)
 	{
 		LATBbits.LATB0 = !LATBbits.LATB0;

@@ -238,3 +238,49 @@ unsigned char SDCardInitialize(void)
 
 	return 0;
 }
+
+unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointer_Buffer)
+{
+	const unsigned short START_TOKEN_TRANSFER_RETRIES_COUNT = 2000;  // Host is required to wait at least 100ms before declaring a timeout, as the SPI module is clocked at 125KHz, each 8-bit transfer takes (1 / 125KHz) * 8 = 64us, so we need at least 100000us (100ms) / 64us = 1563 transfers (then take some margin)
+	unsigned char Result;
+	unsigned short i;
+
+	// Send the single block read command
+	SERIAL_PORT_LOG("Sending CMD17 to the SD card...\r\n");
+	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+	SDCardSendCommand(SD_CARD_CMD17_READ_SINGLE_BLOCK, Block_Address, 0);
+	Result = SDCardWaitForR1Response();
+	if (Result & 0xFE) // Check any error without taking the "idle" bit into account
+	{
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		if (Result == 0x80) SERIAL_PORT_LOG("Error : timeout during execution of CMD17.\r\n");
+		else SERIAL_PORT_LOG("Error : R1 response : 0x%02X.\r\n", Result);
+		return 1;
+	}
+
+	// Wait for the start token
+	for (i = 0; i < START_TOKEN_TRANSFER_RETRIES_COUNT; i++)
+	{
+		Result = SPITransferByte(0xFF);
+		if (Result == 0xFE) break;
+	}
+	if (i == START_TOKEN_TRANSFER_RETRIES_COUNT)
+	{
+		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SERIAL_PORT_LOG("Error : timeout while waiting for the start token.\r\n");
+		return 1;
+	}
+
+	// Retrieve the data block
+	for (i = 0; i < SD_CARD_BLOCK_SIZE;  i++)
+	{
+		*Pointer_Buffer = SPITransferByte(0xFF);
+		Pointer_Buffer++;
+	}
+
+	// Discard the 16-bit CRC
+	SPITransferByte(0xFF);
+	SPITransferByte(0xFF);
+
+	return 0;
+}

@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
 #include <Serial_Port.h>
@@ -42,6 +43,7 @@ void main(void)
 	unsigned short i, j;
 	static unsigned char buf[SD_CARD_BLOCK_SIZE];
 	static char str[256], str2[128];
+	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT];
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -67,16 +69,8 @@ void main(void)
 	if (SDCardReadBlock(0, buf) != 0) SerialPortWriteString("Failed to read SD card block.\r\n");
 	else
 	{
-		for (i = 0; i < SD_CARD_BLOCK_SIZE; i += 16)
-		{
-			str[0] = 0;
-			for (j = 0; j < 16; j++)
-			{
-				sprintf(str2, "0x%02X ", buf[i + j]);
-				strcat(str, str2);
-			}
-			SERIAL_PORT_LOG("0x%04X : %s\r\n", i, str);
-		}
+		MBRParsePrimaryPartitions(buf, Partitions_Data);
+		for (i = 0; i < MBR_PRIMARY_PARTITIONS_COUNT; i++) SERIAL_PORT_LOG("Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i, Partitions_Data[i].Type, Partitions_Data[i].Start_Sector, Partitions_Data[i].Sectors_Count);
 	}
 
 	while (1)

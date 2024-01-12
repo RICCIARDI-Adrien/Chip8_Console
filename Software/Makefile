@@ -4,7 +4,15 @@ PATH_OBJECTS = $(shell realpath .)/Objects
 PATH_SOURCES = $(shell realpath .)/Sources
 
 BINARY_NAME = Chip8_Console_Firmware.hex
-SOURCES = $(PATH_SOURCES)/Main.c $(PATH_SOURCES)/MBR.c $(PATH_SOURCES)/NCO.c $(PATH_SOURCES)/SD_Card.c $(PATH_SOURCES)/Serial_Port.c $(PATH_SOURCES)/Sound.c $(PATH_SOURCES)/SPI.c
+SOURCES = \
+	$(PATH_SOURCES)/FAT.c \
+	$(PATH_SOURCES)/Main.c \
+	$(PATH_SOURCES)/MBR.c \
+	$(PATH_SOURCES)/NCO.c \
+	$(PATH_SOURCES)/SD_Card.c \
+	$(PATH_SOURCES)/Serial_Port.c \
+	$(PATH_SOURCES)/Sound.c \
+	$(PATH_SOURCES)/SPI.c
 
 CC = xc8-cc
 # The -Wa,-a argument tells the assembler to generate a listing file

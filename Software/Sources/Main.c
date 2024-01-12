@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <FAT.h>
 #include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -35,15 +36,62 @@
 #pragma config CP = OFF // Disable program and data code protection
 
 //-------------------------------------------------------------------------------------------------
+// Private functions
+//-------------------------------------------------------------------------------------------------
+/** TODO */
+unsigned char MainMountSDCard(void)
+{
+	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
+	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
+	unsigned char i;
+
+	// The first SD card block contains the MBR, get it
+	if (SDCardReadBlock(0, Buffer) != 0)
+	{
+		SERIAL_PORT_LOG("Failed to read SD card block.\r\n");
+		return 1;
+	}
+
+	// Find the first valid primary partitions (do not care about the partition type, as it does not reflect the real file system the partition is formatted with)
+	MBRParsePrimaryPartitions(Buffer, Partitions_Data);
+	for (i = 0; i < MBR_PRIMARY_PARTITIONS_COUNT; i++)
+	{
+		// Cache the partition data access
+		Pointer_Partitions_Data = &Partitions_Data[i];
+		SERIAL_PORT_LOG("Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
+
+		// Bypass any empty partition
+		if (Pointer_Partitions_Data->Type == 0)
+		{
+			SERIAL_PORT_LOG("Partition is empty, trying next one.\r\n");
+			continue;
+		}
+
+		// Try to mount the file system as the partition is not empty
+		if (FATMount(Pointer_Partitions_Data) != 0)
+		{
+			SERIAL_PORT_LOG("Failed to mount the partition %d.\r\n", i + 1);
+			continue;
+		}
+		SERIAL_PORT_LOG("Partition %d was successfully mounted.\r\n", i + 1);
+		break;
+	}
+	// Were all partitions invalid ?
+	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
+	{
+		SERIAL_PORT_LOG("No valid partition could be found.\r\n");
+		return 2;
+	}
+
+	return 0;
+}
+
+//-------------------------------------------------------------------------------------------------
 // Entry point
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
 	unsigned char a = '0';
-	unsigned short i, j;
-	static unsigned char buf[SD_CARD_BLOCK_SIZE];
-	static char str[256], str2[128];
-	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT];
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -60,18 +108,19 @@ void main(void)
 	SPIInitialize(); // The SPI module must be initialized before the SD card module
 	if (SDCardInitialize() != 0)
 	{
-		SerialPortWriteString("\033[31mFailed to initialize the SD card.\033[0m\r\n");
-		while (1);
+		SERIAL_PORT_LOG("\033[31mFailed to initialize the SD card.\033[0m\r\n");
+		while (1); // TODO
+	}
+
+	// TODO
+	if (MainMountSDCard() != 0)
+	{
+		SERIAL_PORT_LOG("\033[31mFailed to mount the SD card file system.\033[0m\r\n");
+		while (1); // TODO
 	}
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
-	if (SDCardReadBlock(0, buf) != 0) SerialPortWriteString("Failed to read SD card block.\r\n");
-	else
-	{
-		MBRParsePrimaryPartitions(buf, Partitions_Data);
-		for (i = 0; i < MBR_PRIMARY_PARTITIONS_COUNT; i++) SERIAL_PORT_LOG("Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i, Partitions_Data[i].Type, Partitions_Data[i].Start_Sector, Partitions_Data[i].Sectors_Count);
-	}
 
 	while (1)
 	{

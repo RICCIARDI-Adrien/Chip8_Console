@@ -66,6 +66,41 @@ typedef struct __attribute__((packed))
 	unsigned short Signature_Word;
 } TFATBootSector;
 
+/** Relevant FAT information. */
+typedef struct
+{
+	//unsigned short Cluster_Size_Bytes; // Maximum value told in the spec (BPB_SecPerClus) is 128, leading to 65536 for 512-byte sectors
+	unsigned short Cluster_Size_Sectors; // Maximum value told in the spec (BPB_SecPerClus) is 128, leading to 65536 for 512-byte sectors
+	unsigned long Total_Sectors_Count;
+	unsigned long First_FAT_Sector;
+	unsigned long First_Cluster_Sector; //!< The LBA sector address of the first cluster of the volume.
+	unsigned long First_Root_Directory_Sector;
+	unsigned long First_Data_Area_Sector;
+} TFATInformation;
+
+/** A FAT Directory Structure. */
+typedef struct __attribute__((packed))
+{
+	unsigned char Buffer_Name[11];
+	unsigned char Attributes;
+	unsigned char NT_Reserved;
+	unsigned char Creation_Time_Tenth;
+	unsigned short Creation_Time;
+	unsigned short Creation_Date;
+	unsigned short Last_Access_Date;
+	unsigned short First_Cluster_High;
+	unsigned short Last_Modification_Time;
+	unsigned short Last_Modification_Date;
+	unsigned short First_Cluster_Low;
+	unsigned long Size;
+} TFATDirectory;
+
+//-------------------------------------------------------------------------------------------------
+// Private variables
+//-------------------------------------------------------------------------------------------------
+/** Keep the mounted file system relevant information. */
+static TFATInformation FAT_Information;
+
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
@@ -88,6 +123,12 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 		SERIAL_PORT_LOG("Bad signature word, this is not a FAT partition.\r\n");
 		return 1;
 	}
+
+	// Cache some relevant values
+	FAT_Information.Cluster_Size_Sectors = Pointer_Boot_Sector->Sectors_Per_Cluster_Count;
+	FAT_Information.First_FAT_Sector = Pointer_Partition->Start_Sector + Pointer_Boot_Sector->Reserved_Sectors_Count; // Start from the beginning of the partition
+	FAT_Information.First_Cluster_Sector = FAT_Information.First_FAT_Sector + (Pointer_Boot_Sector->Extended_BPB.FAT_32.FAT_Sectors_Count * Pointer_Boot_Sector->FATs_Count); // The first cluster is located after the various copies of the FAT
+	FAT_Information.First_Root_Directory_Sector = FAT_Information.First_Cluster_Sector + ((Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster - 2) * FAT_Information.Cluster_Size_Sectors); // Subtract 2 because the clusters count start at 2
 
 	// Display some file system information
 	#ifdef SERIAL_PORT_ENABLE_LOGGING
@@ -119,6 +160,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 		// FAT sectors count
 		SERIAL_PORT_LOG("Total sectors count (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Total_Sectors_Count);
 		// FAT32 specific fields
+		SERIAL_PORT_LOG("Root directory first cluster (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster);
 		if (Pointer_Boot_Sector->Extended_BPB.FAT_32.Extended_Boot_Signature == 0x29) // When set to this value, this indicates that the following 3 fields are present
 		{
 			// Volume serial number
@@ -132,6 +174,12 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 			String_Temporary[sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_File_System_Type)] = 0; // Make sure the string is terminated
 			SERIAL_PORT_LOG("File system type : \"%s\".\r\n", String_Temporary);
 		}
+
+		// Cached values
+		SERIAL_PORT_LOG("Cached cluster size in sectors : %u.\r\n", FAT_Information.Cluster_Size_Sectors);
+		SERIAL_PORT_LOG("Cached first FAT sector : %lu.\r\n", FAT_Information.First_FAT_Sector);
+		SERIAL_PORT_LOG("Cached first cluster sector : %lu.\r\n", FAT_Information.First_Cluster_Sector);
+		SERIAL_PORT_LOG("Cached first root directory sector : %lu.\r\n", FAT_Information.First_Root_Directory_Sector);
 	}
 	#endif
 

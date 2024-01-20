@@ -82,3 +82,9 @@ void SerialPortWriteString(const char *Pointer_String)
 		SerialPortWriteString(String_Message);
 	}
 #endif
+
+// Implement the XC8 C library putch() function to be able to directly use printf() in the code
+void putch(char data)
+{
+	SerialPortWriteByte(data);
+}

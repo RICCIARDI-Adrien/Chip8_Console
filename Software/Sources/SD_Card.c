@@ -246,7 +246,7 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 	unsigned short i;
 
 	// Send the single block read command
-	SERIAL_PORT_LOG("Sending CMD17 to the SD card...\r\n");
+	SERIAL_PORT_LOG("Sending CMD17 to the SD card (block address : %lu)...\r\n", Block_Address);
 	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
 	SDCardSendCommand(SD_CARD_CMD17_READ_SINGLE_BLOCK, Block_Address, 0);
 	Result = SDCardWaitForR1Response();

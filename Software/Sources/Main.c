@@ -92,6 +92,7 @@ unsigned char MainMountSDCard(void)
 void main(void)
 {
 	unsigned char a = '0';
+	TFATFileInformation File_Information;
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -121,6 +122,20 @@ void main(void)
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
+
+	// TEST
+	if (FATListStart("/") != 0)
+	{
+		SERIAL_PORT_LOG("FATListStart() failed\r\n");
+	}
+	while (FATListNext(&File_Information) == 0)
+	{
+		SERIAL_PORT_LOG("File found : name=\"%s\", directory=%u, size=%lu, first cluster=%lu.\r\n",
+			File_Information.String_Short_Name,
+			File_Information.Is_Directory,
+			File_Information.Size,
+			File_Information.First_Cluster_Number);
+	}
 
 	while (1)
 	{

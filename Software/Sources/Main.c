@@ -130,12 +130,13 @@ void main(void)
 	}
 	while (FATListNext(&File_Information) == 0)
 	{
-		SERIAL_PORT_LOG("File found : name=\"%s\", directory=%u, size=%lu, first cluster=%lu.\r\n",
+		printf("File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.\r\n",
 			File_Information.String_Short_Name,
 			File_Information.Is_Directory,
 			File_Information.Size,
 			File_Information.First_Cluster_Number);
 	}
+	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
 
 	while (1)
 	{

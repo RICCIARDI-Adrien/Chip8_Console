@@ -160,7 +160,7 @@ static unsigned char FATReadClusterAsSectors(void *Pointer_Buffer)
 	// Read the next cluster's sector from the SD card
 	if (SDCardReadBlock(FAT_Read_Cluster_Current_Sector_Address, Pointer_Buffer) != 0)
 	{
-		SERIAL_PORT_LOG("Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08X).\r\n", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
+		SERIAL_PORT_LOG("Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).\r\n", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
 		return 2;
 	}
 
@@ -231,7 +231,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 	// Retrieve the boot sector
 	if (SDCardReadBlock(Pointer_Partition->Start_Sector, Buffer) != 0)
 	{
-		SERIAL_PORT_LOG("Failed to read the boot sector (sector LBA address is 0x%08X).\r\n", Pointer_Partition->Start_Sector);
+		SERIAL_PORT_LOG("Failed to read the boot sector (sector LBA address is 0x%08lX).\r\n", Pointer_Partition->Start_Sector);
 		return 1;
 	}
 
@@ -284,7 +284,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 		if (Pointer_Boot_Sector->Extended_BPB.FAT_32.Extended_Boot_Signature == 0x29) // When set to this value, this indicates that the following 3 fields are present
 		{
 			// Volume serial number
-			SERIAL_PORT_LOG("Volume serial number : 0x%08X.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Volume_Serial_Number);
+			SERIAL_PORT_LOG("Volume serial number : 0x%08lX.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Volume_Serial_Number);
 			// Volume label
 			memcpy(String_Temporary, Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label, sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label));
 			String_Temporary[sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label)] = 0; // Make sure the string is terminated

@@ -69,20 +69,6 @@ void SerialPortWriteString(const char *Pointer_String)
 	}
 }
 
-#ifdef SERIAL_PORT_ENABLE_LOGGING
-	void SerialPortWriteLog(const char *Pointer_String_Format, ...)
-	{
-		char String_Message[256];
-		va_list Arguments_List;
-
-		va_start(Arguments_List, Pointer_String_Format);
-		vsnprintf(String_Message, sizeof(String_Message), Pointer_String_Format, Arguments_List);
-		va_end(Arguments_List);
-
-		SerialPortWriteString(String_Message);
-	}
-#endif
-
 // Implement the XC8 C library putch() function to be able to directly use printf() in the code
 void putch(char data)
 {

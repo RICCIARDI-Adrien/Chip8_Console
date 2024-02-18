@@ -5,6 +5,7 @@ PATH_SOURCES = $(shell realpath .)/Sources
 
 BINARY_NAME = Chip8_Console_Firmware.hex
 SOURCES = \
+	$(PATH_SOURCES)/Display.c \
 	$(PATH_SOURCES)/FAT.c \
 	$(PATH_SOURCES)/Main.c \
 	$(PATH_SOURCES)/MBR.c \

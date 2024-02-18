@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <Display.h>
 #include <FAT.h>
 #include <MBR.h>
 #include <NCO.h>
@@ -106,7 +107,8 @@ void main(void)
 	SerialPortInitialize();
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
-	SPIInitialize(); // The SPI module must be initialized before the SD card module
+	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
+	DisplayInitialize();
 	if (SDCardInitialize() != 0)
 	{
 		SERIAL_PORT_LOG("\033[31mFailed to initialize the SD card.\033[0m\r\n");

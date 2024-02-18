@@ -6,6 +6,14 @@
 #define H_DISPLAY_H
 
 //-------------------------------------------------------------------------------------------------
+// Constants
+//-------------------------------------------------------------------------------------------------
+/** The amount of horizontal pixels in the display area. */
+#define DISPLAY_COLUMNS_COUNT 128
+/** The amount of vertical pixels in the display area. */
+#define DISPLAY_ROWS_COUNT 64
+
+//-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
 /** Configure the display controller, clear its data RAM and turn the display on. */

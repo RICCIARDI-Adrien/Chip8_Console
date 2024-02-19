@@ -37,6 +37,12 @@
 #pragma config CP = OFF // Disable program and data code protection
 
 //-------------------------------------------------------------------------------------------------
+// Private constants
+//-------------------------------------------------------------------------------------------------
+/** Set to 1 to enable the log messages, set to 0 to disable them. */
+#define MAIN_IS_LOGGING_ENABLED 0
+
+//-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
 /** TODO */
@@ -49,7 +55,7 @@ unsigned char MainMountSDCard(void)
 	// The first SD card block contains the MBR, get it
 	if (SDCardReadBlock(0, Buffer) != 0)
 	{
-		SERIAL_PORT_LOG("Failed to read SD card block.\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read SD card block.\r\n");
 		return 1;
 	}
 
@@ -59,28 +65,28 @@ unsigned char MainMountSDCard(void)
 	{
 		// Cache the partition data access
 		Pointer_Partitions_Data = &Partitions_Data[i];
-		SERIAL_PORT_LOG("Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
 
 		// Bypass any empty partition
 		if (Pointer_Partitions_Data->Type == 0)
 		{
-			SERIAL_PORT_LOG("Partition is empty, trying next one.\r\n");
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition is empty, trying next one.\r\n");
 			continue;
 		}
 
 		// Try to mount the file system as the partition is not empty
 		if (FATMount(Pointer_Partitions_Data) != 0)
 		{
-			SERIAL_PORT_LOG("Failed to mount the partition %d.\r\n", i + 1);
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.\r\n", i + 1);
 			continue;
 		}
-		SERIAL_PORT_LOG("Partition %d was successfully mounted.\r\n", i + 1);
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d was successfully mounted.\r\n", i + 1);
 		break;
 	}
 	// Were all partitions invalid ?
 	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
 	{
-		SERIAL_PORT_LOG("No valid partition could be found.\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.\r\n");
 		return 2;
 	}
 
@@ -111,14 +117,14 @@ void main(void)
 	DisplayInitialize();
 	if (SDCardInitialize() != 0)
 	{
-		SERIAL_PORT_LOG("\033[31mFailed to initialize the SD card.\033[0m\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
 		while (1); // TODO
 	}
 
 	// TODO
 	if (MainMountSDCard() != 0)
 	{
-		SERIAL_PORT_LOG("\033[31mFailed to mount the SD card file system.\033[0m\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to mount the SD card file system.\033[0m\r\n");
 		while (1); // TODO
 	}
 
@@ -128,7 +134,7 @@ void main(void)
 	// TEST
 	if (FATListStart("/") != 0)
 	{
-		SERIAL_PORT_LOG("FATListStart() failed\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed\r\n");
 	}
 	while (FATListNext(&File_Information) == 0)
 	{

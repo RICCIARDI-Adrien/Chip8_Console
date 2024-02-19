@@ -11,13 +11,14 @@
 // Constants and macros
 //-------------------------------------------------------------------------------------------------
 /** Print a printf() like message on the serial port preceded by the function name and the line.
+ * @param Is_Enabled Set to 1 to compile the message in, set to 0 do remove the message at the compilation time.
  * @param Format A printf() like format string.
  * @note The internal buffer is limited to 256 bytes, do not write too long strings.
  */
 #ifdef SERIAL_PORT_ENABLE_LOGGING
-	#define SERIAL_PORT_LOG(Format, ...) printf("[%s:%d] " Format, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+	#define SERIAL_PORT_LOG(Is_Enabled, Format, ...) do { if (Is_Enabled) printf("[%s:%d] " Format, __FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 #else
-	#define SERIAL_PORT_LOG(Format, ...) do {} while (0)
+	#define SERIAL_PORT_LOG(Is_Enabled, Format, ...) do {} while (0)
 #endif
 
 //-------------------------------------------------------------------------------------------------

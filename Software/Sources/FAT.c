@@ -10,6 +10,9 @@
 //-------------------------------------------------------------------------------------------------
 // Private constants
 //-------------------------------------------------------------------------------------------------
+/** Set to 1 to enable the log messages, set to 0 to disable them. */
+#define FAT_IS_LOGGING_ENABLED 0
+
 /** How many FAT directories are stored in a sector. The FAT specification tells that a FAT directory can't cross a sector boundary. */
 #define FAT_DIRECTORY_ENTRIES_PER_SECTOR (SD_CARD_BLOCK_SIZE / sizeof(TFATDirectory))
 
@@ -160,7 +163,7 @@ static unsigned char FATReadClusterAsSectors(void *Pointer_Buffer)
 	// Read the next cluster's sector from the SD card
 	if (SDCardReadBlock(FAT_Read_Cluster_Current_Sector_Address, Pointer_Buffer) != 0)
 	{
-		SERIAL_PORT_LOG("Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).\r\n", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).\r\n", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
 		return 2;
 	}
 
@@ -231,7 +234,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 	// Retrieve the boot sector
 	if (SDCardReadBlock(Pointer_Partition->Start_Sector, Buffer) != 0)
 	{
-		SERIAL_PORT_LOG("Failed to read the boot sector (sector LBA address is 0x%08lX).\r\n", Pointer_Partition->Start_Sector);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the boot sector (sector LBA address is 0x%08lX).\r\n", Pointer_Partition->Start_Sector);
 		return 1;
 	}
 
@@ -239,7 +242,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 	Pointer_Boot_Sector = (TFATBootSector *) Buffer;
 	if (Pointer_Boot_Sector->Signature_Word != 0xAA55)
 	{
-		SERIAL_PORT_LOG("Bad signature word, this is not a FAT partition.\r\n");
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Bad signature word, this is not a FAT partition.\r\n");
 		return 1;
 	}
 
@@ -258,49 +261,49 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
 		// OEM name identifier
 		memcpy(String_Temporary, Pointer_Boot_Sector->String_OEM_Name, sizeof(Pointer_Boot_Sector->String_OEM_Name));
 		String_Temporary[sizeof(Pointer_Boot_Sector->String_OEM_Name)] = 0; // Make sure the string is terminated
-		SERIAL_PORT_LOG("OEM name identifier : \"%s\".\r\n", String_Temporary);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "OEM name identifier : \"%s\".\r\n", String_Temporary);
 		// Bytes per sector count
-		SERIAL_PORT_LOG("Bytes per sector count : %u.\r\n", Pointer_Boot_Sector->Bytes_Per_Sector_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Bytes per sector count : %u.\r\n", Pointer_Boot_Sector->Bytes_Per_Sector_Count);
 		// Sectors per cluster count
-		SERIAL_PORT_LOG("Sectors per cluster count : %u.\r\n", Pointer_Boot_Sector->Sectors_Per_Cluster_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Sectors per cluster count : %u.\r\n", Pointer_Boot_Sector->Sectors_Per_Cluster_Count);
 		// FATs count
-		SERIAL_PORT_LOG("FATs count : %u.\r\n", Pointer_Boot_Sector->FATs_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FATs count : %u.\r\n", Pointer_Boot_Sector->FATs_Count);
 		// Old total sectors count
-		SERIAL_PORT_LOG("Total sectors count (only for FAT12 and FAT16) : %u.\r\n", Pointer_Boot_Sector->Old_Total_Sectors_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Total sectors count (only for FAT12 and FAT16) : %u.\r\n", Pointer_Boot_Sector->Old_Total_Sectors_Count);
 		// Media type
-		SERIAL_PORT_LOG("Media type : 0x%02X.\r\n", Pointer_Boot_Sector->Media_Type);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Media type : 0x%02X.\r\n", Pointer_Boot_Sector->Media_Type);
 		// Old FAT sectors count
-		SERIAL_PORT_LOG("FAT sectors count (only for FAT12 and FAT16) : %u.\r\n", Pointer_Boot_Sector->Old_FAT_Sectors_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FAT sectors count (only for FAT12 and FAT16) : %u.\r\n", Pointer_Boot_Sector->Old_FAT_Sectors_Count);
 		// Sectors per track count
-		SERIAL_PORT_LOG("Sectors per track count : %u.\r\n", Pointer_Boot_Sector->Sectors_Per_Track_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Sectors per track count : %u.\r\n", Pointer_Boot_Sector->Sectors_Per_Track_Count);
 		// Heads count
-		SERIAL_PORT_LOG("Heads count : %u.\r\n", Pointer_Boot_Sector->Heads_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Heads count : %u.\r\n", Pointer_Boot_Sector->Heads_Count);
 		// Hidden sectors count
-		SERIAL_PORT_LOG("Hidden sectors count : %lu.\r\n", Pointer_Boot_Sector->Hidden_Sectors_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Hidden sectors count : %lu.\r\n", Pointer_Boot_Sector->Hidden_Sectors_Count);
 		// FAT sectors count
-		SERIAL_PORT_LOG("Total sectors count (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Total_Sectors_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Total sectors count (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Total_Sectors_Count);
 		// FAT32 specific fields
-		SERIAL_PORT_LOG("Root directory first cluster (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Root directory first cluster (only for FAT32) : %lu.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster);
 		if (Pointer_Boot_Sector->Extended_BPB.FAT_32.Extended_Boot_Signature == 0x29) // When set to this value, this indicates that the following 3 fields are present
 		{
 			// Volume serial number
-			SERIAL_PORT_LOG("Volume serial number : 0x%08lX.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Volume_Serial_Number);
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Volume serial number : 0x%08lX.\r\n", Pointer_Boot_Sector->Extended_BPB.FAT_32.Volume_Serial_Number);
 			// Volume label
 			memcpy(String_Temporary, Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label, sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label));
 			String_Temporary[sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_Volume_Label)] = 0; // Make sure the string is terminated
-			SERIAL_PORT_LOG("Volume label : \"%s\".\r\n", String_Temporary);
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Volume label : \"%s\".\r\n", String_Temporary);
 			// File system type
 			memcpy(String_Temporary, Pointer_Boot_Sector->Extended_BPB.FAT_32.String_File_System_Type, sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_File_System_Type));
 			String_Temporary[sizeof(Pointer_Boot_Sector->Extended_BPB.FAT_32.String_File_System_Type)] = 0; // Make sure the string is terminated
-			SERIAL_PORT_LOG("File system type : \"%s\".\r\n", String_Temporary);
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "File system type : \"%s\".\r\n", String_Temporary);
 		}
 
 		// Cached values
-		SERIAL_PORT_LOG("Cached cluster size in sectors : %u.\r\n", FAT_Information.Cluster_Size_Sectors);
-		SERIAL_PORT_LOG("Cached first FAT sector : %lu.\r\n", FAT_Information.First_FAT_Sector);
-		SERIAL_PORT_LOG("Cached first cluster sector : %lu.\r\n", FAT_Information.First_Cluster_Sector);
-		SERIAL_PORT_LOG("Cached first root directory sector : %lu.\r\n", FAT_Information.First_Root_Directory_Sector);
-		SERIAL_PORT_LOG("Cached first root directory cluster : %lu.\r\n", FAT_Information.First_Root_Directory_Cluster);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached cluster size in sectors : %u.\r\n", FAT_Information.Cluster_Size_Sectors);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first FAT sector : %lu.\r\n", FAT_Information.First_FAT_Sector);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first cluster sector : %lu.\r\n", FAT_Information.First_Cluster_Sector);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first root directory sector : %lu.\r\n", FAT_Information.First_Root_Directory_Sector);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first root directory cluster : %lu.\r\n", FAT_Information.First_Root_Directory_Cluster);
 	}
 	#endif
 
@@ -332,16 +335,16 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 		switch (FAT_List_File_State)
 		{
 			case FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER:
-				SERIAL_PORT_LOG("FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER\r\n");
+				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER\r\n");
 				FATConfigureClusterReading(FAT_List_File_Current_Cluster_Number);
 				// When a cluster has been configured, its first sector must be read
 
 			case FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR:
-				SERIAL_PORT_LOG("FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR\r\n");
+				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR\r\n");
 				Result = FATReadClusterAsSectors(FAT_Directories);
 				if (Result == 2) // Did an error occur ?
 				{
-					SERIAL_PORT_LOG("Error : could not read the SD card.\r\n");
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : could not read the SD card.\r\n");
 					return 2;
 				}
 				if (Result == 1) // Is the cluster fully read ?
@@ -359,7 +362,7 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 			case FAT_LIST_FILE_STATE_PARSE_DIRECTORY_ENTRIES:
 				// Cache the directory entry access
 				Pointer_FAT_Directory = &FAT_Directories[Current_Directory_Entry_Index_In_Sector];
-				SERIAL_PORT_LOG("FAT_LIST_FILE_STATE_PARSE_DIRECTORY_ENTRIES, Directory entry %u : name=\"%s\".\r\n", Current_Directory_Entry_Index_In_Sector, Pointer_FAT_Directory->Buffer_Name);
+				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FAT_LIST_FILE_STATE_PARSE_DIRECTORY_ENTRIES, Directory entry %u : name=\"%s\".\r\n", Current_Directory_Entry_Index_In_Sector, Pointer_FAT_Directory->Buffer_Name);
 
 				// Have all directory entries of this sector been read ?
 				Current_Directory_Entry_Index_In_Sector++;
@@ -370,20 +373,20 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 				// Ignore the long file name entries
 				if ((Result & FAT_FILE_ATTRIBUTE_LONG_FILE_NAME) == FAT_FILE_ATTRIBUTE_LONG_FILE_NAME)
 				{
-					SERIAL_PORT_LOG("This is a long file name entry, trying the next directory entry.\r\n");
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "This is a long file name entry, trying the next directory entry.\r\n");
 					continue;
 				}
 				// Ignore the volume name
 				if (Result & FAT_FILE_ATTRIBUTE_VOLUME_ID)
 				{
-					SERIAL_PORT_LOG("This is a volume ID entry, trying the next directory entry.\r\n");
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "This is a volume ID entry, trying the next directory entry.\r\n");
 					continue;
 				}
 				// Is the entry containing a deleted file ?
 				Result = Pointer_FAT_Directory->Buffer_Name[0];
 				if ((Result == 0) || (Result == 0xE5))
 				{
-					SERIAL_PORT_LOG("This is an empty file name entry, trying the next directory entry.\r\n");
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "This is an empty file name entry, trying the next directory entry.\r\n");
 					continue;
 				}
 

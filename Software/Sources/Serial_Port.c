@@ -36,7 +36,7 @@ void SerialPortInitialize(void)
 	TRISCbits.TRISC7 = 1;
 
 	// Display the following message only if the serial port logging feature is enabled
-	SERIAL_PORT_LOG("Serial port logging is enabled.\r\n");
+	SERIAL_PORT_LOG(1, "Serial port logging is enabled.\r\n");
 }
 
 unsigned char SerialPortReadByte(void)

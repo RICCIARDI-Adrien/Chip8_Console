@@ -121,7 +121,7 @@ unsigned char InterpreterRunProgram(void)
 		Instruction_Low_Byte = Interpreter_Memory.Bytes[Interpreter_Register_PC + 1];
 		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Fetching instruction at address 0x%03X : 0x%02X 0x%02X.\r\n", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
 
-		// 
+		// Decode and execute the instruction
 		switch (Instruction_High_Byte & 0xF0)
 		{
 			case 0x00:
@@ -135,8 +135,15 @@ unsigned char InterpreterRunProgram(void)
 
 					// RET
 					case 0xEE:
-						// TODO
-						break;
+						// Make sure there is a valid address on the stack
+						if (Interpreter_Register_SP == 0)
+						{
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack underflow. Stopping interpreter.\r\n");
+							while (1);
+						}
+						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
+						Interpreter_Register_SP--;
+						continue; // Bypass PC incrementation
 
 					default:
 						goto Invalid_Instruction;
@@ -151,8 +158,16 @@ unsigned char InterpreterRunProgram(void)
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.\r\n", Interpreter_Register_PC);
 				continue; // Bypass PC incrementation
 
+			// CALL addr
 			case 0x20:
-				// TODO
+				// Make sure there is still room on the stack
+				if (Interpreter_Register_SP >= INTERPRETER_STACK_SIZE)
+				{
+					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack overflow. Stopping interpreter.\r\n");
+					while (1);
+				}
+				Interpreter_Stack[Interpreter_Register_SP] = Interpreter_Register_PC;
+				Interpreter_Register_SP++;
 				break;
 
 			// SE Vx, byte
@@ -257,17 +272,74 @@ unsigned char InterpreterRunProgram(void)
 						Interpreter_Registers_V[15] = Operand_1;
 						break;
 
+					// SHR Vx
+					case 0x06:
+						Operand_1 = Instruction_High_Byte & 0x0F;
+						Instruction_High_Byte = Interpreter_Registers_V[Operand_1]; // Recycle Instruction_High_Byte variable
+						if (Instruction_High_Byte & 0x01) Interpreter_Registers_V[15] = 1; // Set VF if the Vx least significant bit is set
+						else Interpreter_Registers_V[Operand_1] = 0;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).\r\n", Operand_1, Instruction_High_Byte);
+						Instruction_High_Byte >>= 1;
+						Interpreter_Registers_V[Operand_1] = Instruction_High_Byte;
+						break;
+
+					// SUBN Vx, Vy
+					case 0x07:
+						Operand_1 = Instruction_High_Byte & 0x0F;
+						Operand_2 = (Instruction_Low_Byte >> 4) & 0x0F;
+						Instruction_High_Byte = Interpreter_Registers_V[Operand_1]; // Recycle Instruction_XXX_Byte variables
+						Instruction_Low_Byte = Interpreter_Registers_V[Operand_2];
+						Interpreter_Registers_V[Operand_1] = Instruction_Low_Byte - Instruction_High_Byte;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUBN V%01X (= 0x%02X), V%01X (= 0x%02X).\r\n", Operand_1, Interpreter_Registers_V[Operand_1], Operand_2, Instruction_Low_Byte);
+						// Set VF register if borrow is clear
+						if (Instruction_Low_Byte > Instruction_High_Byte) Operand_1 = 1; // Recycle Operand_1 variable
+						else Operand_1 = 0;
+						Interpreter_Registers_V[15] = Operand_1;
+						break;
+
+					// SHL Vx
+					case 0x0E:
+						Operand_1 = Instruction_High_Byte & 0x0F;
+						Instruction_High_Byte = Interpreter_Registers_V[Operand_1]; // Recycle Instruction_High_Byte variable
+						if (Instruction_High_Byte & 0x80) Interpreter_Registers_V[15] = 1; // Set VF if the Vx most significant bit is set
+						else Interpreter_Registers_V[Operand_1] = 0;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X).\r\n", Operand_1, Instruction_High_Byte);
+						Instruction_High_Byte <<= 1;
+						Interpreter_Registers_V[Operand_1] = Instruction_High_Byte;
+						break;
+
 					default:
 						goto Invalid_Instruction;
 				}
 				break;
 			}
 
+			// SNE Vx, Vy
+			case 0x90:
+				Operand_1 = Instruction_High_Byte & 0x0F;
+				Operand_2 = (Instruction_Low_Byte >> 4) & 0x0F;
+				if (Interpreter_Registers_V[Operand_1] != Interpreter_Registers_V[Operand_2]) Interpreter_Register_PC += 2;
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SNE V%01X (= 0x%02X), V%01X (= 0x%02X).\r\n", Operand_1, Interpreter_Registers_V[Operand_1], Operand_2, Interpreter_Registers_V[Operand_2]);
+				break;
+
 			// LD I, addr
 			case 0xA0:
 				Interpreter_Register_I = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Interpreter_Register_I |= Instruction_Low_Byte;
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD I, 0x%03X.\r\n", Interpreter_Register_I);
+				break;
+
+			// JP V0, nnn
+			case 0xB0:
+				Temporary_Word = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP V0 (= 0x%02X), 0x%03X with PC = 0x%03X.\r\n", Interpreter_Registers_V[0], Temporary_Word, Interpreter_Register_PC);
+				Interpreter_Register_PC = Interpreter_Registers_V[0] + Temporary_Word;
+				Interpreter_Register_PC &= 0x0FFF; // Make sure the address does not cross the 4KB boundary
+				continue; // Bypass PC incrementation
+
+			// RND Vx, byte
+			case 0xC0:
+				// TODO
 				break;
 
 			// DRW Vx, Vy, nibble

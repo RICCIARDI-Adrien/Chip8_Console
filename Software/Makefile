@@ -7,6 +7,7 @@ BINARY_NAME = Chip8_Console_Firmware.hex
 SOURCES = \
 	$(PATH_SOURCES)/Display.c \
 	$(PATH_SOURCES)/FAT.c \
+	$(PATH_SOURCES)/Interpreter.c \
 	$(PATH_SOURCES)/Main.c \
 	$(PATH_SOURCES)/MBR.c \
 	$(PATH_SOURCES)/NCO.c \

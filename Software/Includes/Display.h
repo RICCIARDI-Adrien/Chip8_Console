@@ -19,4 +19,9 @@
 /** Configure the display controller, clear its data RAM and turn the display on. */
 void DisplayInitialize(void);
 
+/** Convert on-the-fly a Chip-8 frame buffer (with 8 horizontal consecutive pixels per byte) to the display 8 vertical pixels per byte format, and send the picture to the display memory.
+ * @param Pointer_Buffer The Chip-8 frame buffer.
+ */
+void DisplayShowBuffer(void *Pointer_Buffer);
+
 #endif

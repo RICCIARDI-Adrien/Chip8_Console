@@ -4,6 +4,7 @@
  */
 #include <Display.h>
 #include <FAT.h>
+#include <Interpreter.h>
 #include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -40,7 +41,7 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
-#define MAIN_IS_LOGGING_ENABLED 0
+#define MAIN_IS_LOGGING_ENABLED 1
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -115,7 +116,7 @@ void main(void)
 	SoundInitialize();
 	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
 	DisplayInitialize();
-	if (SDCardInitialize() != 0)
+	/*if (SDCardInitialize() != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
 		while (1); // TODO
@@ -126,13 +127,49 @@ void main(void)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to mount the SD card file system.\033[0m\r\n");
 		while (1); // TODO
-	}
+	}*/
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 
+	//InterpreterLoadProgramFromFile(NULL);
+	//InterpreterRunProgram();
+
+	{
+		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
+
+		Frame_Buffer[0] = 0x18;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8] = 0x24;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 2] = 0x42;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 3] = 0xF1;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 4] = 0x8F;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 5] = 0x42;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 6] = 0x24;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 7] = 0x18;
+
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 9] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 10] = 0x60;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 11] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 12] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 13] = 0x70;
+
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 59] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 60] = 0x10;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 61] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 62] = 0x80;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 63] = 0xF0;
+
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 59 + 127 / 8] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 60 + 127 / 8] = 0x10;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 61 + 127 / 8] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 62 + 127 / 8] = 0x40;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 63 + 127 / 8] = 0x40;
+
+		DisplayShowBuffer(Frame_Buffer);
+	}
+
 	// TEST
-	if (FATListStart("/") != 0)
+	/*if (FATListStart("/") != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed\r\n");
 	}
@@ -143,7 +180,7 @@ void main(void)
 			File_Information.Is_Directory,
 			File_Information.Size,
 			File_Information.First_Cluster_Number);
-	}
+	}*/
 	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
 
 	while (1)

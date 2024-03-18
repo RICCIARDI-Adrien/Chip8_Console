@@ -79,7 +79,7 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 	};
 	memcpy(&Interpreter_Memory[0x200], a, sizeof(a));*/
 
-	Interpreter_Memory[0x200] = 0x60; Interpreter_Memory[0x201] = 7; // LD V0, 0
+	Interpreter_Memory[0x200] = 0x60; Interpreter_Memory[0x201] = 127; // LD V0, 0
 	Interpreter_Memory[0x202] = 0x61; Interpreter_Memory[0x203] = 0; // LD V1, 0
 	Interpreter_Memory[0x204] = 0xA0; Interpreter_Memory[0x205] = 0; // LD I, 0
 	Interpreter_Memory[0x206] = 0xD0; Interpreter_Memory[0x207] = 0x15; // LD I, 0
@@ -341,7 +341,7 @@ unsigned char InterpreterRunProgram(void)
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.\r\n", Operand_1, Interpreter_Registers_V[Operand_1], Operand_2, Interpreter_Registers_V[Operand_2], Sprite_Size, Interpreter_Register_I);
 
 				// Retrieve the sprite displaying coordinates and make sure they do not cross the display boundaries (screen wraping is not handled for now)
-				Sprite_Column = Interpreter_Registers_V[Operand_1] & 0x3F; // Limit to 64 horizontal values in Chip-8 mode
+				Sprite_Column = Interpreter_Registers_V[Operand_1] /*& 0x3F*/; // Limit to 64 horizontal values in Chip-8 mode
 				Sprite_Row = Interpreter_Registers_V[Operand_2] & 0x1F; // Limit to 32 vertical values in Chip-8 mode
 				//Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[(Operand_1 * INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8) / 8 + Operand_2];
 				Pointer_Sprite = &Interpreter_Memory[Interpreter_Register_I];
@@ -357,14 +357,15 @@ unsigned char InterpreterRunProgram(void)
 					Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[Row * (/*INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8*/ 128 / 8) + (Sprite_Column / 8)];
 					Byte = *Pointer_Sprite;
 
+					//
 					if (Shift_Offset == 0) *Pointer_Display = Byte;
 					else
 					{
 						*Pointer_Display = Byte >> Shift_Offset;
-						*(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
+						if (Sprite_Column < (128/8) - 1) *(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
 					}
 
-					printf("Row = %d, Sprite_Size = %d, Sprite_Column = %d, Pointer_Sprite = %p, *Pointer_Sprite = 0x%02X\r\n", Row, Sprite_Size, Sprite_Column, Pointer_Sprite, *Pointer_Sprite);
+					printf("Row = %d, Sprite_Size = %d, Sprite_Column = %d\r\n", Row, Sprite_Size, Sprite_Column);
 
 					Pointer_Sprite++;
 					Sprite_Size--;

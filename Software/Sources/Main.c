@@ -132,41 +132,41 @@ void main(void)
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 
-	InterpreterLoadProgramFromFile(NULL);
-	InterpreterRunProgram();
+	/*InterpreterLoadProgramFromFile(NULL);
+	InterpreterRunProgram();*/
 
-	/*{
+	{
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
 		Frame_Buffer[0] = 0x18;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8] = 0x24;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 2] = 0x42;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 3] = 0xF1;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 4] = 0x8F;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 5] = 0x42;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 6] = 0x24;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 7] = 0x18;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8] = 0x24;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 2] = 0x42;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 3] = 0xF1;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 4] = 0x8F;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 5] = 0x42;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 6] = 0x24;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 7] = 0x18;
 
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 9] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 10] = 0x60;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 11] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 12] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 13] = 0x70;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 9] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 10] = 0x60;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 11] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 12] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 13] = 0x70;
 
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 59] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 60] = 0x10;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 61] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 62] = 0x80;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 63] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 27] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 28] = 0x10;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 29] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 30] = 0x80;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 31] = 0xF0;
 
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 59 + 127 / 8] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 60 + 127 / 8] = 0x10;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 61 + 127 / 8] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 62 + 127 / 8] = 0x40;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 63 + 127 / 8] = 0x40;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 27 + 63 / 8] = 0xF0;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 28 + 63 / 8] = 0x10;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 29 + 63 / 8] = 0x20;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 30 + 63 / 8] = 0x40;
+		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 31 + 63 / 8] = 0x40;
 
-		DisplayShowBuffer(Frame_Buffer);
-	}*/
+		DisplayDrawHalfSizeBuffer(Frame_Buffer);
+	}
 
 	// TEST
 	SPISetTargetDevice(SPI_DEVICE_ID_SD_CARD);

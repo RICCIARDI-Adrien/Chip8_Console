@@ -371,7 +371,7 @@ unsigned char InterpreterRunProgram(void)
 					Sprite_Size--;
 				}
 
-				DisplayShowBuffer(Interpreter_Frame_Buffer_Chip_8);
+				//DisplayShowBuffer(Interpreter_Frame_Buffer_Chip_8);
 				break;
 			}
 

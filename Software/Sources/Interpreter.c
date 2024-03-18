@@ -2,6 +2,7 @@
  * See Interpreter.h for description.
  * @author Adrien RICCIARDI
  */
+#include <Display.h>
 #include <Interpreter.h>
 #include <Serial_Port.h>
 
@@ -20,19 +21,11 @@
 /** The amount of levels in the virtual stack. */
 #define INTERPRETER_STACK_SIZE 16
 
-/** How many instructions can be stored in the interpreter memory. */
+/** The interpreter memory size in bytes. */
 #define INTERPRETER_MEMORY_SIZE 4096
-#define INTERPRETER_INSTRUCTIONS_COUNT (INTERPRETER_MEMORY_SIZE / 2) // Each instruction is 2-byte wide and the memory is 
 
-//-------------------------------------------------------------------------------------------------
-// Private types
-//-------------------------------------------------------------------------------------------------
-/** Allow to easily access to the interpreter memory. */
-typedef union
-{
-	unsigned short Instructions[INTERPRETER_INSTRUCTIONS_COUNT];
-	unsigned char Bytes[INTERPRETER_MEMORY_SIZE];
-} TInterpreterMemory;
+#define INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 64
+#define INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8 32
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -50,7 +43,12 @@ static unsigned char Interpreter_Register_SP;
 static unsigned short Interpreter_Stack[INTERPRETER_STACK_SIZE];
 
 /** The whole interpreter memory containing the program instructions and data. */
-static TInterpreterMemory Interpreter_Memory;
+static unsigned char Interpreter_Memory[INTERPRETER_MEMORY_SIZE] =
+{
+	0xF0, 0x10, 0x20, 0x40, 0x40
+};
+
+static unsigned char Interpreter_Frame_Buffer_Chip_8[128*64/8];//INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 * INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8];
 
 //-------------------------------------------------------------------------------------------------
 // Public functions
@@ -58,7 +56,7 @@ static TInterpreterMemory Interpreter_Memory;
 unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_Information)
 {
 	// TODO
-	static unsigned char a[] =
+	/*static const unsigned char a[] =
 	{
 		0x6e, 0x05, 0x65, 0x00, 0x6b, 0x06, 0x6a, 0x00, 0xa3, 0x0c, 0xda, 0xb1, 0x7a, 0x04, 0x3a, 0x40,
 		0x12, 0x08, 0x7b, 0x01, 0x3b, 0x12, 0x12, 0x06, 0x6c, 0x20, 0x6d, 0x1f, 0xa3, 0x10, 0xdc, 0xd1,
@@ -79,25 +77,13 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 		0x64, 0x00, 0xd3, 0x45, 0x73, 0x05, 0xf2, 0x29, 0xd3, 0x45, 0x00, 0xee, 0xf0, 0x00, 0x80, 0x00,
 		0xfc, 0x00, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0x05, 0x00, 0xe0, 0x12, 0x04
 	};
-	memcpy(&Interpreter_Memory.Bytes[0x200], a, sizeof(a));
-	
-	/*Interpreter_Memory.Bytes[0x200] = 0x6E; Interpreter_Memory.Bytes[0x201] = 0x05;
-	Interpreter_Memory.Bytes[0x202] = 0x65; Interpreter_Memory.Bytes[0x203] = 0x00;
-	Interpreter_Memory.Bytes[0x204] = 0x6B; Interpreter_Memory.Bytes[0x205] = 0x06;
-	Interpreter_Memory.Bytes[0x206] = 0x6A; Interpreter_Memory.Bytes[0x207] = 0x00;
-	Interpreter_Memory.Bytes[0x208] = 0xA3; Interpreter_Memory.Bytes[0x209] = 0x0C;
-	Interpreter_Memory.Bytes[0x20A] = 0xDA; Interpreter_Memory.Bytes[0x20B] = 0xB1;
-	Interpreter_Memory.Bytes[0x20C] = 0x7A; Interpreter_Memory.Bytes[0x20D] = 0x04;
-	Interpreter_Memory.Bytes[0x20E] = 0x3A; Interpreter_Memory.Bytes[0x20F] = 0x40;
-	Interpreter_Memory.Bytes[0x210] = 0x12; Interpreter_Memory.Bytes[0x211] = 0x08;
-	Interpreter_Memory.Bytes[0x212] = 0x7B; Interpreter_Memory.Bytes[0x213] = 0x01;
-	Interpreter_Memory.Bytes[0x214] = 0x3B; Interpreter_Memory.Bytes[0x215] = 0x12;
-	Interpreter_Memory.Bytes[0x216] = 0x12; Interpreter_Memory.Bytes[0x217] = 0x06;
-	Interpreter_Memory.Bytes[0x218] = 0x6C; Interpreter_Memory.Bytes[0x219] = 0x20;
-	Interpreter_Memory.Bytes[0x21A] = 0x6D; Interpreter_Memory.Bytes[0x21B] = 0x1F;
-	Interpreter_Memory.Bytes[0x21C] = 0xA3; Interpreter_Memory.Bytes[0x21D] = 0x10;
-	Interpreter_Memory.Bytes[0x21E] = 0xDC; Interpreter_Memory.Bytes[0x21F] = 0xD1;
-	Interpreter_Memory.Bytes[0x220] = 0x22; Interpreter_Memory.Bytes[0x221] = 0xF6;*/
+	memcpy(&Interpreter_Memory[0x200], a, sizeof(a));*/
+
+	Interpreter_Memory[0x200] = 0x60; Interpreter_Memory[0x201] = 7; // LD V0, 0
+	Interpreter_Memory[0x202] = 0x61; Interpreter_Memory[0x203] = 0; // LD V1, 0
+	Interpreter_Memory[0x204] = 0xA0; Interpreter_Memory[0x205] = 0; // LD I, 0
+	Interpreter_Memory[0x206] = 0xD0; Interpreter_Memory[0x207] = 0x15; // LD I, 0
+	Interpreter_Memory[0x208] = 0x12; Interpreter_Memory[0x209] = 0x08; // JP 0x208
 
 	// Configure the registers for the program execution
 	Interpreter_Register_PC = 0x200; // The default entry point
@@ -117,9 +103,9 @@ unsigned char InterpreterRunProgram(void)
 		Interpreter_Register_PC &= 0x0FFF;
 
 		// Fetch the next instruction
-		Instruction_High_Byte = Interpreter_Memory.Bytes[Interpreter_Register_PC];
-		Instruction_Low_Byte = Interpreter_Memory.Bytes[Interpreter_Register_PC + 1];
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Fetching instruction at address 0x%03X : 0x%02X 0x%02X.\r\n", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
+		Instruction_High_Byte = Interpreter_Memory[Interpreter_Register_PC];
+		Instruction_Low_Byte = Interpreter_Memory[Interpreter_Register_PC + 1];
+		//SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Fetching instruction at address 0x%03X : 0x%02X 0x%02X.\r\n", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
 
 		// Decode and execute the instruction
 		switch (Instruction_High_Byte & 0xF0)
@@ -155,7 +141,7 @@ unsigned char InterpreterRunProgram(void)
 			case 0x10:
 				Interpreter_Register_PC = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Interpreter_Register_PC |= Instruction_Low_Byte;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.\r\n", Interpreter_Register_PC);
+				//SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.\r\n", Interpreter_Register_PC);
 				continue; // Bypass PC incrementation
 
 			// CALL addr
@@ -344,8 +330,49 @@ unsigned char InterpreterRunProgram(void)
 
 			// DRW Vx, Vy, nibble
 			case 0xD0:
-				// TODO
+			{
+				unsigned char *Pointer_Sprite, *Pointer_Display, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte;
+				//unsigned short
+
+				// Extract the instruction parameters
+				Operand_1 = Instruction_High_Byte & 0x0F;
+				Operand_2 = (Instruction_Low_Byte >> 4) & 0x0F;
+				Sprite_Size = Instruction_Low_Byte & 0x0F;
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.\r\n", Operand_1, Interpreter_Registers_V[Operand_1], Operand_2, Interpreter_Registers_V[Operand_2], Sprite_Size, Interpreter_Register_I);
+
+				// Retrieve the sprite displaying coordinates and make sure they do not cross the display boundaries (screen wraping is not handled for now)
+				Sprite_Column = Interpreter_Registers_V[Operand_1] & 0x3F; // Limit to 64 horizontal values in Chip-8 mode
+				Sprite_Row = Interpreter_Registers_V[Operand_2] & 0x1F; // Limit to 32 vertical values in Chip-8 mode
+				//Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[(Operand_1 * INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8) / 8 + Operand_2];
+				Pointer_Sprite = &Interpreter_Memory[Interpreter_Register_I];
+
+				// Determine the amount of bits the sprite must be shifted (in case it would not fit entirely in a frame buffer byte)
+				Shift_Offset = Sprite_Column & 0x07;
+				printf("Shift_Offset = %d\r\n", Shift_Offset);
+				for (Row = Sprite_Row; Row < INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8; Row++)
+				{
+					// Stop when the requested amount of sprite bytes has been displayed
+					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
+
+					Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[Row * (/*INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8*/ 128 / 8) + (Sprite_Column / 8)];
+					Byte = *Pointer_Sprite;
+
+					if (Shift_Offset == 0) *Pointer_Display = Byte;
+					else
+					{
+						*Pointer_Display = Byte >> Shift_Offset;
+						*(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
+					}
+
+					printf("Row = %d, Sprite_Size = %d, Sprite_Column = %d, Pointer_Sprite = %p, *Pointer_Sprite = 0x%02X\r\n", Row, Sprite_Size, Sprite_Column, Pointer_Sprite, *Pointer_Sprite);
+
+					Pointer_Sprite++;
+					Sprite_Size--;
+				}
+
+				DisplayShowBuffer(Interpreter_Frame_Buffer_Chip_8);
 				break;
+			}
 
 			case 0xF0:
 			{

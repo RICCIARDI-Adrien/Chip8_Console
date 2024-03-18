@@ -132,10 +132,10 @@ void main(void)
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 
-	//InterpreterLoadProgramFromFile(NULL);
-	//InterpreterRunProgram();
+	InterpreterLoadProgramFromFile(NULL);
+	InterpreterRunProgram();
 
-	{
+	/*{
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
 		Frame_Buffer[0] = 0x18;
@@ -166,10 +166,11 @@ void main(void)
 		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 8 * 63 + 127 / 8] = 0x40;
 
 		DisplayShowBuffer(Frame_Buffer);
-	}
+	}*/
 
 	// TEST
-	/*if (FATListStart("/") != 0)
+	SPISetTargetDevice(SPI_DEVICE_ID_SD_CARD);
+	if (FATListStart("/") != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed\r\n");
 	}
@@ -180,7 +181,7 @@ void main(void)
 			File_Information.Is_Directory,
 			File_Information.Size,
 			File_Information.First_Cluster_Number);
-	}*/
+	}
 	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
 
 	while (1)

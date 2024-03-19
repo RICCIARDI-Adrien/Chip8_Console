@@ -10,6 +10,9 @@
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
+/** Display the console splash screen. */
+void InterpreterInitialize(void);
+
 /** TODO */
 unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_Information);
 

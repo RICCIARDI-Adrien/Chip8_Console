@@ -115,7 +115,8 @@ void main(void)
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
-	DisplayInitialize();
+	DisplayInitialize(); // The display must be initialized before the interpreter
+	InterpreterInitialize(); // Display the splash screen
 	if (SDCardInitialize() != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");

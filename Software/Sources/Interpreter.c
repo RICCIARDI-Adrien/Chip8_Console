@@ -509,6 +509,20 @@ unsigned char InterpreterRunProgram(void)
 						// TODO
 						break;
 
+					// LD F, Vx
+					case 0x29:
+					{
+						unsigned char Digit;
+
+						// Retrieve the digit value
+						Operand_1 = Instruction_High_Byte & 0x0F;
+						Digit = Interpreter_Registers_V[Operand_1] & 0x0F; // The allowed digit values are 0 to 0xF
+
+						// Each digit is stored on 5 bytes, and the first digit starts at the memory offset 0
+						Interpreter_Register_I = Digit * 5;
+						break;
+					}
+
 					default:
 						goto Invalid_Instruction;
 				}

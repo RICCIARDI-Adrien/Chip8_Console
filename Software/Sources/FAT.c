@@ -407,3 +407,33 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 
 	return 0;
 }
+
+unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size)
+{
+	unsigned long Cluster_Number;
+	unsigned char *Pointer_Destination_Buffer_Bytes, Result;
+
+	Cluster_Number = Pointer_File_Information->First_Cluster_Number;
+	Pointer_Destination_Buffer_Bytes = Pointer_Destination_Buffer;
+
+	// Read bytes until the destination buffer is filled
+	while (Destination_Buffer_Size > 0)
+	{
+		// Read the next cluster content
+		FATConfigureClusterReading(Cluster_Number);
+		do
+		{
+			Result = FATReadClusterAsSectors(Pointer_Destination_Buffer_Bytes);
+			if (Result == 2) return 1; // Did something bad happened ?
+
+			// Prepare for next cluster sector read
+			Pointer_Destination_Buffer_Bytes += SD_CARD_BLOCK_SIZE;
+			Destination_Buffer_Size -= SD_CARD_BLOCK_SIZE;
+		} while ((Result == 0) && (Destination_Buffer_Size > 0));
+
+		// TODO call function to find the next cluster
+		break; // TEST
+	}
+
+	return 0;
+}

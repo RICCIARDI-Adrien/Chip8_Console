@@ -100,7 +100,7 @@ unsigned char MainMountSDCard(void)
 void main(void)
 {
 	unsigned char a = '0';
-	TFATFileInformation File_Information;
+	TFATFileInformation File_Information, File_Information_2;
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -131,9 +131,6 @@ void main(void)
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
-
-	/*InterpreterLoadProgramFromFile(NULL);
-	InterpreterRunProgram();*/
 
 	// TEST
 	{
@@ -181,7 +178,18 @@ void main(void)
 			File_Information.Is_Directory,
 			File_Information.Size,
 			File_Information.First_Cluster_Number);
+
+		if (strcmp((char *) File_Information.String_Short_Name, "PROTOC~1.TXT") == 0)
+		{
+			printf("Found test file to load.\r\n");
+			memcpy(&File_Information_2, &File_Information, sizeof(File_Information));
+		}
 	}
+
+	// TEST
+	InterpreterLoadProgramFromFile(&File_Information_2);
+	InterpreterRunProgram();
+
 	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
 
 	while (1)

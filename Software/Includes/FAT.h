@@ -50,4 +50,14 @@ unsigned char FATListStart(char *Pointer_String_Absolute_Path);
  */
 unsigned char FATListNext(TFATFileInformation *Pointer_File_Information);
 
+/** Load a file from the file system and store it in memory.
+ * @param Pointer_File_Information The file to load.
+ * @param Pointer_Destination_Buffer On output, will contain the file content.
+ * @param Bytes_Count How may bytes of the file to store in memory. TODO
+ * @param Destination_Buffer_Size The size in bytes of the buffer in which to store the read data. It must be a multiple of the size of a cluster (512 bytes).
+ * @return 0 on success,
+ * @return 1 if an error occurred.
+ */
+unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size);
+
 #endif

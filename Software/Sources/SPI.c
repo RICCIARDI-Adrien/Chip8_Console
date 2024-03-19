@@ -23,8 +23,10 @@ void SPIInitialize(void)
 	// Assign the pins to the SPI functions
 	RC3PPS = 0x1E; // Select the RC3 pin as SPI SCLK
 	SPI1SDIPPS = 0x14; // Select the RC4 pin as SPI SDI (MISO here)
-	RC5PPS = 0x1F; // Select the RC5 pin as SPI SDO (MOSI here)*/
-	SPISetTargetDevice(SPI_DEVICE_ID_NONE); // Configure the /SS pins, RC0 and RC1
+	RC5PPS = 0x1F; // Select the RC5 pin as SPI SDO (MOSI here)
+	// Make sure no device is selected
+	SPI_DESELECT_DISPLAY();
+	SPI_DESELECT_SD_CARD();
 	// Configure the pins as digital
 	ANSELC &= 0xC4;
 	// Configure the pins direction
@@ -33,31 +35,6 @@ void SPIInitialize(void)
 
 	// Enable the SPI module
 	SPI1CON0bits.EN = 1;
-}
-
-void SPISetTargetDevice(TSPIDeviceID Device_ID)
-{
-	if (Device_ID == SPI_DEVICE_ID_DISPLAY)
-	{
-		// Deselect the SD card
-		LATCbits.LATC0 = 1;
-		RC0PPS = 0; // Connect the latch function to the pin
-
-		// Connect the SPI /SS function to the pin
-		SPI1SSPPS = 0x11;
-		RC1PPS = 0x20;
-	}
-	// The SD card /SS pin is manually controlled
-	else
-	{
-		// Deselect the SD card and the display
-		LATCbits.LATC0 = 1;
-		LATCbits.LATC1 = 1;
-
-		// Disconnect the /SS function from all pins
-		RC0PPS = 0;
-		RC1PPS = 0;
-	}
 }
 
 unsigned char SPITransferByte(unsigned char Byte)

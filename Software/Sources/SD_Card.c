@@ -29,11 +29,6 @@
 /** The application specific command 41 bit pattern. */
 #define SD_CARD_ACMD41_SD_SEND_OP_COND 41
 
-/** Select the SD card (/SS pin is logic low). */
-#define SD_CARD_SPI_SLAVE_SELECT_ENABLE() LATCbits.LATC0 = 0
-/** Unselect the SD card (/SS pin is logic low). */
-#define SD_CARD_SPI_SLAVE_SELECT_DISABLE() LATCbits.LATC0 = 1
-
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -97,17 +92,17 @@ unsigned char SDCardInitialize(void)
 	unsigned long Command_Argument;
 
 	// Switch the SD card to SPI mode
-	SD_CARD_SPI_SLAVE_SELECT_DISABLE(); // Do not select the SD card (/SS must be kept high)
+	SPI_DESELECT_SD_CARD(); // Do not select the SD card (/SS must be kept high)
 	__delay_ms(1); // Give some time to the SD card to run some internal firmware
 	for (i = 0; i < 10; i++) SPITransferByte(0xFF); // The MOSI line must also be high while at least 74 clock cycles must be sent by the master
 
 	// Send the CMD0 (GO_IDLE_STATE) command to execute a software reset of the card
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD0 to the SD card...\r\n");
-	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+	SPI_SELECT_SD_CARD();
 	Command_Argument = 0;
 	SDCardSendCommand(SD_CARD_CMD0_GO_IDLE_STATE, Command_Argument, 0x94);
 	Result = SDCardWaitForR1Response();
-	SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+	SPI_DESELECT_SD_CARD();
 	if (Result != 0x01)
 	{
 		if (Result == 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout during execution of CMD0.\r\n");
@@ -119,7 +114,7 @@ unsigned char SDCardInitialize(void)
 
 	// Send the CMD8 (SEND_IF_COND) to determine whether the card is first generation or V2.00
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD8 to the SD card...\r\n");
-	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+	SPI_SELECT_SD_CARD();
 	Command_Argument = 0x01UL << 8; // Tell that the supplied voltage (VHS) is in range 2.7V-3.6V
 	Command_Argument |= 0xAAUL; // Use the recommended check pattern
 	SDCardSendCommand(SD_CARD_CMD8_SEND_IF_COND, Command_Argument, 0x86);
@@ -136,7 +131,7 @@ unsigned char SDCardInitialize(void)
 	}
 	else
 	{
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		if (Result == 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout during execution of CMD8.\r\n");
 		else SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : the card does not support version 1.x nor version 2.00 of the specifications (R1 response : 0x%02X).\r\n", Result);
 		return 1;
@@ -145,7 +140,7 @@ unsigned char SDCardInitialize(void)
 	if (SD_Card_Is_Version_2_Protocol)
 	{
 		for (i = 0; i < 4; i++) Buffer[i] = SPITransferByte(0xFF);
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		// The command execution is successful if the voltage range is confirmed by the card and the check pattern is returned
 		if (!(Buffer[2] & 0x01))
 		{
@@ -167,11 +162,11 @@ unsigned char SDCardInitialize(void)
 	{
 		// Tell the card that an application specific command will be sent
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD55 to the SD card...\r\n");
-		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		SPI_SELECT_SD_CARD();
 		Command_Argument = 0;
 		SDCardSendCommand(SD_CARD_CMD55_APP_CMD, Command_Argument, 0);
 		Result = SDCardWaitForR1Response();
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		if (Result != 0x01)
 		{
 			if (Result == 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout during execution of CMD8.\r\n");
@@ -183,11 +178,11 @@ unsigned char SDCardInitialize(void)
 
 		// Run the initialization process
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending ACMD41 to the SD card...\r\n");
-		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		SPI_SELECT_SD_CARD();
 		Command_Argument = 0xFFFFFFFF; // Set all reserved bits to 1 as asked by specification, set the bit 30 (HCS) to tell that high capacity cards are supported
 		SDCardSendCommand(SD_CARD_ACMD41_SD_SEND_OP_COND, Command_Argument, 0);
 		Result = SDCardWaitForR1Response();
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		if (Result & 0xFE) // Check for any error bit but the "idle" one
 		{
 			SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : R1 response : 0x%02X.\r\n", Result);
@@ -209,20 +204,20 @@ unsigned char SDCardInitialize(void)
 	if (SD_Card_Is_Version_2_Protocol)
 	{
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD58 to the SD card...\r\n");
-		SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+		SPI_SELECT_SD_CARD();
 		Command_Argument = 0;
 		SDCardSendCommand(SD_CARD_CMD58_READ_OCR, Command_Argument, 0);
 		Result = SDCardWaitForR1Response();
 		if (Result & 0xFE) // Check for any error (not taking into account the "idle" bit)
 		{
-			SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+			SPI_DESELECT_SD_CARD();
 			if (Result == 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout during execution of CMD58.\r\n");
 			else SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : R1 response : 0x%02X.\r\n", Result);
 			return 1;
 		}
 		// The OCR register is provided on additional 4 bytes
 		for (i = 0; i < 4; i++) Buffer[i] = SPITransferByte(0xFF);
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		// Display some card features for debugging purposes
 		// Card power up status bit (bit 31)
 		if (Buffer[0] & 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "OCR card power up status bit is set, card is ready.\r\n");
@@ -249,12 +244,12 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 
 	// Send the single block read command
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD17 to the SD card (block address : %lu)...\r\n", Block_Address);
-	SD_CARD_SPI_SLAVE_SELECT_ENABLE();
+	SPI_SELECT_SD_CARD();
 	SDCardSendCommand(SD_CARD_CMD17_READ_SINGLE_BLOCK, Block_Address, 0);
 	Result = SDCardWaitForR1Response();
 	if (Result & 0xFE) // Check any error without taking the "idle" bit into account
 	{
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		if (Result == 0x80) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout during execution of CMD17.\r\n");
 		else SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : R1 response : 0x%02X.\r\n", Result);
 		return 1;
@@ -268,7 +263,7 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 	}
 	if (i == START_TOKEN_TRANSFER_RETRIES_COUNT)
 	{
-		SD_CARD_SPI_SLAVE_SELECT_DISABLE();
+		SPI_DESELECT_SD_CARD();
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Error : timeout while waiting for the start token.\r\n");
 		return 1;
 	}
@@ -283,6 +278,8 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 	// Discard the 16-bit CRC
 	SPITransferByte(0xFF);
 	SPITransferByte(0xFF);
+
+	SPI_DESELECT_SD_CARD();
 
 	return 0;
 }

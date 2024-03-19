@@ -115,9 +115,7 @@ void main(void)
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
-	SPISetTargetDevice(SPI_DEVICE_ID_DISPLAY);
 	DisplayInitialize();
-	SPISetTargetDevice(SPI_DEVICE_ID_SD_CARD);
 	if (SDCardInitialize() != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
@@ -141,7 +139,6 @@ void main(void)
 	{
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
-		SPISetTargetDevice(SPI_DEVICE_ID_DISPLAY);
 		Frame_Buffer[0] = 0x18;
 		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8] = 0x24;
 		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 2] = 0x42;
@@ -173,7 +170,6 @@ void main(void)
 	}
 
 	// TEST
-	SPISetTargetDevice(SPI_DEVICE_ID_SD_CARD);
 	if (FATListStart("/") != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed\r\n");

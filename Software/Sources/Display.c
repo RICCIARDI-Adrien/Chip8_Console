@@ -26,6 +26,8 @@ void DisplayInitialize(void)
 {
 	unsigned short i;
 
+	SPI_SELECT_DISPLAY();
+
 	// Configure the reset and A0 pins
 	// Configure the pins as digital
 	ANSELB &= 0xF9;
@@ -55,11 +57,15 @@ void DisplayInitialize(void)
 
 	// Leave the display in data mode by default
 	DISPLAY_PIN_DC = DISPLAY_DC_MODE_DATA;
+
+	SPI_DESELECT_DISPLAY();
 }
 
 void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 {
 	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[4], Pixel_Mask;
+
+	SPI_SELECT_DISPLAY();
 
 	// Convert a chunk of 32 pixels (8x4 pixels) at a time, outputing 64 pixels (8x8 pixels)
 	for (Row = 0; Row < DISPLAY_ROWS_COUNT / 2; Row += 4) // Load a chunk of 4 vertical bytes, so increment the row per 4
@@ -91,11 +97,15 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 			}
 		}
 	}
+
+	SPI_DESELECT_DISPLAY();
 }
 
 void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 {
 	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[8], Pixel_Mask;
+
+	SPI_SELECT_DISPLAY();
 
 	// Convert and display a chunk of 64 pixels (8x8 pixels) at a time
 	for (Row = 0; Row < DISPLAY_ROWS_COUNT; Row += 8) // Load a chunk of 8 vertical bytes, so increment the row per 8
@@ -125,4 +135,6 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 			}
 		}
 	}
+
+	SPI_DESELECT_DISPLAY();
 }

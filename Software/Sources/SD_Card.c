@@ -97,7 +97,6 @@ unsigned char SDCardInitialize(void)
 	unsigned long Command_Argument;
 
 	// Switch the SD card to SPI mode
-	SPISetTargetDevice(SPI_DEVICE_ID_SD_CARD);
 	SD_CARD_SPI_SLAVE_SELECT_DISABLE(); // Do not select the SD card (/SS must be kept high)
 	__delay_ms(1); // Give some time to the SD card to run some internal firmware
 	for (i = 0; i < 10; i++) SPITransferByte(0xFF); // The MOSI line must also be high while at least 74 clock cycles must be sent by the master

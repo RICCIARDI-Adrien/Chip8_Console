@@ -26,8 +26,6 @@ void DisplayInitialize(void)
 {
 	unsigned short i;
 
-	SPISetTargetDevice(SPI_DEVICE_ID_DISPLAY);
-
 	// Configure the reset and A0 pins
 	// Configure the pins as digital
 	ANSELB &= 0xF9;

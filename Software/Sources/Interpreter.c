@@ -196,27 +196,19 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 	Interpreter_Memory[0x206] = 0xD0; Interpreter_Memory[0x207] = 0x15; // LD I, 0
 	Interpreter_Memory[0x208] = 0x12; Interpreter_Memory[0x209] = 0x08; // JP 0x208*/
 
+	// Load the file
 	if (FATReadFile(Pointer_File_Information, &Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
 	{
 		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".\r\n", Pointer_File_Information->String_Short_Name);
 		return 1;
 	}
 
-	// TEST
-	{
-		int i;
-
-		for (i = 0; i < INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT; i++)
-		{
-			SerialPortWriteByte(Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT + i]);
-		}
-		SerialPortWriteByte('\r');
-		SerialPortWriteByte('\n');
-	}
-
 	// Configure the registers for the program execution
 	Interpreter_Register_PC = INTERPRETER_PROGRAM_ENTRY_POINT; // The default entry point
 	Interpreter_Register_SP = 0; // Clear the stack
+
+	// Clear the frame buffer
+	memset(Interpreter_Frame_Buffer, 0, sizeof(Interpreter_Frame_Buffer));
 
 	return 0;
 }
@@ -258,7 +250,8 @@ unsigned char InterpreterRunProgram(void)
 				{
 					// CLS
 					case 0xE0:
-						// TODO
+						memset(Interpreter_Frame_Buffer, 0, sizeof(Interpreter_Frame_Buffer));
+						DisplayDrawFullSizeBuffer(Interpreter_Frame_Buffer);
 						break;
 
 					// RET

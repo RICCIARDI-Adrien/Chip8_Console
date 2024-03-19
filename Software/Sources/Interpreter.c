@@ -27,6 +27,9 @@
 #define INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 64
 #define INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8 32
 
+#define INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 128
+#define INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 64
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -48,7 +51,8 @@ static unsigned char Interpreter_Memory[INTERPRETER_MEMORY_SIZE] =
 	0xF0, 0x10, 0x20, 0x40, 0x40
 };
 
-static unsigned char Interpreter_Frame_Buffer_Chip_8[128*64/8];//INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 * INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8];
+/** The buffer used to render the interpreter frames. It can hold an entire SuperChip-8 buffer. */
+static unsigned char Interpreter_Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
 //-------------------------------------------------------------------------------------------------
 // Public functions
@@ -79,8 +83,8 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 	};
 	memcpy(&Interpreter_Memory[0x200], a, sizeof(a));*/
 
-	Interpreter_Memory[0x200] = 0x60; Interpreter_Memory[0x201] = 127; // LD V0, 0
-	Interpreter_Memory[0x202] = 0x61; Interpreter_Memory[0x203] = 0; // LD V1, 0
+	Interpreter_Memory[0x200] = 0x60; Interpreter_Memory[0x201] = 60; // LD V0, 0
+	Interpreter_Memory[0x202] = 0x61; Interpreter_Memory[0x203] = 5; // LD V1, 0
 	Interpreter_Memory[0x204] = 0xA0; Interpreter_Memory[0x205] = 0; // LD I, 0
 	Interpreter_Memory[0x206] = 0xD0; Interpreter_Memory[0x207] = 0x15; // LD I, 0
 	Interpreter_Memory[0x208] = 0x12; Interpreter_Memory[0x209] = 0x08; // JP 0x208
@@ -94,8 +98,21 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 
 unsigned char InterpreterRunProgram(void)
 {
-	unsigned char Instruction_High_Byte, Instruction_Low_Byte, Operand_1, Operand_2;
+	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Operand_1, Operand_2, Is_Super_Chip_8_Mode = 0; // TODO Initialize Is_Super_Chip_8_Mode according to the program to run
 	unsigned short Temporary_Word;
+
+	// Configure the display settings according to the selected emulation mode
+	if (Is_Super_Chip_8_Mode)
+	{
+		Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8;
+		Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
+	}
+	else
+	{
+		Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8;
+		Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
+	}
+	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Emulation mode : %s, display columns count = %d, display rows count = %d.\r\n", Is_Super_Chip_8_Mode ? "SuperChip-8" : "Chip-8", Display_Columns_Count, Display_Rows_Count);
 
 	while (1)
 	{
@@ -332,7 +349,6 @@ unsigned char InterpreterRunProgram(void)
 			case 0xD0:
 			{
 				unsigned char *Pointer_Sprite, *Pointer_Display, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte;
-				//unsigned short
 
 				// Extract the instruction parameters
 				Operand_1 = Instruction_High_Byte & 0x0F;
@@ -341,20 +357,29 @@ unsigned char InterpreterRunProgram(void)
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.\r\n", Operand_1, Interpreter_Registers_V[Operand_1], Operand_2, Interpreter_Registers_V[Operand_2], Sprite_Size, Interpreter_Register_I);
 
 				// Retrieve the sprite displaying coordinates and make sure they do not cross the display boundaries (screen wraping is not handled for now)
-				Sprite_Column = Interpreter_Registers_V[Operand_1] /*& 0x3F*/; // Limit to 64 horizontal values in Chip-8 mode
-				Sprite_Row = Interpreter_Registers_V[Operand_2] & 0x1F; // Limit to 32 vertical values in Chip-8 mode
-				//Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[(Operand_1 * INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8) / 8 + Operand_2];
+				Sprite_Column = Interpreter_Registers_V[Operand_1];
+				Sprite_Row = Interpreter_Registers_V[Operand_2];
+				if (Is_Super_Chip_8_Mode)
+				{
+					Sprite_Column &= 0x7F; // Limit to 128 horizontal values in SuperChip-8 mode
+					Sprite_Row &= 0x3F; // Limit to 64 vertical values in SuperChip-8 mode
+				}
+				else
+				{
+					Sprite_Column &= 0x3F; // Limit to 64 horizontal values in Chip-8 mode
+					Sprite_Row &= 0x1F; // Limit to 32 vertical values in Chip-8 mode
+				}
 				Pointer_Sprite = &Interpreter_Memory[Interpreter_Register_I];
 
 				// Determine the amount of bits the sprite must be shifted (in case it would not fit entirely in a frame buffer byte)
 				Shift_Offset = Sprite_Column & 0x07;
 				printf("Shift_Offset = %d\r\n", Shift_Offset);
-				for (Row = Sprite_Row; Row < INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8; Row++)
+				for (Row = Sprite_Row; Row < Display_Rows_Count; Row++)
 				{
 					// Stop when the requested amount of sprite bytes has been displayed
 					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
 
-					Pointer_Display = &Interpreter_Frame_Buffer_Chip_8[Row * (/*INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8*/ 128 / 8) + (Sprite_Column / 8)];
+					Pointer_Display = &Interpreter_Frame_Buffer[Row * (Display_Columns_Count / 8) + (Sprite_Column / 8)];
 					Byte = *Pointer_Sprite;
 
 					//
@@ -362,7 +387,7 @@ unsigned char InterpreterRunProgram(void)
 					else
 					{
 						*Pointer_Display = Byte >> Shift_Offset;
-						if (Sprite_Column < (128/8) - 1) *(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
+						if (Sprite_Column < (Display_Columns_Count / 8) - 1) *(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
 					}
 
 					printf("Row = %d, Sprite_Size = %d, Sprite_Column = %d\r\n", Row, Sprite_Size, Sprite_Column);
@@ -371,7 +396,8 @@ unsigned char InterpreterRunProgram(void)
 					Sprite_Size--;
 				}
 
-				//DisplayShowBuffer(Interpreter_Frame_Buffer_Chip_8);
+				if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Interpreter_Frame_Buffer);
+				else DisplayDrawHalfSizeBuffer(Interpreter_Frame_Buffer);
 				break;
 			}
 

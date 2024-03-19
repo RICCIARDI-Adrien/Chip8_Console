@@ -262,8 +262,8 @@ unsigned char InterpreterRunProgram(void)
 							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack underflow. Stopping interpreter.\r\n");
 							while (1);
 						}
+						Interpreter_Register_SP--; // The CALL instruction increments the stack pointer after pushing, so the RET instruction needs to decrement the stack pointer before popping
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
-						Interpreter_Register_SP--;
 						continue; // Bypass PC incrementation
 
 					default:
@@ -281,15 +281,27 @@ unsigned char InterpreterRunProgram(void)
 
 			// CALL addr
 			case 0x20:
+			{
+				unsigned short Address;
+
+				// Extract the operands
+				Address = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
+				Address |= Instruction_Low_Byte; // The address will by default be on 12 bits due to the instruction encoding, so no need to check for an overflow
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "CALL 0x%03X (SP = %d).\r\n", Address, Interpreter_Register_SP);
+
 				// Make sure there is still room on the stack
 				if (Interpreter_Register_SP >= INTERPRETER_STACK_SIZE)
 				{
 					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack overflow. Stopping interpreter.\r\n");
 					while (1);
 				}
-				Interpreter_Stack[Interpreter_Register_SP] = Interpreter_Register_PC;
+				Interpreter_Stack[Interpreter_Register_SP] = Interpreter_Register_PC + 2; // Store the address of the instruction following this one
 				Interpreter_Register_SP++;
-				break;
+
+				// Jump to the function entry point
+				Interpreter_Register_PC = Address;
+				continue; // Bypass PC incrementation
+			}
 
 			// SE Vx, byte
 			case 0x30:

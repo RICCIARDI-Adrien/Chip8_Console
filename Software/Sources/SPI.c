@@ -12,7 +12,7 @@ void SPIInitialize(void)
 {
 	// Configure the baud rate
 	SPI1CLK = 0; // Clock the SPI module from Fosc (64MHz)
-	SPI1BAUD = 255; // SPIxBAUD = Fcsel / (2 * Fbaud) - 1, with Fcsel = HFINTOSC = 64MHz and Fbaud = 125KHz (SD card frequency must be between 100KHz and 400KHz)
+	SPI1BAUD = 31; // SPIxBAUD = Fcsel / (2 * Fbaud) - 1, with Fcsel = HFINTOSC = 64MHz and Fbaud = 1MHz
 
 	// Configure the module
 	SPI1TWIDTH = 0; // Select 8-bit communications

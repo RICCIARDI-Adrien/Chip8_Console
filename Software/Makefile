@@ -8,6 +8,7 @@ SOURCES = \
 	$(PATH_SOURCES)/Display.c \
 	$(PATH_SOURCES)/FAT.c \
 	$(PATH_SOURCES)/Interpreter.c \
+	$(PATH_SOURCES)/Keyboard.c \
 	$(PATH_SOURCES)/Main.c \
 	$(PATH_SOURCES)/MBR.c \
 	$(PATH_SOURCES)/NCO.c \

@@ -5,6 +5,7 @@
 #include <Display.h>
 #include <FAT.h>
 #include <Interpreter.h>
+#include <Keyboard.h>
 #include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -117,6 +118,7 @@ void main(void)
 	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
 	DisplayInitialize(); // The display must be initialized before the interpreter
 	InterpreterInitialize(); // Display the splash screen
+	KeyboardInitialize();
 	if (SDCardInitialize() != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");

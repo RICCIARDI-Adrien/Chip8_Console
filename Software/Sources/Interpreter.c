@@ -4,6 +4,7 @@
  */
 #include <Display.h>
 #include <Interpreter.h>
+#include <Keyboard.h>
 #include <Serial_Port.h>
 #include <xc.h>
 
@@ -33,6 +34,9 @@
 
 #define INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 128
 #define INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 64
+
+/** The total amount of keys supported by Chip-8. */
+#define INTERPRETER_KEYS_COUNT 16
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -154,6 +158,9 @@ static unsigned char Interpreter_Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_RO
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+/** Hold a look-up table returning the physical switch code corresponding to a logical Chip-8 key code. This allows to remap Chip-8 program keys to the physical mapping of the console. */
+static unsigned char Interpreter_Keys_Table[INTERPRETER_KEYS_COUNT] = { 0x00, 0x00, KEYBOARD_KEY_UP, 0x00, KEYBOARD_KEY_DOWN, 0x00, KEYBOARD_KEY_LEFT, 0x00, KEYBOARD_KEY_RIGHT }; // TEST mapping
 
 //-------------------------------------------------------------------------------------------------
 // Public functions
@@ -627,6 +634,37 @@ unsigned char InterpreterRunProgram(void)
 
 				if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Interpreter_Frame_Buffer);
 				else DisplayDrawHalfSizeBuffer(Interpreter_Frame_Buffer);
+				break;
+			}
+
+			case 0xE0:
+			{
+				unsigned char Register_Index, Key_Code, Key_Mask, Is_Key_Pressed;
+
+				// Retrieve whether the expected key is pressed, this is common to all 0xExxx instructions
+				Register_Index = Instruction_High_Byte & 0x0F; // Retrieve the register containing the key code
+				Key_Code = Interpreter_Registers_V[Register_Index]; // Get the key code
+				Key_Mask = Interpreter_Keys_Table[Key_Code]; // Get the bit mask corresponding to the physical key switch
+				if (KeyboardReadKeysMask() & Key_Mask) Is_Key_Pressed = 1;
+				else Is_Key_Pressed = 0;
+
+				switch (Instruction_Low_Byte)
+				{
+					// SKP Vx
+					case 0x9E:
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKP V%01X (= 0x%02X).\r\n", Register_Index, Key_Code);
+						if (Is_Key_Pressed) Interpreter_Register_PC += 2;
+						break;
+
+					// SKNP Vx
+					case 0xA1:
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X).\r\n", Register_Index, Key_Code);
+						if (!Is_Key_Pressed) Interpreter_Register_PC += 2;
+						break;
+				}
+
+				// TODO test debug
+				SERIAL_PORT_LOG(1, "KeyboardReadKeysMask=0x%02X, Key_Code=%d, Key_Mask=0x%02X, Is_Key_Pressed=%d\r\n", KeyboardReadKeysMask(), Key_Code, Key_Mask, Is_Key_Pressed);
 				break;
 			}
 

@@ -589,7 +589,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte, Columns_Count_Byte;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -614,29 +614,32 @@ unsigned char InterpreterRunProgram(void)
 
 				// Determine the amount of bits the sprite must be shifted (in case it would not fit entirely in a frame buffer byte)
 				Shift_Offset = Sprite_Column & 0x07;
-				printf("Shift_Offset = %d\r\n", Shift_Offset);
+				Columns_Count_Byte = Display_Columns_Count / 8; // Cache the amount of columns in bytes (instead of pixels)
+				Sprite_Column /= 8; // A byte stores 8 horizontal pixels, so cache the column coordinate converted to bytes instead of pixels
 				for (Row = Sprite_Row; Row < Display_Rows_Count; Row++)
 				{
 					// Stop when the requested amount of sprite bytes has been displayed
 					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
 
-					Pointer_Display = &Interpreter_Frame_Buffer[Row * (Display_Columns_Count / 8) + (Sprite_Column / 8)];
+					// Find the location in the frame buffer where to draw the sprite
+					Pointer_Display = &Interpreter_Frame_Buffer[(Row * Columns_Count_Byte) + Sprite_Column];
 					Byte = *Pointer_Sprite;
 
-					//
-					if (Shift_Offset == 0) *Pointer_Display = Byte;
+					// Directly display the sprite byte if it is aligned with a frame buffer byte
+					if (Shift_Offset == 0) *Pointer_Display ^= Byte;
+					// The sprite is not aligned, draw a part on the first frame buffer byte, and draw the remaining part on the following frame buffer byte
 					else
 					{
-						*Pointer_Display = Byte >> Shift_Offset;
-						if (Sprite_Column < (Display_Columns_Count / 8) - 1) *(Pointer_Display + 1) = (unsigned char) (Byte << (8 - Shift_Offset));
+						*Pointer_Display ^= Byte >> Shift_Offset;
+						if (Sprite_Column < (Columns_Count_Byte - 1)) *(Pointer_Display + 1) ^= (unsigned char) (Byte << (8 - Shift_Offset));
 					}
 
-					printf("Row = %d, Sprite_Size = %d, Sprite_Column = %d\r\n", Row, Sprite_Size, Sprite_Column);
-
+					// Draw the next sprite line
 					Pointer_Sprite++;
 					Sprite_Size--;
 				}
 
+				// Display the picture according to the emulation mode display
 				if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Interpreter_Frame_Buffer);
 				else DisplayDrawHalfSizeBuffer(Interpreter_Frame_Buffer);
 				break;
@@ -667,9 +670,6 @@ unsigned char InterpreterRunProgram(void)
 						if (!Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
 				}
-
-				// TODO test debug
-				SERIAL_PORT_LOG(1, "KeyboardReadKeysMask=0x%02X, Key_Code=%d, Key_Mask=0x%02X, Is_Key_Pressed=%d\r\n", KeyboardReadKeysMask(), Key_Code, Key_Mask, Is_Key_Pressed);
 				break;
 			}
 

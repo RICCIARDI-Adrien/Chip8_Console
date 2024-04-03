@@ -6,6 +6,7 @@
 #include <Interpreter.h>
 #include <Keyboard.h>
 #include <Serial_Port.h>
+#include <Sound.h>
 #include <xc.h>
 
 // TEST
@@ -710,6 +711,19 @@ unsigned char InterpreterRunProgram(void)
 						T6PR = Delay; // The timer will stop incrementing when the TMR register value will become equal to the PR register value
 						T6TMR = 0;
 						T6CONbits.ON = 1;
+						break;
+					}
+
+					// LD ST, Vx
+					case 0x18:
+					{
+						unsigned char Register_Index;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD ST, V%01X (= 0x%02X).\r\n", Register_Index, Interpreter_Registers_V[Register_Index]);
+
+						SoundPlay(Interpreter_Registers_V[Register_Index]);
 						break;
 					}
 

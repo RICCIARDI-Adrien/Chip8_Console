@@ -713,6 +713,20 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
+					// ADD I, Vx
+					case 0x1E:
+					{
+						unsigned char Register_Index;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+
+						// Sum the values
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD I (= 0x%04X), V%01X (= 0x%02X).\r\n", Interpreter_Register_I, Register_Index, Interpreter_Registers_V[Register_Index]);
+						Interpreter_Register_I += Interpreter_Registers_V[Register_Index];
+						break;
+					}
+
 					// LD F, Vx
 					case 0x29:
 					{
@@ -727,6 +741,42 @@ unsigned char InterpreterRunProgram(void)
 
 						// Each digit is stored on 5 bytes, and the first digit starts at the memory offset 0
 						Interpreter_Register_I = Digit * 5;
+						break;
+					}
+
+					// LD [I], Vx
+					case 0x55:
+					{
+						unsigned char Last_Register_Index, i;
+
+						// Extract the operands
+						Last_Register_Index = Instruction_High_Byte & 0x0F;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD [I] (= 0x%03X), V%01X.\r\n", Interpreter_Register_I, Last_Register_Index);
+
+						// Store the requested amount of registers to the address pointed by the I register
+						for (i = 0; i <= Last_Register_Index; i++)
+						{
+							Interpreter_Memory[Interpreter_Register_I] = Interpreter_Registers_V[i];
+							Interpreter_Register_I++;
+						}
+						break;
+					}
+
+					// LD Vx, [I]
+					case 0x65:
+					{
+						unsigned char Last_Register_Index, i;
+
+						// Extract the operands
+						Last_Register_Index = Instruction_High_Byte & 0x0F;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, [I] (= 0x%03X).\r\n", Last_Register_Index, Interpreter_Register_I);
+
+						// Store the requested amount of registers to the address pointed by the I register
+						for (i = 0; i <= Last_Register_Index; i++)
+						{
+							Interpreter_Registers_V[i] = Interpreter_Memory[Interpreter_Register_I];
+							Interpreter_Register_I++;
+						}
 						break;
 					}
 

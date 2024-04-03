@@ -744,6 +744,40 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
+					// LD B, Vx
+					case 0x33:
+					{
+						unsigned char Register_Index, Value, Digit, i, Divider;
+						unsigned short Register_I;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+						Value = Interpreter_Registers_V[Register_Index];
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD B, V%01X (= 0x%02X).\r\n", Register_Index, Value);
+						Register_I = Interpreter_Register_I & 0x0FFF; // The I register value must not be changed at the end of this instruction execution (also make sure to prevent any interpreter memory access overflow)
+
+						// Convert the and store it to the memory
+						Divider = 100;
+						for (i = 0; i < 3; i++)
+						{
+							// Extract the next digit
+							if (Value >= Divider)
+							{
+								Digit = Value / Divider;
+								Value -= Digit * Divider; // Subtract only the hudreds to the value
+							}
+							else Digit = 0;
+
+							// Store the value in the memory pointed by the I register, making sure to prevent any interpreter memory access overflow
+							Interpreter_Memory[Register_I] = Digit;
+							Register_I = (Register_I + 1) & 0x0FFF;
+
+							// Extract next rank digit
+							Divider /= 10;
+						}
+						break;
+					}
+
 					// LD [I], Vx
 					case 0x55:
 					{
@@ -757,7 +791,7 @@ unsigned char InterpreterRunProgram(void)
 						for (i = 0; i <= Last_Register_Index; i++)
 						{
 							Interpreter_Memory[Interpreter_Register_I] = Interpreter_Registers_V[i];
-							Interpreter_Register_I++;
+							Interpreter_Register_I = (Interpreter_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
 						}
 						break;
 					}
@@ -775,7 +809,7 @@ unsigned char InterpreterRunProgram(void)
 						for (i = 0; i <= Last_Register_Index; i++)
 						{
 							Interpreter_Registers_V[i] = Interpreter_Memory[Interpreter_Register_I];
-							Interpreter_Register_I++;
+							Interpreter_Register_I = (Interpreter_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
 						}
 						break;
 					}

@@ -167,6 +167,11 @@ static unsigned char Interpreter_Keys_Table[INTERPRETER_KEYS_COUNT] = { 0x00, 0x
 //-------------------------------------------------------------------------------------------------
 void InterpreterInitialize(void)
 {
+	// Use timer 6 as the Chip-8 delay timer
+	T6CLK = 0x09; // Clock the timer by the NCO module
+	T6HLT = 0xA8; // Prescaler output is synchronized with Fosc/4, also synchronize the ON bit with the timer clock input, select the one-shot mode with one-shot operation and software start
+	T6CON = 0; // Do not enable the timer yet, do not enable any prescaler or postscaler (the timer is already clocked at the desired frequency)
+
 	DisplayDrawFullSizeBuffer(Interpreter_Frame_Buffer);
 	__delay_ms(2000);
 }
@@ -674,13 +679,39 @@ unsigned char InterpreterRunProgram(void)
 				{
 					// LD Vx, DT
 					case 0x07:
-						// TODO
+					{
+						unsigned char Register_Index, Delay;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+
+						// Retrieve the timer value
+						if (T6CONbits.ON == 0) Delay = 0; // When the timer has overflowed, the counter register is reset and the ON bit is cleared
+						else Delay = T6PR - T6TMR; // The hardware timer is incrementing while the Chip-8 timer is expected to decrement
+						Interpreter_Registers_V[Register_Index] = Delay;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, DT (= 0x%02X).\r\n", Register_Index, Delay);
 						break;
+					}
 
 					// LD DT, Vx
 					case 0x15:
-						// TODO
+					{
+						unsigned char Register_Index, Delay;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+
+						// Retrieve the register value
+						Delay = Interpreter_Registers_V[Register_Index];
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD DT, V%01X (= 0x%02X).\r\n", Register_Index, Delay);
+
+						// Start the timer
+						T6CONbits.ON = 0; // Stop the timer in case it is already running
+						T6PR = Delay; // The timer will stop incrementing when the TMR register value will become equal to the PR register value
+						T6TMR = 0;
+						T6CONbits.ON = 1;
 						break;
+					}
 
 					// LD F, Vx
 					case 0x29:
@@ -689,6 +720,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD F, V%01X (= 0x%02X).\r\n", Register_Index, Interpreter_Registers_V[Register_Index]);
 
 						// Retrieve the digit value
 						Digit = Interpreter_Registers_V[Register_Index] & 0x0F; // The allowed digit values are 0 to 0xF

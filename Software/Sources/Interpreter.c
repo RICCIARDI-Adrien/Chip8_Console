@@ -163,6 +163,9 @@ static unsigned char Interpreter_Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_RO
 /** Hold a look-up table returning the physical switch code corresponding to a logical Chip-8 key code. This allows to remap Chip-8 program keys to the physical mapping of the console. */
 static unsigned char Interpreter_Keys_Table[INTERPRETER_KEYS_COUNT] = { 0x00, 0x00, KEYBOARD_KEY_UP, 0x00, KEYBOARD_KEY_DOWN, 0x00, KEYBOARD_KEY_LEFT, 0x00, KEYBOARD_KEY_RIGHT }; // TEST mapping
 
+/** The random seed. */
+static unsigned char Interpreter_Random_Seed;
+
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
@@ -222,6 +225,9 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 
 	// Clear the frame buffer
 	memset(Interpreter_Frame_Buffer, 0, sizeof(Interpreter_Frame_Buffer));
+
+	// Use the timer feeding the sound PWM generation (which is always running) to initialize the random seed for the entire Chip-8 program execution
+	Interpreter_Random_Seed = T2TMR;
 
 	return 0;
 }
@@ -584,8 +590,23 @@ unsigned char InterpreterRunProgram(void)
 
 			// RND Vx, byte
 			case 0xC0:
-				// TODO
+			{
+				unsigned char Register_Index, Is_Least_Significant_Bit_Set;
+
+				// Extract the operands
+				Register_Index = Instruction_High_Byte & 0x0F;
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "RND V%01X, 0x%02X.\r\n", Register_Index, Instruction_Low_Byte);
+
+				// Use a 8-bit Galois LFSR to generate good pseudo-random numbers (see https://en.wikipedia.org/wiki/Linear-feedback_shift_register#Galois_LFSRs)
+				if (Interpreter_Random_Seed & 0x01) Is_Least_Significant_Bit_Set = 1;
+				else Is_Least_Significant_Bit_Set = 0;
+				Interpreter_Random_Seed >>= 1;
+				if (Is_Least_Significant_Bit_Set) Interpreter_Random_Seed ^= 0xB4;
+
+				// The random byte is ANDed with a mask provided in the instruction
+				Interpreter_Registers_V[Register_Index] = Interpreter_Random_Seed & Instruction_Low_Byte;
 				break;
+			}
 
 			// DRW Vx, Vy, nibble
 			case 0xD0:

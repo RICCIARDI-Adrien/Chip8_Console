@@ -87,14 +87,19 @@ void SoundInitialize(void)
 	// Configure the logic function
 	CLC1CON = 0x82; // Enable the logic cell, select a 4-input AND function
 
+	// Enable the waveform generation
+	PWM5CONbits.EN = 1; // Start the PWM
+	T2CONbits.ON = 1; // Start the PWM clocking timer
+
+	// It seems that the S-R latch is set when the MCU is booting (maybe the TMR4_out signal is always high), just after the PWM is started
+	// Trying to reset the latch through the CLC2POLbits does not seem to work, so just play the shortest tone possible to make the hardware clear the TMR4_out signal
+	SoundPlay(1);
+	while (T4CONbits.ON); // Wait for the timer to elapse, so the output pin is configured as output when the latch is cleared, not before
+
 	// Configure the pin that drives the buzzer
 	RC2PPS = 0x01; // Select the RC2 pin as the Configurable Logic Cell 1 output
 	ANSELCbits.ANSELC2 = 0; // Configure the pin as digital
 	TRISCbits.TRISC2 = 0; // Set the pin as output
-
-	// Enable the waveform generation
-	PWM5CONbits.EN = 1; // Start the PWM
-	T2CONbits.ON = 1; // Start the PWM clocking timer
 }
 
 void SoundPlay(unsigned char Duration)

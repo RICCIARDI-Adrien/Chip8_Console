@@ -37,7 +37,9 @@
 #define INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 64
 
 /** The total amount of keys supported by Chip-8. */
-#define INTERPRETER_KEYS_COUNT 16
+#define INTERPRETER_KEYS_COUNT_CHIP_8 16
+/** The total amount of hardware keys supported by this console. */
+#define INTERPRETER_KEYS_COUNT_CONSOLE 8
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -161,7 +163,9 @@ static unsigned char Interpreter_Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_RO
 };
 
 /** Hold a look-up table returning the physical switch code corresponding to a logical Chip-8 key code. This allows to remap Chip-8 program keys to the physical mapping of the console. */
-static unsigned char Interpreter_Keys_Table[INTERPRETER_KEYS_COUNT] = { 0x00, 0x00, KEYBOARD_KEY_UP, 0x00, KEYBOARD_KEY_DOWN, 0x00, KEYBOARD_KEY_LEFT, 0x00, KEYBOARD_KEY_RIGHT }; // TEST mapping
+static unsigned char Interpreter_Keys_Table_From_Interpreter[INTERPRETER_KEYS_COUNT_CHIP_8] = { 0x00, 0x00, KEYBOARD_KEY_UP, 0x00, KEYBOARD_KEY_DOWN, 0x00, KEYBOARD_KEY_LEFT, 0x00, KEYBOARD_KEY_RIGHT }; // TEST mapping
+/** This reverse table allows to determine which Chip-8 key code to return when a console switch is pressed. This table is automatically created from the Interpreter_Keys_Table_From_Interpreter table content. */
+static unsigned char Interpreter_Keys_Table_From_Console[INTERPRETER_KEYS_COUNT_CONSOLE];
 
 /** The random seed. */
 static unsigned char Interpreter_Random_Seed;
@@ -182,6 +186,8 @@ void InterpreterInitialize(void)
 
 unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_Information)
 {
+	unsigned char Console_Key_Mask, Console_Key_Index, Key_Index;
+
 	// TODO
 	/*static const unsigned char a[] =
 	{
@@ -225,6 +231,21 @@ unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_I
 
 	// Clear the frame buffer
 	memset(Interpreter_Frame_Buffer, 0, sizeof(Interpreter_Frame_Buffer));
+
+	// Generate a reverse look-up table to match a Chip-8 key code with a console key switch
+	Console_Key_Mask = 0x01;
+	for (Console_Key_Index = 0; Console_Key_Index < INTERPRETER_KEYS_COUNT_CONSOLE; Console_Key_Index++)
+	{
+		for (Key_Index = 0; Key_Index < INTERPRETER_KEYS_COUNT_CHIP_8; Key_Index++)
+		{
+			if (Interpreter_Keys_Table_From_Interpreter[Key_Index] == Console_Key_Mask)
+			{
+				Interpreter_Keys_Table_From_Console[Console_Key_Index] = Key_Index;
+				break;
+			}
+		}
+		Console_Key_Mask <<= 1;
+	}
 
 	// Use the timer feeding the sound PWM generation (which is always running) to initialize the random seed for the entire Chip-8 program execution
 	Interpreter_Random_Seed = T2TMR;
@@ -674,7 +695,7 @@ unsigned char InterpreterRunProgram(void)
 				// Retrieve whether the expected key is pressed, this is common to all 0xExxx instructions
 				Register_Index = Instruction_High_Byte & 0x0F; // Retrieve the register containing the key code
 				Key_Code = Interpreter_Registers_V[Register_Index]; // Get the key code
-				Key_Mask = Interpreter_Keys_Table[Key_Code]; // Get the bit mask corresponding to the physical key switch
+				Key_Mask = Interpreter_Keys_Table_From_Interpreter[Key_Code]; // Get the bit mask corresponding to the physical key switch
 				if (KeyboardReadKeysMask() & Key_Mask) Is_Key_Pressed = 1;
 				else Is_Key_Pressed = 0;
 
@@ -712,6 +733,33 @@ unsigned char InterpreterRunProgram(void)
 						else Delay = T6PR - T6TMR; // The hardware timer is incrementing while the Chip-8 timer is expected to decrement
 						Interpreter_Registers_V[Register_Index] = Delay;
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, DT (= 0x%02X).\r\n", Register_Index, Delay);
+						break;
+					}
+
+					// LD Vx, K
+					case 0x0A:
+					{
+						unsigned char Register_Index, Key_Mask, i;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, K.\r\n", Register_Index);
+
+						// Stop the execution until a key is pressed
+						do
+						{
+							Key_Mask = KeyboardReadKeysMask();
+						} while (Key_Mask == 0);
+
+						// Retrieve the corresponding Chip-8 key (the first one matching)
+						for (i = 0; i < 8; i++)
+						{
+							if ((1 << i) & Key_Mask)
+							{
+								Interpreter_Registers_V[Register_Index] = Interpreter_Keys_Table_From_Console[i];
+								break;
+							}
+						}
 						break;
 					}
 

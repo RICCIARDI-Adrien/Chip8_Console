@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "D6R90_F1_LFS")(type "KiCad")(uri "${KIPRJMOD}/D6R90_F1_LFS.kicad_sym")(options "")(descr ""))
+)

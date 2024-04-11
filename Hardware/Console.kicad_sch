@@ -1,4 +1,4 @@
-(kicad_sch (version 20211123) (generator eeschema)
+(kicad_sch (version 20230121) (generator eeschema)
 
   (uuid b24cc209-2cbb-4d17-be98-7f106140ce76)
 
@@ -16,46 +16,23 @@
 
 
   (sheet (at 25.4 25.4) (size 25.4 12.7) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0000))
     (uuid 512cb1d6-43c3-4cfd-ae70-a9531753462d)
-    (property "Sheet name" "Power_Supply" (id 0) (at 25.4 24.6884 0)
+    (property "Sheetname" "Power_Supply" (at 25.4 24.6884 0)
       (effects (font (size 1.27 1.27)) (justify left bottom))
     )
-    (property "Sheet file" "Power_Supply.kicad_sch" (id 1) (at 25.4 38.6846 0)
+    (property "Sheetfile" "Power_Supply.kicad_sch" (at 25.4 38.6846 0)
       (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "Console"
+        (path "/b24cc209-2cbb-4d17-be98-7f106140ce76" (page "2"))
+      )
     )
   )
 
   (sheet_instances
     (path "/" (page "1"))
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d" (page "2"))
-  )
-
-  (symbol_instances
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/ac5ccb7a-b44a-43e9-9053-f7f964a65090"
-      (reference "#PWR?") (unit 1) (value "+3.3V") (footprint "")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/b9d92003-0177-4c05-9c3a-5c7f34c89d13"
-      (reference "#PWR?") (unit 1) (value "GND") (footprint "")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/3217ad9d-adda-4a11-b1bb-77575886bdf1"
-      (reference "C?") (unit 1) (value "4.7u") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/327329af-b354-4969-bb48-b00b5140bf82"
-      (reference "C?") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/8565640a-285d-484b-ae91-e4aa65d02f6a"
-      (reference "C?") (unit 1) (value "4.7u") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/cb34452e-8350-4f2e-847a-bd206b4ec4ca"
-      (reference "C?") (unit 1) (value "2.2u") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/2c1cb26b-1c08-416c-8412-2877ae1bf504"
-      (reference "L?") (unit 1) (value "1286AS-H-2R2M=P2") (footprint "Inductors:0806_HandSolder")
-    )
-    (path "/512cb1d6-43c3-4cfd-ae70-a9531753462d/fc12a3b8-6335-4157-a359-e1d8704dee63"
-      (reference "U?") (unit 1) (value "TPS613221ADBV") (footprint "Package_TO_SOT_SMD:SOT-23-5")
-    )
   )
 )

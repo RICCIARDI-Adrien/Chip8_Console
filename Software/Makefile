@@ -19,7 +19,7 @@ SOURCES = \
 
 CC = xc8-cc
 # The -Wa,-a argument tells the assembler to generate a listing file
-CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000 -Wa,-a
+CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000 -muse-ivt -Wa,-a
 
 all: $(PATH_BINARIES) $(PATH_OBJECTS)
 	cd $(PATH_OBJECTS) && $(CC) $(CFLAGS) -I$(PATH_INCLUDES) $(SOURCES) -o $(BINARY_NAME)

@@ -32,4 +32,10 @@ void KeyboardInitialize(void);
  */
 unsigned char KeyboardReadKeysMask(void);
 
+/** Tell whether the menu key has been pressed.
+ * @note The pressed status is cleared every time this function is called.
+ * @return 1 if the menu key has been pressed since the last time this function was called, 0 otherwise.
+ */
+unsigned char KeyboardIsMenuKeyPressed(void);
+
 #endif

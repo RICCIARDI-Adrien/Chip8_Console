@@ -48,7 +48,7 @@
 // Private functions
 //-------------------------------------------------------------------------------------------------
 /** TODO */
-unsigned char MainMountSDCard(void)
+static unsigned char MainMountSDCard(void)
 {
 	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
@@ -124,6 +124,15 @@ void main(void)
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
 		while (1); // TODO
 	}
+
+	// Initialize the interrupts
+	// Set the vector table base address to the default value
+	IVTBASEU = 0;
+	IVTBASEH = 0;
+	IVTBASEL = 0x08;
+	// Enable interrupts
+	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
+	INTCON0bits.GIE = 1; // Enable all interrupts
 
 	// TODO
 	if (MainMountSDCard() != 0)

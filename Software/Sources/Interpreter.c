@@ -272,6 +272,9 @@ unsigned char InterpreterRunProgram(void)
 
 	while (1)
 	{
+		// Exit when the menu key is pressed
+		if (KeyboardIsMenuKeyPressed()) return 0;
+
 		// Make sure only the instruction address can't go out the array bounds
 		Interpreter_Register_PC &= 0x0FFF;
 
@@ -748,6 +751,9 @@ unsigned char InterpreterRunProgram(void)
 						// Stop the execution until a key is pressed
 						do
 						{
+							// Exit when the menu key is pressed
+							if (KeyboardIsMenuKeyPressed()) return 0;
+
 							Key_Mask = KeyboardReadKeysMask();
 						} while (Key_Mask == 0);
 

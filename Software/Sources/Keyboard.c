@@ -5,14 +5,11 @@
 #include <Keyboard.h>
 #include <xc.h>
 
-// TEST
-#include <Serial_Port.h>
-
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 when pressed and cleared when the KeyboardIsMenuKeyPressed() function is called. */
-static unsigned char Keyboard_Is_Menu_Key_Pressed = 0;
+static volatile unsigned char Keyboard_Is_Menu_Key_Pressed = 0;
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -22,8 +19,6 @@ static void __interrupt(irq(INT0), high_priority) KeyboardInterrupt(void)
 {
     // Keep the pressed state until
     Keyboard_Is_Menu_Key_Pressed = 1;
-
-    SerialPortWriteString("INT !\r\n");
 
     // Clear the interrupt flag
     PIR1bits.INT0IF = 0;
@@ -47,6 +42,7 @@ void KeyboardInitialize(void)
 
     // Configure the external interrupt 0 interrupt
     INTCON0bits.INT0EDG = 0; // Trigger the interrupt on signal failing edge
+    PIR1bits.INT0IF = 0; // Make sure the interrupt flag is cleared to avoid triggering a false interrupt
     PIE1bits.INT0IE = 1; // Enable the interrupt
 }
 

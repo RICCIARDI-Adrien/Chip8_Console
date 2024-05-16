@@ -32,6 +32,23 @@
     )
   )
 
+  (sheet (at 38.1 63.5) (size 25.4 25.4) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid c6f04168-6103-44f5-ab75-60fa314c9dc1)
+    (property "Sheetname" "Keys" (at 38.1 62.7884 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "Keys.kicad_sch" (at 38.1 89.4846 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "Console"
+        (path "/b24cc209-2cbb-4d17-be98-7f106140ce76" (page "3"))
+      )
+    )
+  )
+
   (sheet_instances
     (path "/" (page "1"))
   )

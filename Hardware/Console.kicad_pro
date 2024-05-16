@@ -340,6 +340,10 @@
     [
       "512cb1d6-43c3-4cfd-ae70-a9531753462d",
       "Power_Supply"
+    ],
+    [
+      "c6f04168-6103-44f5-ab75-60fa314c9dc1",
+      "Keys"
     ]
   ],
   "text_variables": {}

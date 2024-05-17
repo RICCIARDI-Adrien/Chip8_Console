@@ -25,6 +25,10 @@
     (property "Sheetfile" "Power_Supply.kicad_sch" (at 25.4 38.6846 0)
       (effects (font (size 1.27 1.27)) (justify left top))
     )
+    (pin "Battery_Measure" passive (at 50.8 31.75 0)
+      (effects (font (size 1.27 1.27)) (justify right))
+      (uuid bc2430b3-86bd-4a8f-a773-c7e49ef8ee78)
+    )
     (instances
       (project "Console"
         (path "/b24cc209-2cbb-4d17-be98-7f106140ce76" (page "2"))
@@ -45,6 +49,23 @@
     (instances
       (project "Console"
         (path "/b24cc209-2cbb-4d17-be98-7f106140ce76" (page "3"))
+      )
+    )
+  )
+
+  (sheet (at 107.95 45.72) (size 31.75 26.67) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid de0b44b6-a7f6-45d6-a415-cbc8958efab8)
+    (property "Sheetname" "Microcontroller" (at 107.95 45.0084 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "Microcontroller.kicad_sch" (at 107.95 72.9746 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "Console"
+        (path "/b24cc209-2cbb-4d17-be98-7f106140ce76" (page "4"))
       )
     )
   )

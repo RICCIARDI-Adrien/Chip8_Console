@@ -676,7 +676,7 @@
     (uuid f72d488c-79f1-4713-bc90-9325af736495)
   )
 
-  (hierarchical_label "Battery_Measure" (shape passive) (at 121.92 69.85 0) (fields_autoplaced)
+  (hierarchical_label "BATTERY_MEASURE" (shape passive) (at 121.92 69.85 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left))
     (uuid fb46eb0e-69c5-4798-a6da-c39cc20d4913)
   )

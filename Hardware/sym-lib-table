@@ -2,4 +2,5 @@
   (version 7)
   (lib (name "D6R90_F1_LFS")(type "KiCad")(uri "${KIPRJMOD}/D6R90_F1_LFS.kicad_sym")(options "")(descr ""))
   (lib (name "PIC18F27K42")(type "KiCad")(uri "${KIPRJMOD}/PIC18F27K42.kicad_sym")(options "")(descr ""))
+  (lib (name "DM1B-DSF-PEJ(92)")(type "KiCad")(uri "${KIPRJMOD}/DM1B-DSF-PEJ(92).kicad_sym")(options "")(descr ""))
 )

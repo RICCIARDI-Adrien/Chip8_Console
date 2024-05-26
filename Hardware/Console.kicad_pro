@@ -32,7 +32,11 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      "power_pin_not_driven|1765300|1143000|204eeb7c-e752-4a95-a487-df3b4d7f52a4|00000000-0000-0000-0000-000000000000|||",
+      "power_pin_not_driven|2095500|1270000|3819a7fc-fa5a-48c3-a02a-3b2f919798bf|00000000-0000-0000-0000-000000000000|||",
+      "power_pin_not_driven|2095500|1320800|430fca45-202f-4d3b-bb5e-655aeae54bee|00000000-0000-0000-0000-000000000000|||"
+    ],
     "meta": {
       "version": 0
     },

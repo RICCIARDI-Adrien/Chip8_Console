@@ -3,4 +3,5 @@
   (lib (name "Inductors")(type "KiCad")(uri "${KIPRJMOD}/Inductors.pretty")(options "")(descr ""))
   (lib (name "D6R90_F1_LFS")(type "KiCad")(uri "${KIPRJMOD}/D6R90_F1_LFS.pretty")(options "")(descr ""))
   (lib (name "DM1B-DSF-PEJ(92)")(type "KiCad")(uri "${KIPRJMOD}/DM1B-DSF-PEJ(92).pretty")(options "")(descr ""))
+  (lib (name "Waveshare_2.42inch_OLED_Module")(type "KiCad")(uri "${KIPRJMOD}/Waveshare_2.42inch_OLED_Module.pretty")(options "")(descr ""))
 )

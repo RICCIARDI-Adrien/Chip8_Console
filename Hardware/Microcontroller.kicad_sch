@@ -1488,7 +1488,7 @@
     (property "Datasheet" "~" (at 189.23 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Value 2" "DEBUG" (at 193.04 42.2275 90)
+    (property "Value2" "DEBUG" (at 193.04 42.2275 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
     (pin "1" (uuid d1ec92a0-33f4-4d03-a97b-eb55cdd53fba))

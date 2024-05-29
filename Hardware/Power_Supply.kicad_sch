@@ -733,7 +733,7 @@
     (uuid f78b8614-2f1f-41d8-8c46-eed3e4821b3b)
   )
 
-  (text "Microcontroller ADC voltage reference is 2.048V.\nThe maximum batteries voltage to measure is 2x 1.65V = 3.3V.\nTake a little margin and use 3.5V.\nSo, the battery measurement voltage divider must read 2.048V\nfor an input voltage of 3.5V.\nThe microcontroller recommended ADC impedance is 1Kohm, so do not\nuse too high resistor values."
+  (text "Microcontroller ADC voltage reference is 2.048V.\nThe maximum batteries voltage to measure is 2x 1.65V = 3.3V.\nTake a little margin and use 3.5V.\nSo, the battery measurement voltage divider must read 2.048V\nfor an input voltage of 3.5V.\nThe microcontroller recommended ADC impedance is 1Kohm, so do not\nuse too high resistor values.\nHere, with the voltage divider upper resistor equal to 7360ohms,\nthe maximum battery voltage can reach 3.555V."
     (at 146.05 48.26 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 34c48b22-d064-4d29-aa73-04b5396eedb5)
@@ -758,7 +758,7 @@
     (property "Reference" "R3" (at 133.35 58.42 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "270" (at 133.35 60.96 0)
+    (property "Value" "560" (at 133.35 60.96 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" (at 129.032 60.96 90)

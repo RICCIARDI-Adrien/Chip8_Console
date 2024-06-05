@@ -1067,7 +1067,7 @@
     (property "Value" "CMT-1604-SMT-TR" (at 71.6349 121.92 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 73.025 124.46 90)
+    (property "Footprint" "CMT-1604-SMT-TR:CMT-1604-SMT-TR" (at 73.025 124.46 90)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (at 73.025 124.46 90)

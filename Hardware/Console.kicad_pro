@@ -173,6 +173,9 @@
       ],
       "track_widths": [
         0.0,
+        0.4,
+        0.6,
+        0.9,
         2.0
       ],
       "via_dimensions": [
@@ -191,10 +194,7 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [
-      "power_pin_not_driven|1765300|1143000|204eeb7c-e752-4a95-a487-df3b4d7f52a4|00000000-0000-0000-0000-000000000000|||",
-      "power_pin_not_driven|2095500|1320800|430fca45-202f-4d3b-bb5e-655aeae54bee|00000000-0000-0000-0000-000000000000|||"
-    ],
+    "erc_exclusions": [],
     "meta": {
       "version": 0
     },

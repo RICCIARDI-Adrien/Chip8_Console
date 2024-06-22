@@ -148,34 +148,11 @@ void main(void)
 	{
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
-		Frame_Buffer[0] = 0x18;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8] = 0x24;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 2] = 0x42;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 3] = 0xF1;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 4] = 0x8F;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 5] = 0x42;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 6] = 0x24;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 7] = 0x18;
-
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 9] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 10] = 0x60;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 11] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 12] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 13] = 0x70;
-
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 27] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 28] = 0x10;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 29] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 30] = 0x80;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 31] = 0xF0;
-
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 27 + 63 / 8] = 0xF0;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 28 + 63 / 8] = 0x10;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 29 + 63 / 8] = 0x20;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 30 + 63 / 8] = 0x40;
-		Frame_Buffer[DISPLAY_COLUMNS_COUNT / 2 / 8 * 31 + 63 / 8] = 0x40;
-
-		DisplayDrawHalfSizeBuffer(Frame_Buffer);
+		Frame_Buffer[0] = 0x81;
+		Frame_Buffer[128] = 0xF0;
+		Frame_Buffer[128*64/8-1] = 0xA5;
+		DisplayDrawTextBuffer(Frame_Buffer);
+		while (1);
 	}
 
 	// TEST

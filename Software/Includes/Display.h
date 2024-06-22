@@ -29,4 +29,9 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer);
  */
 void DisplayDrawFullSizeBuffer(void *Pointer_Buffer);
 
+/** Send the frame buffer to the display without any conversion, because in text mode the frame buffer encoding is the same than the display controller (1 byte corresponds to 8 consecutive vertical pixels).
+ * @param Pointer_Buffer The frame buffer to display (128x64 pixels).
+ */
+void DisplayDrawTextBuffer(void *Pointer_Buffer);
+
 #endif

@@ -138,3 +138,22 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 
 	SPI_DESELECT_DISPLAY();
 }
+
+void DisplayDrawTextBuffer(void *Pointer_Buffer)
+{
+	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer;
+
+	SPI_SELECT_DISPLAY();
+
+	// Use the native display controller hardware order (1 byte represents 8 vertical pixels), so it is easy to adjust characters starting column
+	for (Row = 0; Row < DISPLAY_ROWS_COUNT; Row += 8)
+	{
+		for (Column = 0; Column < DISPLAY_COLUMNS_COUNT; Column++)
+		{
+			SPITransferByte(*Pointer_Buffer_Bytes);
+			Pointer_Buffer_Bytes++;
+		}
+	}
+
+	SPI_DESELECT_DISPLAY();
+}

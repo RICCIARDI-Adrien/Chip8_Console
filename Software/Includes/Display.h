@@ -29,6 +29,18 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer);
  */
 void DisplayDrawFullSizeBuffer(void *Pointer_Buffer);
 
+/** Set the cursor position in text mode.
+ * @param X The horizontal coordinate.
+ * @param Y The vertical coordinate.
+ */
+void DisplaySetTextCursor(unsigned char X, unsigned char Y);
+
+/** Render an ASCII character at the current cursor location.
+ * @param Pointer_Buffer The buffer to render the character to.
+ * @param Character The character ASCII code.
+ */
+void DisplayWriteCharacter(void *Pointer_Buffer, unsigned char Character);
+
 /** Send the frame buffer to the display without any conversion, because in text mode the frame buffer encoding is the same than the display controller (1 byte corresponds to 8 consecutive vertical pixels).
  * @param Pointer_Buffer The frame buffer to display (128x64 pixels).
  */

@@ -148,9 +148,37 @@ void main(void)
 	{
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
-		Frame_Buffer[0] = 0x81;
-		Frame_Buffer[128] = 0xF0;
-		Frame_Buffer[128*64/8-1] = 0xA5;
+		DisplaySetTextCursor(0, 0);
+		DisplayWriteCharacter(Frame_Buffer, 'S');
+		DisplaySetTextCursor(1, 0);
+		DisplayWriteCharacter(Frame_Buffer, 'A');
+		DisplaySetTextCursor(2, 0);
+		DisplayWriteCharacter(Frame_Buffer, 'L');
+		DisplaySetTextCursor(3, 0);
+		DisplayWriteCharacter(Frame_Buffer, 'U');
+		DisplaySetTextCursor(4, 0);
+		DisplayWriteCharacter(Frame_Buffer, 'T');
+		DisplaySetTextCursor(5, 0);
+		DisplayWriteCharacter(Frame_Buffer, ' ');
+		DisplaySetTextCursor(6, 0);
+		DisplayWriteCharacter(Frame_Buffer, '!');
+
+		DisplaySetTextCursor(5, 3);
+		DisplayWriteCharacter(Frame_Buffer, 'C');
+		DisplaySetTextCursor(6, 3);
+		DisplayWriteCharacter(Frame_Buffer, 'i');
+		DisplaySetTextCursor(7, 3);
+		DisplayWriteCharacter(Frame_Buffer, 'a');
+		DisplaySetTextCursor(8, 3);
+		DisplayWriteCharacter(Frame_Buffer, 'o');
+		DisplaySetTextCursor(9, 3);
+		DisplayWriteCharacter(Frame_Buffer, '!');
+
+		DisplaySetTextCursor(19, 7);
+		DisplayWriteCharacter(Frame_Buffer, 6);
+		DisplaySetTextCursor(20, 7);
+		DisplayWriteCharacter(Frame_Buffer, 140);
+
 		DisplayDrawTextBuffer(Frame_Buffer);
 		while (1);
 	}

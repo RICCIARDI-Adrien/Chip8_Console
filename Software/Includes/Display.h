@@ -41,6 +41,13 @@ void DisplaySetTextCursor(unsigned char X, unsigned char Y);
  */
 void DisplayWriteCharacter(void *Pointer_Buffer, unsigned char Character);
 
+/** Render a ASCII string at the current cursor location into the frame buffer.
+ * @param Pointer_Buffer The buffer to render the string to.
+ * @param Pointer_String The ASCII string to render.
+ * @note The '\n' character is supported to put the cursor at the beginning of the next line.
+ */
+void DisplayWriteString(void *Pointer_Buffer, const char *Pointer_String);
+
 /** Send the frame buffer to the display without any conversion, because in text mode the frame buffer encoding is the same than the display controller (1 byte corresponds to 8 consecutive vertical pixels).
  * @param Pointer_Buffer The frame buffer to display (128x64 pixels).
  */

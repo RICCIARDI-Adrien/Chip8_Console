@@ -149,35 +149,16 @@ void main(void)
 		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
 		DisplaySetTextCursor(0, 0);
-		DisplayWriteCharacter(Frame_Buffer, 'S');
-		DisplaySetTextCursor(1, 0);
-		DisplayWriteCharacter(Frame_Buffer, 'A');
-		DisplaySetTextCursor(2, 0);
-		DisplayWriteCharacter(Frame_Buffer, 'L');
-		DisplaySetTextCursor(3, 0);
-		DisplayWriteCharacter(Frame_Buffer, 'U');
-		DisplaySetTextCursor(4, 0);
-		DisplayWriteCharacter(Frame_Buffer, 'T');
-		DisplaySetTextCursor(5, 0);
-		DisplayWriteCharacter(Frame_Buffer, ' ');
-		DisplaySetTextCursor(6, 0);
-		DisplayWriteCharacter(Frame_Buffer, '!');
+		DisplayWriteString(Frame_Buffer, "Salut !");
 
-		DisplaySetTextCursor(5, 3);
-		DisplayWriteCharacter(Frame_Buffer, 'C');
-		DisplaySetTextCursor(6, 3);
-		DisplayWriteCharacter(Frame_Buffer, 'i');
-		DisplaySetTextCursor(7, 3);
-		DisplayWriteCharacter(Frame_Buffer, 'a');
-		DisplaySetTextCursor(8, 3);
-		DisplayWriteCharacter(Frame_Buffer, 'o');
-		DisplaySetTextCursor(9, 3);
-		DisplayWriteCharacter(Frame_Buffer, '!');
+		DisplaySetTextCursor(2, 2);
+		DisplayWriteString(Frame_Buffer, "Message sur 2\nlignes.");
 
-		DisplaySetTextCursor(19, 7);
-		DisplayWriteCharacter(Frame_Buffer, 6);
-		DisplaySetTextCursor(20, 7);
-		DisplayWriteCharacter(Frame_Buffer, 140);
+		DisplaySetTextCursor(0, 4);
+		DisplayWriteString(Frame_Buffer, "Message plus long qui va aller a la ligne plusieurs fois.");
+
+		DisplaySetTextCursor(1, 7);
+		DisplayWriteString(Frame_Buffer, "Message qui deborde et ne sera pas affiche totalement");
 
 		DisplayDrawTextBuffer(Frame_Buffer);
 		while (1);

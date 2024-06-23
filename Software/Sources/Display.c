@@ -288,6 +288,34 @@ void DisplayWriteCharacter(void *Pointer_Buffer, unsigned char Character)
 	memcpy(Pointer_Buffer_Bytes + Index, Display_Font_Sprites[Character], DISPLAY_TEXT_CHARACTER_WIDTH);
 }
 
+void DisplayWriteString(void *Pointer_Buffer, const char *Pointer_String)
+{
+	unsigned char Character;
+
+	while (*Pointer_String != 0)
+	{
+		Character = *Pointer_String;
+		Pointer_String++;
+
+		// Display only drawable characters
+		if (Character >= 32)
+		{
+			DisplayWriteCharacter(Pointer_Buffer, Character);
+			Display_Text_Cursor_X++;
+		}
+
+		// Should the cursor go to the next line ?
+		if ((Display_Text_Cursor_X >= DISPLAY_TEXT_MODE_WIDTH) || (Character == '\n'))
+		{
+			Display_Text_Cursor_X = 0;
+			Display_Text_Cursor_Y++;
+
+			// Stop rendering the string if it crosses the display bounds
+			if (Display_Text_Cursor_Y >= DISPLAY_TEXT_MODE_HEIGHT) return;
+		}
+	}
+}
+
 void DisplayDrawTextBuffer(void *Pointer_Buffer)
 {
 	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer;

@@ -10,7 +10,7 @@
 //-------------------------------------------------------------------------------------------------
 // Variables
 //-------------------------------------------------------------------------------------------------
-/** The display frame buffer, it can contain incompatible data when used in text mode or in Chip-8 graphic mode. */
+/** The display frame buffer, it can contain incompatible data when used in text mode or in Chip-8/SuperChip-8 graphic mode. */
 extern unsigned char Shared_Buffer_Display[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
 
 #endif

@@ -119,8 +119,8 @@ const unsigned char Main_Splash_Screen[] =
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
-/** TODO */
-static unsigned char MainMountSDCard(void)
+/** Probe the SD card and mount the first FAT partition. */
+static void MainMountSDCard(void)
 {
 	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
@@ -128,6 +128,7 @@ static unsigned char MainMountSDCard(void)
 	TSDCardDetectionStatus Card_Detection_Status;
 
 	// Wait for an SD card to be inserted
+Detect_SD_Card:
 	Is_Message_Displayed = 0;
 	while (1)
 	{
@@ -142,21 +143,31 @@ static unsigned char MainMountSDCard(void)
 		}
 	}
 
-	// TEST
-	DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "OK");
-	while (1);
-
-	// Probe the SD card only when necessary, as this takes some time
+	// The card has not changed and was already probed, nothing more to do
+	if (Card_Detection_Status == SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
-		while (1); // TODO
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.\r\n");
+		return;
+	}
+
+	// Probe the SD card
+	if (SDCardProbe() != 0)
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m\r\n");
+		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.");
+		while (!KeyboardIsMenuKeyPressed());
+		__delay_ms(1000); // Give some time to the SD card to wake up
+		goto Detect_SD_Card;
 	}
 
 	// The first SD card block contains the MBR, get it
 	if (SDCardReadBlock(0, Buffer) != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read SD card block.\r\n");
-		return 1;
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.\r\n");
+		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.");
+		while (!KeyboardIsMenuKeyPressed());
+		__delay_ms(1000); // Give some time to the SD card to wake up
+		goto Detect_SD_Card;
 	}
 
 	// Find the first valid primary partitions (do not care about the partition type, as it does not reflect the real file system the partition is formatted with)
@@ -187,10 +198,10 @@ static unsigned char MainMountSDCard(void)
 	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.\r\n");
-		return 2;
+		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.");
+		while (!KeyboardIsMenuKeyPressed());
+		goto Detect_SD_Card;
 	}
-
-	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -234,20 +245,11 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// TODO
-	if (MainMountSDCard() != 0)
-	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to mount the SD card file system.\033[0m\r\n");
-		while (1); // TODO
-	}
+	// Block until an SD card with a valid FAT file system is inserted
+	MainMountSDCard();
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
-
-	DisplayDrawTextMessage(Shared_Buffer_Display, "Titre de ouf", "Message autant incroyable de l'espace.");
-	__delay_ms(3000);
-	DisplayDrawTextMessage(Shared_Buffer_Display, "Titre de ouf mais trop long de merde", "Message court.");
-	__delay_ms(3000);
 
 	// TEST
 	if (FATListStart("/") != 0)

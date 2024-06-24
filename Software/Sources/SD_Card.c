@@ -36,7 +36,7 @@
 static unsigned char SD_Card_Is_Version_2_Protocol;
 
 /** Tell whether the card has been removed since last check. */
-static unsigned char SD_Card_Is_Card_Removed = 0;
+static unsigned char SD_Card_Is_Card_Removed = 1; // On boot, tell that the card has been removed to force probing it
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -316,15 +316,16 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 
 TSDCardDetectionStatus SDCardGetDetectionStatus(void)
 {
-	unsigned char Is_Card_Detected, Is_Card_Removed = SD_Card_Is_Card_Removed;
+	unsigned char Is_Card_Detected;
 
 	// Cache the detection state
 	Is_Card_Detected = !PORTBbits.RB4;
 
-	// Reset the removal state at each call
-	SD_Card_Is_Card_Removed = 0;
-
 	if (!Is_Card_Detected) return SD_CARD_DETECTION_STATUS_NO_CARD;
-	if (SD_Card_Is_Card_Removed) return SD_CARD_DETECTION_STATUS_DETECTED_REMOVED;
+	if (SD_Card_Is_Card_Removed)
+	{
+		SD_Card_Is_Card_Removed = 0; // Reset the removal state at each call, but only if a card is inserted
+		return SD_CARD_DETECTION_STATUS_DETECTED_REMOVED;
+	}
 	return SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED;
 }

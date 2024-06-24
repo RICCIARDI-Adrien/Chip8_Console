@@ -3,6 +3,8 @@
  * @author Adrien RICCIARDI
  */
 #include <Display.h>
+#include <Serial_Port.h>
+#include <Shared_Buffer.h>
 #include <SPI.h>
 #include <string.h>
 #include <xc.h>
@@ -10,6 +12,9 @@
 //-------------------------------------------------------------------------------------------------
 // Private constants
 //-------------------------------------------------------------------------------------------------
+/** Set to 1 to enable the log messages, set to 0 to disable them. */
+#define DISPLAY_IS_LOGGING_ENABLED 1
+
 /** The display controller reset pin. */
 #define DISPLAY_PIN_RESET LATBbits.LATB1
 /** The display controller D/C pin. */
@@ -333,4 +338,32 @@ void DisplayDrawTextBuffer(void *Pointer_Buffer)
 	}
 
 	SPI_DESELECT_DISPLAY();
+}
+
+void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Title, const char *Pointer_String_Message)
+{
+	unsigned char Title_X, Length;
+
+	// Clear the frame buffer
+	memset(Pointer_Buffer, 0, sizeof(Shared_Buffer_Display));
+
+	// Center the title
+	Length = (unsigned char) strlen(Pointer_String_Title);
+	if (Length < DISPLAY_TEXT_MODE_WIDTH)
+	{
+		Title_X = (DISPLAY_TEXT_MODE_WIDTH - Length) / 2;
+	}
+	else
+	{
+		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The title string \"%s\" is too long to fit on a single display row.\r\n", Pointer_String_Title);
+		Title_X = 0;
+	}
+	DisplaySetTextCursor(Title_X, 0);
+	DisplayWriteString(Pointer_Buffer, Pointer_String_Title);
+
+	// Render the message text
+	DisplaySetTextCursor(0, 2);
+	DisplayWriteString(Pointer_Buffer, Pointer_String_Message);
+
+	DisplayDrawTextBuffer(Pointer_Buffer);
 }

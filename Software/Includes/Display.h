@@ -53,4 +53,11 @@ void DisplayWriteString(void *Pointer_Buffer, const char *Pointer_String);
  */
 void DisplayDrawTextBuffer(void *Pointer_Buffer);
 
+/** Show a text message made of a title and text.
+ * @param Pointer_Buffer The frame buffer in which the message will be rendered. The frame buffer will be automatically cleared by this function.
+ * @param Pointer_String_Title The message title, it will be automatically centered and needs to fit on a single display line.
+ * @param Pointer_String_Message The message text content, it can use several up to 6 lines.
+ */
+void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Title, const char *Pointer_String_Message);
+
 #endif

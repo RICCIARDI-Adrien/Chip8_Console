@@ -222,25 +222,10 @@ void main(void)
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 
-	// TEST
-	{
-		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
-
-		DisplaySetTextCursor(0, 0);
-		DisplayWriteString(Shared_Buffer_Display, "Salut !");
-
-		DisplaySetTextCursor(2, 2);
-		DisplayWriteString(Shared_Buffer_Display, "Message sur 2\nlignes.");
-
-		DisplaySetTextCursor(0, 4);
-		DisplayWriteString(Shared_Buffer_Display, "Message plus long qui va aller a la ligne plusieurs fois.");
-
-		DisplaySetTextCursor(1, 7);
-		DisplayWriteString(Shared_Buffer_Display, "Message qui deborde et ne sera pas affiche totalement");
-
-		DisplayDrawTextBuffer(Shared_Buffer_Display);
-		while (1);
-	}
+	DisplayDrawTextMessage(Shared_Buffer_Display, "Titre de ouf", "Message autant incroyable de l'espace.");
+	__delay_ms(3000);
+	DisplayDrawTextMessage(Shared_Buffer_Display, "Titre de ouf mais trop long de merde", "Message court.");
+	__delay_ms(3000);
 
 	// TEST
 	if (FATListStart("/") != 0)

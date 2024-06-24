@@ -14,6 +14,7 @@ SOURCES = \
 	$(PATH_SOURCES)/NCO.c \
 	$(PATH_SOURCES)/SD_Card.c \
 	$(PATH_SOURCES)/Serial_Port.c \
+	$(PATH_SOURCES)/Shared_Buffer.c \
 	$(PATH_SOURCES)/Sound.c \
 	$(PATH_SOURCES)/SPI.c
 

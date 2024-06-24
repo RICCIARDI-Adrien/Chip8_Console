@@ -10,6 +10,7 @@
 #include <NCO.h>
 #include <SD_Card.h>
 #include <Serial_Port.h>
+#include <Shared_Buffer.h>
 #include <Sound.h>
 #include <SPI.h>
 #include <stdio.h>
@@ -146,21 +147,19 @@ void main(void)
 
 	// TEST
 	{
-		static unsigned char Frame_Buffer[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
-
 		DisplaySetTextCursor(0, 0);
-		DisplayWriteString(Frame_Buffer, "Salut !");
+		DisplayWriteString(Shared_Buffer_Display, "Salut !");
 
 		DisplaySetTextCursor(2, 2);
-		DisplayWriteString(Frame_Buffer, "Message sur 2\nlignes.");
+		DisplayWriteString(Shared_Buffer_Display, "Message sur 2\nlignes.");
 
 		DisplaySetTextCursor(0, 4);
-		DisplayWriteString(Frame_Buffer, "Message plus long qui va aller a la ligne plusieurs fois.");
+		DisplayWriteString(Shared_Buffer_Display, "Message plus long qui va aller a la ligne plusieurs fois.");
 
 		DisplaySetTextCursor(1, 7);
-		DisplayWriteString(Frame_Buffer, "Message qui deborde et ne sera pas affiche totalement");
+		DisplayWriteString(Shared_Buffer_Display, "Message qui deborde et ne sera pas affiche totalement");
 
-		DisplayDrawTextBuffer(Frame_Buffer);
+		DisplayDrawTextBuffer(Shared_Buffer_Display);
 		while (1);
 	}
 

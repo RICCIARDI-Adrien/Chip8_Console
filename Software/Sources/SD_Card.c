@@ -35,9 +35,22 @@
 /** Tell whether the SD card supports protocol version 1.x or protocol V2.00 and later. */
 static unsigned char SD_Card_Is_Version_2_Protocol;
 
+/** Tell whether the card has been removed since last check. */
+static unsigned char SD_Card_Is_Card_Removed = 0;
+
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
+/** Interrupt handler for the external interrupt 1. */
+static void __interrupt(irq(INT1), high_priority) SDCardInterrupt(void)
+{
+	// Keep the record of the card removal state
+	SD_Card_Is_Card_Removed = 1;
+
+	// Clear the interrupt flag
+	PIR5bits.INT1IF = 0;
+}
+
 /** Prepare the command at the SD format and transmit it on the SPI bus.
  * @param Command_Bit_Pattern The command number.
  * @param Argument The command argument, depending on the command.
@@ -86,7 +99,24 @@ unsigned char SDCardWaitForR1Response(void)
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
-unsigned char SDCardInitialize(void)
+void SDCardInitialize(void)
+{
+	// Configure the pin as digital
+	ANSELBbits.ANSELB4 = 0;
+
+	// Configure the pin as input
+	TRISBbits.TRISB4 = 1;
+
+	// Assign the external interrupt 1 feature to the RB4 pin
+	INT1PPS = 0x0C; // Port B, pin 4
+
+	// Configure the external interrupt 1 interrupt
+	INTCON0bits.INT1EDG = 1; // Trigger the interrupt on signal rising edge (to detect card removal)
+	PIR5bits.INT1IF = 0; // Make sure the interrupt flag is cleared to avoid triggering a false interrupt
+	PIE5bits.INT1IE = 1; // Enable the interrupt
+}
+
+unsigned char SDCardProbe(void)
 {
 	unsigned char i, Buffer[4], Result;
 	unsigned long Command_Argument;
@@ -282,4 +312,19 @@ unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointe
 	SPI_DESELECT_SD_CARD();
 
 	return 0;
+}
+
+TSDCardDetectionStatus SDCardGetDetectionStatus(void)
+{
+	unsigned char Is_Card_Detected, Is_Card_Removed = SD_Card_Is_Card_Removed;
+
+	// Cache the detection state
+	Is_Card_Detected = !PORTBbits.RB4;
+
+	// Reset the removal state at each call
+	SD_Card_Is_Card_Removed = 0;
+
+	if (!Is_Card_Detected) return SD_CARD_DETECTION_STATUS_NO_CARD;
+	if (SD_Card_Is_Card_Removed) return SD_CARD_DETECTION_STATUS_DETECTED_REMOVED;
+	return SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED;
 }

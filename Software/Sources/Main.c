@@ -124,7 +124,33 @@ static unsigned char MainMountSDCard(void)
 {
 	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
-	unsigned char i;
+	unsigned char i, Is_Message_Displayed;
+	TSDCardDetectionStatus Card_Detection_Status;
+
+	// Wait for an SD card to be inserted
+	Is_Message_Displayed = 0;
+	while (1)
+	{
+		Card_Detection_Status = SDCardGetDetectionStatus();
+		if (Card_Detection_Status != SD_CARD_DETECTION_STATUS_NO_CARD) break;
+
+		// Avoid redrawing the message at each loop
+		if (!Is_Message_Displayed)
+		{
+			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Please insert a SD\ncard.");
+			Is_Message_Displayed = 1;
+		}
+	}
+
+	// TEST
+	DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "OK");
+	while (1);
+
+	// Probe the SD card only when necessary, as this takes some time
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
+		while (1); // TODO
+	}
 
 	// The first SD card block contains the MBR, get it
 	if (SDCardReadBlock(0, Buffer) != 0)
@@ -188,20 +214,16 @@ void main(void)
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	KeyboardInitialize();
-	SPIInitialize(); // The SPI module must be initialized before the display and the SD card
 	InterpreterInitialize();
+	SDCardInitialize();
+	SPIInitialize(); // The SPI module must be initialized before the display
 	DisplayInitialize();
+	SDCardInitialize();
 
 	// Show the splash screen
 	memcpy(Shared_Buffer_Display, Main_Splash_Screen, sizeof(Shared_Buffer_Display));
 	DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 	__delay_ms(2000);
-
-	if (SDCardInitialize() != 0)
-	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to initialize the SD card.\033[0m\r\n");
-		while (1); // TODO
-	}
 
 	// Initialize the interrupts
 	// Set the vector table base address to the default value

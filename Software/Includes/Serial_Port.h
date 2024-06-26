@@ -16,7 +16,7 @@
  * @note The internal buffer is limited to 256 bytes, do not write too long strings.
  */
 #ifdef SERIAL_PORT_ENABLE_LOGGING
-	#define SERIAL_PORT_LOG(Is_Enabled, Format, ...) do { if (Is_Enabled) printf("[%s:%d] " Format, __FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
+	#define SERIAL_PORT_LOG(Is_Enabled, Format, ...) do { if (Is_Enabled) printf("[%s:%d] " Format "\r\n", __FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 #else
 	#define SERIAL_PORT_LOG(Is_Enabled, Format, ...) do {} while (0)
 #endif

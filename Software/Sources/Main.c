@@ -146,14 +146,14 @@ Detect_SD_Card:
 	// The card has not changed and was already probed, nothing more to do
 	if (Card_Detection_Status == SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.");
 		return;
 	}
 
 	// Probe the SD card
 	if (SDCardProbe() != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
@@ -163,7 +163,7 @@ Detect_SD_Card:
 	// The first SD card block contains the MBR, get it
 	if (SDCardReadBlock(0, Buffer) != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
@@ -176,28 +176,28 @@ Detect_SD_Card:
 	{
 		// Cache the partition data access
 		Pointer_Partitions_Data = &Partitions_Data[i];
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.\r\n", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
 
 		// Bypass any empty partition
 		if (Pointer_Partitions_Data->Type == 0)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition is empty, trying next one.\r\n");
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition is empty, trying next one.");
 			continue;
 		}
 
 		// Try to mount the file system as the partition is not empty
 		if (FATMount(Pointer_Partitions_Data) != 0)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.\r\n", i + 1);
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.", i + 1);
 			continue;
 		}
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d was successfully mounted.\r\n", i + 1);
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d was successfully mounted.", i + 1);
 		break;
 	}
 	// Were all partitions invalid ?
 	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		goto Detect_SD_Card;
@@ -254,7 +254,7 @@ void main(void)
 	// TEST
 	if (FATListStart("/") != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed\r\n");
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed");
 	}
 	while (FATListNext(&File_Information) == 0)
 	{

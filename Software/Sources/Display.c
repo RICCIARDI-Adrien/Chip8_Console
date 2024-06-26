@@ -355,7 +355,7 @@ void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Tit
 	}
 	else
 	{
-		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The title string \"%s\" is too long to fit on a single display row.\r\n", Pointer_String_Title);
+		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The title string \"%s\" is too long to fit on a single display row.", Pointer_String_Title);
 		Title_X = 0;
 	}
 	DisplaySetTextCursor(Title_X, 0);

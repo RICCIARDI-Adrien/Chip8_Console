@@ -31,4 +31,12 @@ char *INIParserFindNextSection(char *Pointer_String_Current_Section);
  */
 char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_String_Key_Name);
 
+/** Retrieve an unsigned 8-bit value associated to a key in the specified section.
+ * @param Pointer_String_Section Pointer to the beginning of the section.
+ * @param Pointer_String_Key_Name The key name. It is case sensitive.
+ * @return The integer value converted to binary,
+ * @return 0 if the key value was not convertible to a number.
+ */
+unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char *Pointer_String_Key_Name);
+
 #endif

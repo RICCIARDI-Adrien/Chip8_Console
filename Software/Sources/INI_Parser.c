@@ -5,6 +5,7 @@
 #include <INI_Parser.h>
 #include <Serial_Port.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -163,4 +164,19 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 			return NULL;
 		}
 	}
+}
+
+unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char *Pointer_String_Key_Name)
+{
+	char *Pointer_String_Value;
+
+	// Find the string containing the key data
+	Pointer_String_Value = INIParserReadString(Pointer_String_Section, Pointer_String_Key_Name);
+	if (Pointer_String_Value == NULL)
+	{
+		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Could not find the key named \"%s\".", Pointer_String_Key_Name);
+		return 1;
+	}
+
+	return (unsigned char) atoi(Pointer_String_Value);
 }

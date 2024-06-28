@@ -284,6 +284,7 @@ void main(void)
 			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
 			SERIAL_PORT_LOG(1, "KeyValueUp=%s", INIParserReadString(Pointer_String_Section, "KeyValueUp"));
 			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
+			SERIAL_PORT_LOG(1, "valeur KeyValueUp = %d\n", INIParserRead8BitInteger(Pointer_String_Section, "KeyValueUp"));
 
 			Pointer_String_Section++;
 		}

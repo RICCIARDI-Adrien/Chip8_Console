@@ -276,6 +276,15 @@ void main(void)
 
 			SERIAL_PORT_LOG(1, "\033[33mSection (et tout ce qui suit) : \033[0m\"%s\"", Pointer_String_Section);
 
+			SERIAL_PORT_LOG(1, "\033[32mRecherche cles\033[0m");
+			SERIAL_PORT_LOG(1, "ROMFile=%s", INIParserReadString(Pointer_String_Section, "ROMFile"));
+			SERIAL_PORT_LOG(1, "rien=%s", INIParserReadString(Pointer_String_Section, "rien"));
+			SERIAL_PORT_LOG(1, "Description=%s", INIParserReadString(Pointer_String_Section, "Description"));
+			SERIAL_PORT_LOG(1, "KeyValueUp=%s", INIParserReadString(Pointer_String_Section, "KeyValueUp"));
+			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
+			SERIAL_PORT_LOG(1, "KeyValueUp=%s", INIParserReadString(Pointer_String_Section, "KeyValueUp"));
+			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
+
 			Pointer_String_Section++;
 		}
 

@@ -1,6 +1,7 @@
 /** @file INI_Parser.h
  * A simple INI file format parser.
  * @note The buffer containing the INI data must be followed by 2 bytes set to the value 0x03 (to delimit the INI end).
+ * @note INI keys data are limited to 255 characters.
  * @author Adrien RICCIARDI
  */
 #ifndef H_INI_PARSER_H
@@ -21,5 +22,13 @@
  * @return A pointer on the beginning of the next section (if such section is existing), pointing to the initial '['.
  */
 char *INIParserFindNextSection(char *Pointer_String_Current_Section);
+
+/** Retrieve a string value associated to a key in the specified section.
+ * @param Pointer_String_Section Pointer to the beginning of the section.
+ * @param Pointer_String_Key_Name The key name. It is case sensitive.
+ * @return NULL if the end of the buffer was reached before finding the key,
+ * @return A pointer to the beginning of the string if it was found. The string is zero-terminated and can be read as-is. Do not modify the string or you will break the INI content.
+ */
+char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_String_Key_Name);
 
 #endif

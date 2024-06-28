@@ -8,3 +8,5 @@
 // Public variables
 //-------------------------------------------------------------------------------------------------
 unsigned char Shared_Buffer_Display[DISPLAY_COLUMNS_COUNT * DISPLAY_ROWS_COUNT / 8];
+
+TSharedBuffers Shared_Buffers;

@@ -1,0 +1,25 @@
+/** @file INI_Parser.h
+ * A simple INI file format parser.
+ * @note The buffer containing the INI data must be followed by 2 bytes set to the value 0x03 (to delimit the INI end).
+ * @author Adrien RICCIARDI
+ */
+#ifndef H_INI_PARSER_H
+#define H_INI_PARSER_H
+
+//-------------------------------------------------------------------------------------------------
+// Constants
+//-------------------------------------------------------------------------------------------------
+/** Allow to terminate the accessed keys data with a NUL character, making the strings directly readable by the application without needing to copy them to terminate them. */
+#define INI_PARSER_END_CHARACTER 0x03 // Corresponds to the End-of-text ASCII character
+
+//-------------------------------------------------------------------------------------------------
+// Functions
+//-------------------------------------------------------------------------------------------------
+/** Locate the beginning of the next section in INI buffer.
+ * @param Pointer_String_Current_Section On function first call, initialize Pointer_String_Current_Section to the beginning of the INI buffer. On successive calls, this buffer can point to whatever location in an existing section.
+ * @return NULL if the end of the buffer was reached before finding the next section,
+ * @return A pointer on the beginning of the next section (if such section is existing), pointing to the initial '['.
+ */
+char *INIParserFindNextSection(char *Pointer_String_Current_Section);
+
+#endif

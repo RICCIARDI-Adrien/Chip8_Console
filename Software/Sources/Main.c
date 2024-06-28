@@ -4,6 +4,7 @@
  */
 #include <Display.h>
 #include <FAT.h>
+#include <INI_Parser.h>
 #include <Interpreter.h>
 #include <Keyboard.h>
 #include <MBR.h>
@@ -244,6 +245,43 @@ void main(void)
 	// Enable interrupts
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
+
+	// TEST
+	{
+		char buf[] = \
+			"[brix]\n"
+			"Title=Bof\n"
+			"Description=qwerty uiop asdf\n"
+			"ROMFile=brix.ch8\n"
+			"KeyValueUp=3\n"
+			"\n"
+			"[SecondGame]\n\n\n"
+			"Title=Jeu 2\n"
+			"Description=courte\n"
+			"KeyValueUp=6\n"
+			"ROMFile=BLABLA.ch8\n"
+			"\n\n"
+			"  [troisieme]\n"
+			"ROMFile=tre.ch8\n\n"
+			"	Title=titre 3 PLUS LONG\n"
+			"Description=moins courte\n"
+			"KeyValueUp=17\n\x03\x03";
+		char *Pointer_String_Section;
+
+		Pointer_String_Section = buf;
+		while (1)
+		{
+			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
+			if (Pointer_String_Section == NULL) break;
+
+			SERIAL_PORT_LOG(1, "\033[33mSection (et tout ce qui suit) : \033[0m\"%s\"", Pointer_String_Section);
+
+			Pointer_String_Section++;
+		}
+
+		SERIAL_PORT_LOG(1, "FIN DU TEST.");
+		while (1);
+	}
 
 	// Block until an SD card with a valid FAT file system is inserted
 	MainMountSDCard();

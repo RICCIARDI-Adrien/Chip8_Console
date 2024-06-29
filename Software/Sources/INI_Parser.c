@@ -12,7 +12,7 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
-#define INI_PARSER_IS_LOGGING_ENABLED 1
+#define INI_PARSER_IS_LOGGING_ENABLED 0
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -71,7 +71,14 @@ static char *INIParserDiscardWhiteSpace(char *Pointer_String)
 //-------------------------------------------------------------------------------------------------
 char *INIParserFindNextSection(char *Pointer_String_Current_Section)
 {
-	return INIParserSearchCharacter(Pointer_String_Current_Section, '[');
+	char *Pointer_String;
+
+	Pointer_String = INIParserSearchCharacter(Pointer_String_Current_Section, '[');
+	if (Pointer_String == NULL) return NULL;
+
+	// Bypass the '[' character, so a next call to INIParserFindNextSection() will return the next section without needed to modify the pointer
+	Pointer_String++;
+	return Pointer_String;
 }
 
 char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_String_Key_Name)

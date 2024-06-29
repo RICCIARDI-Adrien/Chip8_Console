@@ -46,6 +46,9 @@
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
 #define MAIN_IS_LOGGING_ENABLED 1
 
+/** The configuration file name on the SD card. */
+#define MAIN_CONFIGURATION_FILE_NAME "CONFIG.INI"
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -205,13 +208,72 @@ Detect_SD_Card:
 	}
 }
 
+/** Retrieve the games configuration file and display the available games. */
+static unsigned char MainLoadConfigurationFile(void)
+{
+	TFATFileInformation File_Information;
+	unsigned long Size;
+
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Starting finding the available games on the SD card...");
+
+	// Begin listing the files
+	if (FATListStart("/") != 0)
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed.");
+		return 1;
+	}
+
+	// Search for the configuration file
+	while (FATListNext(&File_Information) == 0)
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
+			File_Information.String_Short_Name,
+			File_Information.Is_Directory,
+			File_Information.Size,
+			File_Information.First_Cluster_Number);
+
+		// We are searching for a file, discard any directory
+		if (File_Information.Is_Directory)
+		{
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
+			continue;
+		}
+
+		// Is this the searched file ?
+		if (strcmp((char *) File_Information.String_Short_Name, MAIN_CONFIGURATION_FILE_NAME) == 0)
+		{
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Found the configuration file, loading it.");
+
+			// Load the file
+			if (FATReadFile(&File_Information, Shared_Buffers.Configuration_File, sizeof(Shared_Buffers.Configuration_File)) != 0) // Keep room for the terminating bytes
+			{
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
+				DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\nconfiguration file.\nReplace SD card and\npress Menu.");
+				while (!KeyboardIsMenuKeyPressed());
+				return 1;
+			}
+
+			// Terminate the INI buffer (see the INI parser documentation for information about the two terminating bytes)
+			Size = File_Information.Size;
+			if (Size > (sizeof(Shared_Buffers.Configuration_File) - 2)) Size = sizeof(Shared_Buffers.Configuration_File) - 2;
+			Shared_Buffers.Configuration_File[Size] = INI_PARSER_END_CHARACTER;
+			Shared_Buffers.Configuration_File[Size + 1] = INI_PARSER_END_CHARACTER;
+
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
+			return 0;
+		}
+	}
+
+	// No configuration file found
+	return 1;
+}
+
 //-------------------------------------------------------------------------------------------------
 // Entry point
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
-	unsigned char a = '0';
-	TFATFileInformation File_Information, File_Information_2;
+	TFATFileInformation File_Information_2;
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -246,78 +308,28 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// TEST
+	// Block until an SD card with a valid FAT file system is inserted
+	while (1)
 	{
-		char buf[] = \
-			"[brix]\n"
-			"Title=Bof\n"
-			"Description=qwerty uiop asdf\n"
-			"ROMFile=brix.ch8\n"
-			"KeyValueUp=3\n"
-			"\n"
-			"[SecondGame]\n\n\n"
-			"Title=Jeu 2\n"
-			"Description=courte\n"
-			"KeyValueUp=6\n"
-			"ROMFile=BLABLA.ch8\n"
-			"\n\n"
-			"  [troisieme]\n"
-			"ROMFile=tre.ch8\n\n"
-			"	Title=titre 3 PLUS LONG\n"
-			"Description=moins courte\n"
-			"KeyValueUp=17\n\x03\x03";
-		char *Pointer_String_Section;
+		DisplayDrawTextMessage(Shared_Buffer_Display, "- Welcome -", "Loading console\nconfiguration...");
 
-		Pointer_String_Section = buf;
-		while (1)
+		MainMountSDCard();
+
+		if (MainLoadConfigurationFile() != 0)
 		{
-			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
-			if (Pointer_String_Section == NULL) break;
-
-			SERIAL_PORT_LOG(1, "\033[33mSection (et tout ce qui suit) : \033[0m\"%s\"", Pointer_String_Section);
-
-			SERIAL_PORT_LOG(1, "\033[32mRecherche cles\033[0m");
-			SERIAL_PORT_LOG(1, "ROMFile=%s", INIParserReadString(Pointer_String_Section, "ROMFile"));
-			SERIAL_PORT_LOG(1, "rien=%s", INIParserReadString(Pointer_String_Section, "rien"));
-			SERIAL_PORT_LOG(1, "Description=%s", INIParserReadString(Pointer_String_Section, "Description"));
-			SERIAL_PORT_LOG(1, "KeyValueUp=%s", INIParserReadString(Pointer_String_Section, "KeyValueUp"));
-			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
-			SERIAL_PORT_LOG(1, "KeyValueUp=%s", INIParserReadString(Pointer_String_Section, "KeyValueUp"));
-			SERIAL_PORT_LOG(1, "Title=%s", INIParserReadString(Pointer_String_Section, "Title"));
-			SERIAL_PORT_LOG(1, "valeur KeyValueUp = %d\n", INIParserRead8BitInteger(Pointer_String_Section, "KeyValueUp"));
-
-			Pointer_String_Section++;
+			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No configuration filefound. Replace SD\ncard and press Menu.");
+			while (!KeyboardIsMenuKeyPressed());
+			continue;
 		}
 
-		SERIAL_PORT_LOG(1, "FIN DU TEST.");
-		while (1);
+		// TEST
+		break;
 	}
-
-	// Block until an SD card with a valid FAT file system is inserted
-	MainMountSDCard();
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
-
-	// TEST
-	if (FATListStart("/") != 0)
-	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed");
-	}
-	while (FATListNext(&File_Information) == 0)
-	{
-		printf("File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.\r\n",
-			File_Information.String_Short_Name,
-			File_Information.Is_Directory,
-			File_Information.Size,
-			File_Information.First_Cluster_Number);
-
-		if (strcmp((char *) File_Information.String_Short_Name, "PROTOC~1.TXT") == 0)
-		{
-			printf("Found test file to load.\r\n");
-			memcpy(&File_Information_2, &File_Information, sizeof(File_Information));
-		}
-	}
+	DisplayDrawTextMessage(Shared_Buffer_Display, "TEST", "DEMARREE");
+	while (1);
 
 	// TEST
 	InterpreterLoadProgramFromFile(&File_Information_2);

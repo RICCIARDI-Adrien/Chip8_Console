@@ -123,7 +123,7 @@ unsigned char SDCardProbe(void)
 
 	// Switch the SD card to SPI mode
 	SPI_DESELECT_SD_CARD(); // Do not select the SD card (/SS must be kept high)
-	__delay_ms(1); // Give some time to the SD card to run some internal firmware
+	__delay_ms(100); // Give some time to the SD card to run some internal firmware
 	for (i = 0; i < 10; i++) SPITransferByte(0xFF); // The MOSI line must also be high while at least 74 clock cycles must be sent by the master
 
 	// Send the CMD0 (GO_IDLE_STATE) command to execute a software reset of the card
@@ -140,7 +140,7 @@ unsigned char SDCardProbe(void)
 		return 1;
 	}
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "CMD0 was successful.");
-	__delay_ms(1);
+	__delay_ms(10);
 
 	// Send the CMD8 (SEND_IF_COND) to determine whether the card is first generation or V2.00
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending CMD8 to the SD card...");
@@ -184,7 +184,7 @@ unsigned char SDCardProbe(void)
 		}
 	}
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "CMD8 was successful.");
-	__delay_ms(1);
+	__delay_ms(10);
 
 	// Run the card initialization process until the card is ready
 	SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Looping through the initialization process...");
@@ -204,7 +204,7 @@ unsigned char SDCardProbe(void)
 			return 1;
 		}
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "CMD55 was successful.");
-		__delay_ms(1);
+		__delay_ms(10);
 
 		// Run the initialization process
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Sending ACMD41 to the SD card...");
@@ -228,7 +228,7 @@ unsigned char SDCardProbe(void)
 		// Wait 10 milliseconds (taking into account the 1 millisecond of delay that has already been spent during the CMD55 execution)
 		__delay_ms(9);
 	}
-	__delay_ms(1);
+	__delay_ms(10);
 
 	// Reading the OCR register is part of the initialization process of the protocol V2.00 and later
 	if (SD_Card_Is_Version_2_Protocol)
@@ -260,7 +260,7 @@ unsigned char SDCardProbe(void)
 		if (Buffer[0] & 0x40) SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Card is High Capacity or Extended Capacity (CCS bit is set).");
 		else SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "Card is Standard Capacity.");
 		SERIAL_PORT_LOG(SD_CARD_IS_LOGGING_ENABLED, "CMD58 was successful.");
-		__delay_ms(1);
+		__delay_ms(10);
 	}
 
 	return 0;

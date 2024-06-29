@@ -19,7 +19,7 @@
 /** Locate the beginning of the next section in INI buffer.
  * @param Pointer_String_Current_Section On function first call, initialize Pointer_String_Current_Section to the beginning of the INI buffer. On successive calls, this buffer can point to whatever location in an existing section.
  * @return NULL if the end of the buffer was reached before finding the next section,
- * @return A pointer on the beginning of the next section (if such section is existing), pointing to the initial '['.
+ * @return A pointer on the beginning of the next section (if such section is existing), pointing to the character right after the '['.
  */
 char *INIParserFindNextSection(char *Pointer_String_Current_Section);
 

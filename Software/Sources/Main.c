@@ -208,13 +208,16 @@ Detect_SD_Card:
 	}
 }
 
-/** Retrieve the games configuration file and display the available games. */
+/** Retrieve the games configuration file from the SD card.
+ * @return 1 if an error occurred,
+ * @return 0 when a valid configuration file has been found and loaded.
+ */
 static unsigned char MainLoadConfigurationFile(void)
 {
 	TFATFileInformation File_Information;
 	unsigned long Size;
 
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Starting finding the available games on the SD card...");
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file on the SD card...");
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -264,8 +267,120 @@ static unsigned char MainLoadConfigurationFile(void)
 		}
 	}
 
-	// No configuration file found
+	// No configuration file found, tell the user to provide an updated SD card
+	DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No configuration filefound. Replace the SDcard and press Menu.");
+	while (!KeyboardIsMenuKeyPressed());
 	return 1;
+}
+
+/** Propose each available game to the user and allow him to select one.
+ * TODO
+ */
+static unsigned char MainSelectGame(void)
+{
+	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
+	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1;
+
+	// TEST
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "TEST ini=%s", Shared_Buffers.Configuration_File);
+
+	// Count the available games
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
+	Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+	while (1)
+	{
+		// Locate the next game section
+		Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
+		if (Pointer_String_Section == NULL) break;
+		Games_Count++;
+	}
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Found games count : %u.", Games_Count);
+
+	// Do not continue if no game is available
+	if (Games_Count == 0)
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No game found, stopping.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No game found in the\nconfiguration file.\nReplace the SD card\nand press Menu.");
+		while (!KeyboardIsMenuKeyPressed());
+		return 1;
+	}
+
+	// Display all games to the user
+	Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+	while (1)
+	{
+		// Go to the next game
+		if (Is_Games_List_Incrementing)
+		{
+			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
+			if (Pointer_String_Section == NULL)
+			{
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Last game reached, looping to the first one.");
+				Current_Game_Index = 1;
+				Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+				Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section); // Make sure to point to the second section next time
+			}
+			else Current_Game_Index++;
+		}
+		else
+		{
+			// TODO
+		}
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Current game index : %u.", Current_Game_Index);
+
+		// Show the game into the display frame buffer
+		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
+		sprintf(String_Line, "- Game %u/%u -", Current_Game_Index, Games_Count);
+		DisplaySetTextCursor((DISPLAY_TEXT_MODE_WIDTH - (unsigned char) strlen(String_Line)) / 2, 0); // Center the text
+		DisplayWriteString(Shared_Buffer_Display, String_Line);
+
+		// Retrieve the game information
+		// Title
+		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Title");
+		if (Pointer_String_Content == NULL)
+		{
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game title found.");
+			Pointer_String_Content = "! NO TITLE PROVIDED !";
+		}
+		DisplaySetTextCursor(0, 2);
+		DisplayWriteString(Shared_Buffer_Display, Pointer_String_Content);
+		// Description
+		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Description");
+		if (Pointer_String_Content == NULL) SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game description found.");
+		// Do not display an error message if no description is provided, just display nothing
+		else
+		{
+			DisplaySetTextCursor(0, 3);
+			DisplayWriteString(Shared_Buffer_Display, Pointer_String_Content);
+		}
+
+		// Display instructions
+		DisplaySetTextCursor(0, DISPLAY_TEXT_MODE_HEIGHT - 1);
+		DisplayWriteString(Shared_Buffer_Display, "Press C to start");
+		DisplayDrawTextBuffer(Shared_Buffer_Display);
+
+		// Wait for a key press
+		while (1)
+		{
+			Keys_Mask = KeyboardReadKeysMask();
+
+			// Show the previous game
+			if (Keys_Mask & KEYBOARD_KEY_LEFT)
+			{
+				Is_Games_List_Incrementing = 0;
+				//break;
+			}
+			// Show the next game
+			if (Keys_Mask & KEYBOARD_KEY_RIGHT)
+			{
+				Is_Games_List_Incrementing = 1;
+				while (KeyboardReadKeysMask() & KEYBOARD_KEY_RIGHT); // Wait for key release
+				break;
+			}
+		}
+	}
+
+	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -308,22 +423,19 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// Block until an SD card with a valid FAT file system is inserted
+	// Load the games configuration from the SD card
 	while (1)
 	{
 		DisplayDrawTextMessage(Shared_Buffer_Display, "- Welcome -", "Loading console\nconfiguration...");
 
+		// Block until an SD card with a valid FAT file system is inserted
 		MainMountSDCard();
 
-		if (MainLoadConfigurationFile() != 0)
-		{
-			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No configuration filefound. Replace SD\ncard and press Menu.");
-			while (!KeyboardIsMenuKeyPressed());
-			continue;
-		}
+		// Block until a valid configuration file is found
+		if (MainLoadConfigurationFile() != 0) continue;
 
-		// TEST
-		break;
+		// Block until a game is found
+		if (MainSelectGame() == 0) break;
 	}
 
 	// TEST

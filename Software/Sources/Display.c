@@ -26,19 +26,6 @@
 #define DISPLAY_DC_MODE_DATA 1
 
 //-------------------------------------------------------------------------------------------------
-// Constants
-//-------------------------------------------------------------------------------------------------
-/** Text character width in pixels. */
-#define DISPLAY_TEXT_CHARACTER_WIDTH 6
-/** Text character height in pixels. */
-#define DISPLAY_TEXT_CHARACTER_HEIGHT 8
-
-/** How many characters can be displayed horizontally. */
-#define DISPLAY_TEXT_MODE_WIDTH (DISPLAY_COLUMNS_COUNT / DISPLAY_TEXT_CHARACTER_WIDTH)
-/** How many characters can be displayed vertically. */
-#define DISPLAY_TEXT_MODE_HEIGHT (DISPLAY_ROWS_COUNT / DISPLAY_TEXT_CHARACTER_HEIGHT)
-
-//-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
 /** The horizontal position of the cursor used for rendering text. */

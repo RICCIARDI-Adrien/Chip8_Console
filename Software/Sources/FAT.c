@@ -317,7 +317,10 @@ unsigned char FATListStart(char *Pointer_String_Absolute_Path)
 	// TODO split the path
 
 	// TODO follow all root directory clusters up to the target directory
+
+	// Reset the listing state machine
 	FAT_List_File_Current_Cluster_Number = FAT_Information.First_Root_Directory_Cluster; // Always start from the root directory for now as directories support is not present
+	FAT_List_File_State = FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER;
 
 	return 0;
 }

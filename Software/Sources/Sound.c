@@ -9,12 +9,12 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** The PWM period is a 8-bit value computed as follow : TxPR = ((1 / PWM_Frequency) / (4 * (1 / Fosc) * Prescaler)) - 1.
- * The desired PWM frequency is here 2KHz, with Fosc being 64MHz. By using a 1:32 prescaler, the computed value is an integer and fits into 8 bits.
+ * The desired PWM frequency is here 4KHz, with Fosc being 64MHz. By using a 1:16 prescaler, the computed value is an integer and fits into 8 bits.
  */
 #define SOUND_PWM_PERIOD 249
 
 /** The pulse width is a 10-bit value computed as follow : PWMxDC = Pulse_Width / ((1 / Fosc) * Prescaler).
- * The pulse width is here 1 / 2000 / 2 to get a 50% duty cycle.
+ * The pulse width is here 1 / 4000 / 2 to get a 50% duty cycle.
  */
 #define SOUND_PWM_PULSE_WIDTH 500
 
@@ -33,7 +33,7 @@ void SoundInitialize(void)
 	T2CLK = 0x01; // The datasheet tells that the timer must be clocked by Fosc/4 for proper PWM operations
 	T2PR = SOUND_PWM_PERIOD;
 	T2HLT = 0xA0; // Prescaler output is synchronized with Fosc/4, also synchronize the ON bit with the timer clock input, select the free running period mode with period pulse and software gate
-	T2CON = 0x50; // Do not enable the timer yet, configure a 1:32 prescaler and no postscaler as it is not used by the PWM module
+	T2CON = 0x40; // Do not enable the timer yet, configure a 1:16 prescaler and no postscaler as it is not used by the PWM module
 
 	// Configure the timer that is used as the CHIP-8 sound timer
 	T4CLK = 0x09; // Select the NCO as clock source (the NCO is outputting a clean 60Hz clock)

@@ -274,15 +274,13 @@ static unsigned char MainLoadConfigurationFile(void)
 }
 
 /** Propose each available game to the user and allow him to select one.
- * TODO
+ * @return NULL if an error occurred,
+ * @return A string pointer on the INI section corresponding to the selected game.
  */
-static unsigned char MainSelectGame(void)
+static char *MainSelectGame(void)
 {
 	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
 	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1;
-
-	// TEST
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "TEST ini=%s", Shared_Buffers.Configuration_File);
 
 	// Count the available games
 	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
@@ -302,7 +300,7 @@ static unsigned char MainSelectGame(void)
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No game found, stopping.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No game found in the\nconfiguration file.\nReplace the SD card\nand press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
-		return 1;
+		return NULL;
 	}
 
 	// Display all games to the user
@@ -342,6 +340,7 @@ static unsigned char MainSelectGame(void)
 			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game title found.");
 			Pointer_String_Content = "! NO TITLE PROVIDED !";
 		}
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Game title : \"%s\".", Pointer_String_Content);
 		DisplaySetTextCursor(0, 2);
 		DisplayWriteString(Shared_Buffer_Display, Pointer_String_Content);
 		// Description
@@ -356,7 +355,7 @@ static unsigned char MainSelectGame(void)
 
 		// Display instructions
 		DisplaySetTextCursor(0, DISPLAY_TEXT_MODE_HEIGHT - 1);
-		DisplayWriteString(Shared_Buffer_Display, "Press C to start");
+		DisplayWriteString(Shared_Buffer_Display, "Press C to start.");
 		DisplayDrawTextBuffer(Shared_Buffer_Display);
 
 		// Wait for a key press
@@ -368,6 +367,7 @@ static unsigned char MainSelectGame(void)
 			if (Keys_Mask & KEYBOARD_KEY_LEFT)
 			{
 				Is_Games_List_Incrementing = 0;
+				// TODO
 				//break;
 			}
 			// Show the next game
@@ -377,10 +377,15 @@ static unsigned char MainSelectGame(void)
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_RIGHT); // Wait for key release
 				break;
 			}
+			// Select the current game
+			if (Keys_Mask & KEYBOARD_KEY_C)
+			{
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
+				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release
+				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
+			}
 		}
 	}
-
-	return 0;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -388,6 +393,7 @@ static unsigned char MainSelectGame(void)
 //-------------------------------------------------------------------------------------------------
 void main(void)
 {
+	char *Pointer_String_Game_INI_Section;
 	TFATFileInformation File_Information_2;
 
 	// Wait for the internal oscillator to stabilize
@@ -435,17 +441,26 @@ void main(void)
 		if (MainLoadConfigurationFile() != 0) continue;
 
 		// Block until a game is found
-		if (MainSelectGame() == 0) break;
+		Pointer_String_Game_INI_Section = MainSelectGame();
+		if (Pointer_String_Game_INI_Section == NULL) continue;
+
+		// Try to load the game from the SD card
+		if (InterpreterLoadProgramFromFile(Pointer_String_Game_INI_Section) != 0)
+		{
+			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
+			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\ngame. Replace the SD\ncard and press Menu.");
+			while (!KeyboardIsMenuKeyPressed());
+			continue;
+		}
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
+
+		// TEST
+		InterpreterRunProgram();
 	}
 
 	// TEST
 	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
 	DisplayDrawTextMessage(Shared_Buffer_Display, "TEST", "DEMARREE");
-	while (1);
-
-	// TEST
-	InterpreterLoadProgramFromFile(&File_Information_2);
-	InterpreterRunProgram();
 
 	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
 

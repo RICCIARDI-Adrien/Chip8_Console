@@ -3,6 +3,8 @@
  * @author Adrien RICCIARDI
  */
 #include <Display.h>
+#include <FAT.h>
+#include <INI_Parser.h>
 #include <Interpreter.h>
 #include <Keyboard.h>
 #include <Serial_Port.h>
@@ -108,19 +110,71 @@ void InterpreterInitialize(void)
 	T6CON = 0; // Do not enable the timer yet, do not enable any prescaler or postscaler (the timer is already clocked at the desired frequency)
 }
 
-unsigned char InterpreterLoadProgramFromFile(TFATFileInformation *Pointer_File_Information)
+unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Section)
 {
-	unsigned char Console_Key_Mask, Console_Key_Index, Key_Index;
+	unsigned char Console_Key_Mask, Console_Key_Index, Key_Index, Result;
+	char *Pointer_String;
+	TFATFileInformation File_Information;
+
+	// Retrieve the game ROM file name
+	Pointer_String = INIParserReadString(Pointer_String_Game_INI_Section, "ROMFile");
+	if (Pointer_String == NULL)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to retrieve the game ROM file from the INI configuration.");
+		return 1;
+	}
+	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
+
+	// Begin listing the files
+	if (FATListStart("/") != 0)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "FATListStart() failed.");
+		return 1;
+	}
+
+	// Search for the game ROM file
+	while (1)
+	{
+		Result = FATListNext(&File_Information);
+		if (Result != 0) break;
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
+			File_Information.String_Short_Name,
+			File_Information.Is_Directory,
+			File_Information.Size,
+			File_Information.First_Cluster_Number);
+
+		// Do not take directories into account
+		if (File_Information.Is_Directory)
+		{
+			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
+			continue;
+		}
+
+		// Is this the searched file ?
+		if (strcmp((char *) File_Information.String_Short_Name, Pointer_String) == 0)
+		{
+			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Found the game file, loading it.");
+			break;
+		}
+	}
+	// Was the file found ?
+	if (Result != 0)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : could not find the game file, stopping.");
+		return 1;
+	}
+
+	// Load the file
+	if (FATReadFile(&File_Information, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", File_Information.String_Short_Name);
+		return 1;
+	}
+
+	// TODO keys binding
 
 	// Place the built-in fonts at the beginning of the interpreter memory
 	memcpy(Shared_Buffers.Interpreter_Memory, Interpreter_Fonts, sizeof(Interpreter_Fonts));
-
-	// Load the file
-	if (FATReadFile(Pointer_File_Information, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
-	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", Pointer_File_Information->String_Short_Name);
-		return 1;
-	}
 
 	// Configure the registers for the program execution
 	Interpreter_Register_PC = INTERPRETER_PROGRAM_ENTRY_POINT; // The default entry point

@@ -20268,7 +20268,7 @@
 			(justify left bottom mirror)
 		)
 	)
-	(gr_text "BLACK"
+	(gr_text "GND"
 		(at 83 78.6 0)
 		(layer "F.SilkS")
 		(uuid "2b36e605-8018-4368-b383-592f1fd080cc")
@@ -20280,7 +20280,7 @@
 			(justify right bottom)
 		)
 	)
-	(gr_text "BLUE"
+	(gr_text "DIN"
 		(at 85 76 0)
 		(layer "F.SilkS")
 		(uuid "4aa6f3c7-e89d-4616-ac98-1a4e4f32bc96")
@@ -20304,8 +20304,8 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "WHITE"
-		(at 86.5 82.75 0)
+	(gr_text "VCC"
+		(at 86.1 82.7 0)
 		(layer "F.SilkS")
 		(uuid "5e44b0cd-9a87-4098-a816-69cc920cd617")
 		(effects
@@ -20352,8 +20352,8 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "GREY"
-		(at 85 66 0)
+	(gr_text "RESET"
+		(at 85.45 66 0)
 		(layer "F.SilkS")
 		(uuid "9b9f672d-d98f-4458-b5f8-1557ba4be742")
 		(effects
@@ -20400,7 +20400,7 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "GREEN"
+	(gr_text "CLK"
 		(at 85 73.75 0)
 		(layer "F.SilkS")
 		(uuid "c3eeff8b-9180-4dd4-8e2b-ea20fca49d4d")
@@ -20412,7 +20412,7 @@
 			(justify right bottom)
 		)
 	)
-	(gr_text "VIOLET"
+	(gr_text "DC"
 		(at 85 68.5 0)
 		(layer "F.SilkS")
 		(uuid "db195fa9-b73a-464a-9f0f-79a48e2e5859")
@@ -20424,7 +20424,7 @@
 			(justify right bottom)
 		)
 	)
-	(gr_text "YELLOW"
+	(gr_text "CS"
 		(at 80.25 71 0)
 		(layer "F.SilkS")
 		(uuid "fde3d89f-a661-4833-aa73-596a80567374")

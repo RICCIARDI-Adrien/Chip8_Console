@@ -92,12 +92,79 @@ static const unsigned char Interpreter_Fonts[] =
 };
 
 /** Hold a look-up table returning the physical switch code corresponding to a logical Chip-8 key code. This allows to remap Chip-8 program keys to the physical mapping of the console. */
-static unsigned char Interpreter_Keys_Table_From_Interpreter[INTERPRETER_KEYS_COUNT_CHIP_8] = { 0x00, 0x00, KEYBOARD_KEY_UP, 0x00, KEYBOARD_KEY_DOWN, 0x00, KEYBOARD_KEY_LEFT, 0x00, KEYBOARD_KEY_RIGHT }; // TEST mapping
+static unsigned char Interpreter_Keys_Table_From_Interpreter[INTERPRETER_KEYS_COUNT_CHIP_8];
 /** This reverse table allows to determine which Chip-8 key code to return when a console switch is pressed. This table is automatically created from the Interpreter_Keys_Table_From_Interpreter table content. */
 static unsigned char Interpreter_Keys_Table_From_Console[INTERPRETER_KEYS_COUNT_CONSOLE];
 
 /** The random seed. */
 static unsigned char Interpreter_Random_Seed;
+
+//-------------------------------------------------------------------------------------------------
+// Private functions
+//-------------------------------------------------------------------------------------------------
+/** Retrieve the keys configuration from the game INI configuration.
+ * @param Pointer_String_Game_INI_Section The INI section corresponding to the game.
+ * @return 0 on success,
+ * @return 1 if an error occurred.
+ */
+static unsigned char InterpreterConfigureKeyBindings(char *Pointer_String_Game_INI_Section)
+{
+	typedef struct
+	{
+		const char *Pointer_String_INI_Key_Name;
+		unsigned char Keyboard_Key_Code;
+	} TKeyBinding;
+	static TKeyBinding Key_Bindings[INTERPRETER_KEYS_COUNT_CONSOLE] =
+	{
+		{ "KeyValueUp", KEYBOARD_KEY_UP },
+		{ "KeyValueDown", KEYBOARD_KEY_DOWN },
+		{ "KeyValueLeft", KEYBOARD_KEY_LEFT },
+		{ "KeyValueRight", KEYBOARD_KEY_RIGHT },
+		{ "KeyValueA", KEYBOARD_KEY_A },
+		{ "KeyValueB", KEYBOARD_KEY_B },
+		{ "KeyValueC", KEYBOARD_KEY_C },
+		{ "KeyValueD", KEYBOARD_KEY_D }
+	};
+	TKeyBinding *Pointer_Key_Binding;
+	unsigned char i, Console_Key_Mask, Console_Key_Index, Key_Index;
+
+	// Map each console key code to the corresponding Chip-8 code
+	for (i = 0; i < INTERPRETER_KEYS_COUNT_CONSOLE; i++)
+	{
+		// Cache the current binding access
+		Pointer_Key_Binding = &Key_Bindings[i];
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Retrieving key binding for \"%s\".", Pointer_Key_Binding->Pointer_String_INI_Key_Name);
+
+		// Try to retrieve the corresponding Chip-8 code
+		Key_Index = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, Pointer_Key_Binding->Pointer_String_INI_Key_Name);
+		if (Key_Index >= INTERPRETER_KEYS_COUNT_CHIP_8)
+		{
+			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid Chip-8 key code, it must be in range 0 to 15 (read value is %u).", Key_Index);
+			DisplayDrawTextMessage(Shared_Buffer_Display, "Chip-8", "Invalid key code for\n%s.\nPress Menu to exit.");
+			while (!KeyboardIsMenuKeyPressed());
+			return 1;
+		}
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Chip-8 key binding value is %u.", Key_Index);
+		Interpreter_Keys_Table_From_Interpreter[Key_Index] = Pointer_Key_Binding->Keyboard_Key_Code;
+	}
+
+	// Generate a reverse look-up table to match a Chip-8 key code with a console key switch
+	Console_Key_Mask = 0x01;
+	for (Console_Key_Index = 0; Console_Key_Index < INTERPRETER_KEYS_COUNT_CONSOLE; Console_Key_Index++)
+	{
+		for (Key_Index = 0; Key_Index < INTERPRETER_KEYS_COUNT_CHIP_8; Key_Index++)
+		{
+			if (Interpreter_Keys_Table_From_Interpreter[Key_Index] == Console_Key_Mask)
+			{
+				Interpreter_Keys_Table_From_Console[Console_Key_Index] = Key_Index;
+				break;
+			}
+		}
+		Console_Key_Mask <<= 1;
+	}
+
+	return 0;
+}
 
 //-------------------------------------------------------------------------------------------------
 // Public functions
@@ -112,7 +179,7 @@ void InterpreterInitialize(void)
 
 unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Section)
 {
-	unsigned char Console_Key_Mask, Console_Key_Index, Key_Index, Result;
+	unsigned char Result;
 	char *Pointer_String;
 	TFATFileInformation File_Information;
 
@@ -171,7 +238,12 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 		return 1;
 	}
 
-	// TODO keys binding
+	// Assign the console keys to the Chip-8 values expected by the game
+	if (InterpreterConfigureKeyBindings(Pointer_String_Game_INI_Section) != 0)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to configure the key bindings.");
+		return 1;
+	}
 
 	// Place the built-in fonts at the beginning of the interpreter memory
 	memcpy(Shared_Buffers.Interpreter_Memory, Interpreter_Fonts, sizeof(Interpreter_Fonts));
@@ -182,21 +254,6 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 
 	// Clear the frame buffer
 	memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
-
-	// Generate a reverse look-up table to match a Chip-8 key code with a console key switch
-	Console_Key_Mask = 0x01;
-	for (Console_Key_Index = 0; Console_Key_Index < INTERPRETER_KEYS_COUNT_CONSOLE; Console_Key_Index++)
-	{
-		for (Key_Index = 0; Key_Index < INTERPRETER_KEYS_COUNT_CHIP_8; Key_Index++)
-		{
-			if (Interpreter_Keys_Table_From_Interpreter[Key_Index] == Console_Key_Mask)
-			{
-				Interpreter_Keys_Table_From_Console[Console_Key_Index] = Key_Index;
-				break;
-			}
-		}
-		Console_Key_Mask <<= 1;
-	}
 
 	// Use the timer feeding the sound PWM generation (which is always running) to initialize the random seed for the entire Chip-8 program execution
 	Interpreter_Random_Seed = T2TMR;

@@ -183,6 +183,13 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	char *Pointer_String;
 	TFATFileInformation File_Information;
 
+	// Assign the console keys to the Chip-8 values expected by the game (do that before loading the ROM file because the INI data is stored in the same buffer that the one in which the ROM file will be loaded)
+	if (InterpreterConfigureKeyBindings(Pointer_String_Game_INI_Section) != 0)
+	{
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to configure the key bindings.");
+		return 1;
+	}
+
 	// Retrieve the game ROM file name
 	Pointer_String = INIParserReadString(Pointer_String_Game_INI_Section, "ROMFile");
 	if (Pointer_String == NULL)
@@ -235,13 +242,6 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	if (FATReadFile(&File_Information, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
 	{
 		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", File_Information.String_Short_Name);
-		return 1;
-	}
-
-	// Assign the console keys to the Chip-8 values expected by the game
-	if (InterpreterConfigureKeyBindings(Pointer_String_Game_INI_Section) != 0)
-	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to configure the key bindings.");
 		return 1;
 	}
 

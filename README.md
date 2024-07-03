@@ -26,3 +26,7 @@ Bare PCB :
 Assembled PCB :
 ![Assembled PCB front view](Resources/Assembled_PCB_Top.jpg)
 ![Assembled PCB bottom view](Resources/Assembled_PCB_Bottom.jpg)
+
+Assembled PCB with the display module screwed and connected :
+![Assembled PCB with display front view](Resources/Assembled_PCB_With_Display_Top.jpg)
+![Assembled PCB with display bottom view](Resources/Assembled_PCB_With_Display_Bottom.jpg)

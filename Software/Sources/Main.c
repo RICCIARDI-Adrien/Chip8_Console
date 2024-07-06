@@ -209,10 +209,11 @@ Detect_SD_Card:
 }
 
 /** Retrieve the games configuration file from the SD card.
+ * @param Pointer_Size On output, contain the size of the configuration file in bytes.
  * @return 1 if an error occurred,
  * @return 0 when a valid configuration file has been found and loaded.
  */
-static unsigned char MainLoadConfigurationFile(void)
+static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 {
 	TFATFileInformation File_Information;
 	unsigned long Size;
@@ -261,6 +262,7 @@ static unsigned char MainLoadConfigurationFile(void)
 			if (Size > (sizeof(Shared_Buffers.Configuration_File) - 2)) Size = sizeof(Shared_Buffers.Configuration_File) - 2;
 			Shared_Buffers.Configuration_File[Size] = INI_PARSER_END_CHARACTER;
 			Shared_Buffers.Configuration_File[Size + 1] = INI_PARSER_END_CHARACTER;
+			*Pointer_Size = (unsigned short) Size; // A 16-bit value is enough to store this size, as there are only 8KB of RAM in total
 
 			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
 			return 0;
@@ -274,17 +276,18 @@ static unsigned char MainLoadConfigurationFile(void)
 }
 
 /** Propose each available game to the user and allow him to select one.
+ * @param Configuration_File_Size The size of the configuration file in bytes.
  * @return NULL if an error occurred,
  * @return A string pointer on the INI section corresponding to the selected game.
  */
-static char *MainSelectGame(void)
+static char *MainSelectGame(unsigned short Configuration_File_Size)
 {
 	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
 	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1;
 
 	// Count the available games
 	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
-	Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+	Pointer_String_Section = Shared_Buffers.Configuration_File;
 	while (1)
 	{
 		// Locate the next game section
@@ -304,7 +307,7 @@ static char *MainSelectGame(void)
 	}
 
 	// Display all games to the user
-	Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+	Pointer_String_Section = Shared_Buffers.Configuration_File;
 	while (1)
 	{
 		// Go to the next game
@@ -315,14 +318,23 @@ static char *MainSelectGame(void)
 			{
 				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Last game reached, looping to the first one.");
 				Current_Game_Index = 1;
-				Pointer_String_Section = (char *) Shared_Buffers.Configuration_File;
+				Pointer_String_Section = Shared_Buffers.Configuration_File;
 				Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section); // Make sure to point to the second section next time
 			}
 			else Current_Game_Index++;
 		}
+		// Go to the previous game
 		else
 		{
-			// TODO
+			Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section);
+			if (Pointer_String_Section == NULL)
+			{
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "First game reached, looping to the last one.");
+				Current_Game_Index = Games_Count;
+				Pointer_String_Section = (char *) (Shared_Buffers.Configuration_File + Configuration_File_Size);
+				Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section); // Make sure to point to the penultimate section next time
+			}
+			else Current_Game_Index--;
 		}
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Current game index : %u.", Current_Game_Index);
 
@@ -367,8 +379,8 @@ static char *MainSelectGame(void)
 			if (Keys_Mask & KEYBOARD_KEY_LEFT)
 			{
 				Is_Games_List_Incrementing = 0;
-				// TODO
-				//break;
+				while (KeyboardReadKeysMask() & KEYBOARD_KEY_LEFT); // Wait for key release
+				break;
 			}
 			// Show the next game
 			if (Keys_Mask & KEYBOARD_KEY_RIGHT)
@@ -394,7 +406,7 @@ static char *MainSelectGame(void)
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
-	TFATFileInformation File_Information_2;
+	unsigned short Configuration_File_Size;
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
@@ -438,10 +450,10 @@ void main(void)
 		MainMountSDCard();
 
 		// Block until a valid configuration file is found
-		if (MainLoadConfigurationFile() != 0) continue;
+		if (MainLoadConfigurationFile(&Configuration_File_Size) != 0) continue;
 
 		// Block until a game is found
-		Pointer_String_Game_INI_Section = MainSelectGame();
+		Pointer_String_Game_INI_Section = MainSelectGame(Configuration_File_Size);
 		if (Pointer_String_Game_INI_Section == NULL) continue;
 
 		// Try to load the game from the SD card

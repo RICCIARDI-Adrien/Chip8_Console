@@ -69,6 +69,29 @@ static char *INIParserDiscardWhiteSpace(char *Pointer_String)
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
+char *INIParserFindPreviousSection(char *Pointer_String_Buffer_Start, char *Pointer_String_Current_Section)
+{
+	// Search for the ']' character of the previous section
+	while (1)
+	{
+		// Is the beginning of the buffer reached ?
+		if (Pointer_String_Current_Section < Pointer_String_Buffer_Start) return NULL;
+
+		if (*Pointer_String_Current_Section == ']') break;
+		Pointer_String_Current_Section--;
+	}
+
+	// The end of the previous section name has been found, go up to the beginning of the section name, so the returned string is the same than the one returned by INIParserFindNextSection()
+	while (1)
+	{
+		// Is the beginning of the buffer reached ?
+		if (Pointer_String_Current_Section < Pointer_String_Buffer_Start) return NULL;
+
+		if (*Pointer_String_Current_Section == '[') return Pointer_String_Current_Section + 1; // Point to the first character of the section name
+		Pointer_String_Current_Section--;
+	}
+}
+
 char *INIParserFindNextSection(char *Pointer_String_Current_Section)
 {
 	char *Pointer_String;

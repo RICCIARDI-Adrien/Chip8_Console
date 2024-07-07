@@ -123,8 +123,11 @@ const unsigned char Main_Splash_Screen[] =
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
-/** Probe the SD card and mount the first FAT partition. */
-static void MainMountSDCard(void)
+/** Probe the SD card and mount the first FAT partition.
+ * @return 0 if the SD card was not removed since the last time it was probed,
+ * @return 1 if the SD card was removed since the last time it was probed.
+ */
+static unsigned char MainMountSDCard(void)
 {
 	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
@@ -151,7 +154,7 @@ Detect_SD_Card:
 	if (Card_Detection_Status == SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.");
-		return;
+		return 0;
 	}
 
 	// Probe the SD card
@@ -206,6 +209,9 @@ Detect_SD_Card:
 		while (!KeyboardIsMenuKeyPressed());
 		goto Detect_SD_Card;
 	}
+
+	// The SD card has been removed since last time it was probed
+	return 1;
 }
 
 /** Retrieve the games configuration file from the SD card.
@@ -277,13 +283,14 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 
 /** Propose each available game to the user and allow him to select one.
  * @param Configuration_File_Size The size of the configuration file in bytes.
+ * @param Pointer_Last_Played_Game_Index todo
  * @return NULL if an error occurred,
  * @return A string pointer on the INI section corresponding to the selected game.
  */
-static char *MainSelectGame(unsigned short Configuration_File_Size)
+static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned char *Pointer_Last_Played_Game_Index)
 {
 	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
-	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1;
+	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1, Last_Played_Game_Index = *Pointer_Last_Played_Game_Index;
 
 	// Count the available games
 	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
@@ -306,8 +313,31 @@ static char *MainSelectGame(unsigned short Configuration_File_Size)
 		return NULL;
 	}
 
-	// Display all games to the user
-	Pointer_String_Section = Shared_Buffers.Configuration_File;
+	// Display the last played game
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Searching for the last played game index (%u).", Last_Played_Game_Index);
+	if (Last_Played_Game_Index > Games_Count) // Make sure the provided value is not bad
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last played game index (%u) is greater than the games count (%u).", Last_Played_Game_Index, Games_Count);
+		return NULL;
+	}
+	// Go through the games list until the index before the last played game is found
+	else
+	{
+		if (Last_Played_Game_Index > 0) Last_Played_Game_Index--; // Stop just before the game, as the displaying game loop will parse it
+		Pointer_String_Section = Shared_Buffers.Configuration_File;
+		while (Current_Game_Index < Last_Played_Game_Index)
+		{
+			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
+			if (Pointer_String_Section == NULL)
+			{
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last game has been reached but the last played game index was not found, this issue should not occur (current game index = %u, last played game index = %u).", Current_Game_Index, Last_Played_Game_Index);
+				return NULL;
+			}
+			else Current_Game_Index++;
+		}
+	}
+
+	// Display the games selection menu
 	while (1)
 	{
 		// Go to the next game
@@ -393,6 +423,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size)
 			if (Keys_Mask & KEYBOARD_KEY_C)
 			{
 				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
+				*Pointer_Last_Played_Game_Index = Current_Game_Index;
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release
 				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
 			}
@@ -406,6 +437,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size)
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
+	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0;
 	unsigned short Configuration_File_Size;
 
 	// Wait for the internal oscillator to stabilize
@@ -447,13 +479,14 @@ void main(void)
 		DisplayDrawTextMessage(Shared_Buffer_Display, "- Welcome -", "Loading console\nconfiguration...");
 
 		// Block until an SD card with a valid FAT file system is inserted
-		MainMountSDCard();
+		Is_SD_Card_Removed = MainMountSDCard();
 
 		// Block until a valid configuration file is found
 		if (MainLoadConfigurationFile(&Configuration_File_Size) != 0) continue;
 
 		// Block until a game is found
-		Pointer_String_Game_INI_Section = MainSelectGame(Configuration_File_Size);
+		if (Is_SD_Card_Removed) Last_Played_Game_Index = 0; // Restart displaying the game selection menu from the first one if the card has been changed, as we do not know its content
+		Pointer_String_Game_INI_Section = MainSelectGame(Configuration_File_Size, &Last_Played_Game_Index);
 		if (Pointer_String_Game_INI_Section == NULL) continue;
 
 		// Try to load the game from the SD card

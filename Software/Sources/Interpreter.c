@@ -643,7 +643,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte, Columns_Count_Byte;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte, Rows_Count, Columns_Count_Byte, i;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -651,18 +651,21 @@ unsigned char InterpreterRunProgram(void)
 				Sprite_Size = Instruction_Low_Byte & 0x0F;
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2], Sprite_Size, Interpreter_Register_I);
 
-				// Retrieve the sprite displaying coordinates and make sure they do not cross the display boundaries (screen wraping is not handled for now)
+				// Retrieve the sprite displaying coordinates
 				Sprite_Column = Interpreter_Registers_V[Register_Index_1];
 				Sprite_Row = Interpreter_Registers_V[Register_Index_2];
+
 				if (Is_Super_Chip_8_Mode)
 				{
 					Sprite_Column &= 0x7F; // Limit to 128 horizontal values in SuperChip-8 mode
 					Sprite_Row &= 0x3F; // Limit to 64 vertical values in SuperChip-8 mode
+					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
 				}
 				else
 				{
 					Sprite_Column &= 0x3F; // Limit to 64 horizontal values in Chip-8 mode
 					Sprite_Row &= 0x1F; // Limit to 32 vertical values in Chip-8 mode
+					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
 				}
 				Pointer_Sprite = &Shared_Buffers.Interpreter_Memory[Interpreter_Register_I];
 
@@ -670,7 +673,8 @@ unsigned char InterpreterRunProgram(void)
 				Shift_Offset = Sprite_Column & 0x07;
 				Columns_Count_Byte = Display_Columns_Count / 8; // Cache the amount of columns in bytes (instead of pixels)
 				Sprite_Column /= 8; // A byte stores 8 horizontal pixels, so cache the column coordinate converted to bytes instead of pixels
-				for (Row = Sprite_Row; Row < Display_Rows_Count; Row++)
+				Row = Sprite_Row;
+				for (i = 0; i < Display_Rows_Count; i++) // Do not use Row as the loop variable as its value can be reset
 				{
 					// Stop when the requested amount of sprite bytes has been displayed
 					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
@@ -684,13 +688,22 @@ unsigned char InterpreterRunProgram(void)
 					// The sprite is not aligned, draw a part on the first frame buffer byte, and draw the remaining part on the following frame buffer byte
 					else
 					{
+						// Render the first part of the sprite
 						*Pointer_Display ^= Byte >> Shift_Offset;
-						if (Sprite_Column < (Columns_Count_Byte - 1)) *(Pointer_Display + 1) ^= (unsigned char) (Byte << (8 - Shift_Offset));
+
+						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
+						if (Sprite_Column >= (Columns_Count_Byte - 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
+						// Otherwise, just render the left over pixels to the following byte location
+						else Pointer_Display_Left_Over_Pixels = Pointer_Display + 1;
+						*Pointer_Display_Left_Over_Pixels ^= (unsigned char) (Byte << (8 - Shift_Offset));
 					}
 
 					// Draw the next sprite line
 					Pointer_Sprite++;
 					Sprite_Size--;
+					// If the bottom side of the display is reached, the sprite must wrap over the top of the display
+					Row++;
+					if (Row >= Rows_Count) Row = 0;
 				}
 
 				// Display the picture according to the emulation mode display

@@ -657,14 +657,14 @@ unsigned char InterpreterRunProgram(void)
 
 				if (Is_Super_Chip_8_Mode)
 				{
-					Sprite_Column &= 0x7F; // Limit to 128 horizontal values in SuperChip-8 mode
-					Sprite_Row &= 0x3F; // Limit to 64 vertical values in SuperChip-8 mode
+					Sprite_Column &= INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 - 1;
+					Sprite_Row &= INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 - 1;
 					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
 				}
 				else
 				{
-					Sprite_Column &= 0x3F; // Limit to 64 horizontal values in Chip-8 mode
-					Sprite_Row &= 0x1F; // Limit to 32 vertical values in Chip-8 mode
+					Sprite_Column &= INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 - 1;
+					Sprite_Row &= INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8 - 1;
 					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
 				}
 				Pointer_Sprite = &Shared_Buffers.Interpreter_Memory[Interpreter_Register_I];

@@ -1919,7 +1919,7 @@
 	)
 	(wire
 		(pts
-			(xy 236.22 30.48) (xy 187.96 30.48)
+			(xy 237.49 30.48) (xy 187.96 30.48)
 		)
 		(stroke
 			(width 0)
@@ -1969,7 +1969,7 @@
 	)
 	(wire
 		(pts
-			(xy 193.04 35.56) (xy 236.22 35.56)
+			(xy 193.04 35.56) (xy 237.49 35.56)
 		)
 		(stroke
 			(width 0)
@@ -2119,7 +2119,7 @@
 	)
 	(wire
 		(pts
-			(xy 185.42 27.94) (xy 236.22 27.94)
+			(xy 185.42 27.94) (xy 237.49 27.94)
 		)
 		(stroke
 			(width 0)
@@ -2339,7 +2339,7 @@
 	)
 	(wire
 		(pts
-			(xy 190.5 33.02) (xy 236.22 33.02)
+			(xy 190.5 33.02) (xy 237.49 33.02)
 		)
 		(stroke
 			(width 0)
@@ -2469,7 +2469,7 @@
 	)
 	(wire
 		(pts
-			(xy 231.14 43.18) (xy 236.22 43.18)
+			(xy 231.14 43.18) (xy 237.49 43.18)
 		)
 		(stroke
 			(width 0)
@@ -2489,7 +2489,7 @@
 	)
 	(wire
 		(pts
-			(xy 212.09 40.64) (xy 236.22 40.64)
+			(xy 212.09 40.64) (xy 237.49 40.64)
 		)
 		(stroke
 			(width 0)
@@ -2569,7 +2569,7 @@
 	)
 	(wire
 		(pts
-			(xy 195.58 38.1) (xy 236.22 38.1)
+			(xy 195.58 38.1) (xy 237.49 38.1)
 		)
 		(stroke
 			(width 0)
@@ -2648,9 +2648,9 @@
 		)
 		(uuid "22222c97-591d-4f35-b6ff-f5059edc593c")
 	)
-	(text "RST (white)"
+	(text "RST"
 		(exclude_from_sim no)
-		(at 243.84 29.21 0)
+		(at 246.38 29.21 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2659,9 +2659,9 @@
 		)
 		(uuid "26596f44-5ee5-4505-8b05-5d5e68313ce3")
 	)
-	(text "DIN (blue)"
+	(text "DIN"
 		(exclude_from_sim no)
-		(at 243.84 39.37 0)
+		(at 246.38 39.37 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2670,9 +2670,9 @@
 		)
 		(uuid "37463a8a-4eaa-4829-923b-ebe490c194fa")
 	)
-	(text "DC (green)"
+	(text "DC"
 		(exclude_from_sim no)
-		(at 243.84 31.75 0)
+		(at 246.38 31.75 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2681,9 +2681,9 @@
 		)
 		(uuid "5021de62-8c93-41bc-b36a-d9df5bead85a")
 	)
-	(text "CS (orange)"
+	(text "CS"
 		(exclude_from_sim no)
-		(at 243.84 34.29 0)
+		(at 246.38 34.29 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2692,9 +2692,9 @@
 		)
 		(uuid "9ca84e82-93a8-4570-a50a-be4b3a026e1f")
 	)
-	(text "VCC (red)"
+	(text "VCC"
 		(exclude_from_sim no)
-		(at 243.84 44.45 0)
+		(at 246.38 44.45 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2703,9 +2703,9 @@
 		)
 		(uuid "a66a9b2b-56cf-4f35-b27c-361a38da1126")
 	)
-	(text "CLK (yellow)"
+	(text "CLK"
 		(exclude_from_sim no)
-		(at 243.84 36.83 0)
+		(at 246.38 36.83 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2725,9 +2725,9 @@
 		)
 		(uuid "ebc6f1e3-63da-4e78-acc9-6689f9ee1875")
 	)
-	(text "GND (black)"
+	(text "GND"
 		(exclude_from_sim no)
-		(at 243.84 41.91 0)
+		(at 246.38 41.91 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3564,15 +3564,15 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x07")
-		(at 241.3 35.56 0)
+		(at 242.57 35.56 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "aa009f99-8ecc-4050-8a2a-56513c460a0a")
 		(property "Reference" "J2"
-			(at 240.03 21.59 0)
+			(at 241.3 21.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3581,7 +3581,7 @@
 			)
 		)
 		(property "Value" "DISPLAY"
-			(at 237.49 24.13 0)
+			(at 238.76 24.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3590,7 +3590,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x07_P2.54mm_Horizontal"
-			(at 241.3 35.56 0)
+			(at 242.57 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3599,7 +3599,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 241.3 35.56 0)
+			(at 242.57 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3608,7 +3608,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 241.3 35.56 0)
+			(at 242.57 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)

@@ -9012,7 +9012,7 @@
 		(path "/aa009f99-8ecc-4050-8a2a-56513c460a0a")
 		(sheetname "Racine")
 		(sheetfile "Console.kicad_sch")
-		(attr through_hole)
+		(attr through_hole dnp)
 		(fp_line
 			(start -1.27 -1.27)
 			(end 0 -1.27)
@@ -16059,7 +16059,7 @@
 		(path "/f7c38074-60a2-4745-b758-902042e7685a")
 		(sheetname "Racine")
 		(sheetfile "Console.kicad_sch")
-		(attr smd dnp)
+		(attr smd)
 		(fp_line
 			(start -0.254724 0.5225)
 			(end 0.254724 0.5225)

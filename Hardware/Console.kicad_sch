@@ -4423,7 +4423,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f7c38074-60a2-4745-b758-902042e7685a")
 		(property "Reference" "R1"

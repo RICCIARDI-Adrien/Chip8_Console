@@ -674,13 +674,17 @@ unsigned char InterpreterRunProgram(void)
 				Columns_Count_Byte = Display_Columns_Count / 8; // Cache the amount of columns in bytes (instead of pixels)
 				Sprite_Column /= 8; // A byte stores 8 horizontal pixels, so cache the column coordinate converted to bytes instead of pixels
 				Row = Sprite_Row;
+
+				// Find the location in the frame buffer where to draw the sprite
+				Pointer_Display = &Shared_Buffer_Display[(Row * Columns_Count_Byte) + Sprite_Column];
+
+				// Render the sprite
 				for (i = 0; i < Display_Rows_Count; i++) // Do not use Row as the loop variable as its value can be reset
 				{
 					// Stop when the requested amount of sprite bytes has been displayed
 					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
 
-					// Find the location in the frame buffer where to draw the sprite
-					Pointer_Display = &Shared_Buffer_Display[(Row * Columns_Count_Byte) + Sprite_Column];
+					// Cache the sprite data
 					Byte = *Pointer_Sprite;
 
 					// Directly display the sprite byte if it is aligned with a frame buffer byte
@@ -701,9 +705,17 @@ unsigned char InterpreterRunProgram(void)
 					// Draw the next sprite line
 					Pointer_Sprite++;
 					Sprite_Size--;
+
 					// If the bottom side of the display is reached, the sprite must wrap over the top of the display
 					Row++;
-					if (Row >= Rows_Count) Row = 0;
+					if (Row >= Rows_Count)
+					{
+						Row = 0;
+						// Subtract all rows but the last one, keeping only the "column" component of the display address
+						Pointer_Display -= (Display_Rows_Count - 1) * Columns_Count_Byte;
+					}
+					// Go to the next line
+					else Pointer_Display += Columns_Count_Byte;
 				}
 
 				// Display the picture according to the emulation mode display

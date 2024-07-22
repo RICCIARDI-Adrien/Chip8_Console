@@ -39,3 +39,9 @@ $(PATH_OBJECTS):
 
 clean:
 	rm -rf $(PATH_BINARIES) $(PATH_OBJECTS)
+
+FLASH_TOOL_PATH=$(shell find /opt/microchip/mplabx -iname ipecmd.jar)
+flash:
+	@# -TPPK3 selects the PICkit 3 programmer
+	@# -OL allows to release the reset signal
+	java -jar $(FLASH_TOOL_PATH) -P18F27K42 -TPPK3 -M -F$(PATH_BINARIES)/$(BINARY_NAME) -OL

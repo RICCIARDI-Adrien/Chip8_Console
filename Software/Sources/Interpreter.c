@@ -18,6 +18,8 @@
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
 #define INTERPRETER_IS_LOGGING_ENABLED 1
+/** Set to 1 to enable the interpreter debugger facility. */
+#define INTERPRETER_IS_DEBUGGER_ENABLED 0
 
 /** The amount of general purpose registers (V0 to VF). */
 #define INTERPRETER_REGISTERS_V_COUNT 16
@@ -289,7 +291,7 @@ unsigned char InterpreterRunProgram(void)
 		// Fetch the next instruction
 		Instruction_High_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC];
 		Instruction_Low_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC + 1];
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Fetching instruction at address 0x%03X : 0x%02X 0x%02X.", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "**** Fetching instruction at address 0x%03X : 0x%02X 0x%02X.", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
 
 		// Decode and execute the instruction
 		switch (Instruction_High_Byte & 0xF0)
@@ -316,7 +318,7 @@ unsigned char InterpreterRunProgram(void)
 						}
 						Interpreter_Register_SP--; // The CALL instruction increments the stack pointer after pushing, so the RET instruction needs to decrement the stack pointer before popping
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
-						continue; // Bypass PC incrementation
+						goto Next_Instruction; // Bypass PC incrementation
 
 					default:
 						goto Invalid_Instruction;
@@ -329,7 +331,7 @@ unsigned char InterpreterRunProgram(void)
 				Interpreter_Register_PC = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Interpreter_Register_PC |= Instruction_Low_Byte;
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.", Interpreter_Register_PC);
-				continue; // Bypass PC incrementation
+				goto Next_Instruction; // Bypass PC incrementation
 
 			// CALL addr
 			case 0x20:
@@ -352,7 +354,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Jump to the function entry point
 				Interpreter_Register_PC = Address;
-				continue; // Bypass PC incrementation
+				goto Next_Instruction; // Bypass PC incrementation
 			}
 
 			// SE Vx, byte
@@ -617,7 +619,7 @@ unsigned char InterpreterRunProgram(void)
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP V0 (= 0x%02X), 0x%03X with PC = 0x%03X.", Interpreter_Registers_V[0], Address, Interpreter_Register_PC);
 				Interpreter_Register_PC = Interpreter_Registers_V[0] + Address;
 				Interpreter_Register_PC &= 0x0FFF; // Make sure the address does not cross the 4KB boundary
-				continue; // Bypass PC incrementation
+				goto Next_Instruction; // Bypass PC incrementation
 			}
 
 			// RND Vx, byte
@@ -739,13 +741,13 @@ unsigned char InterpreterRunProgram(void)
 				{
 					// SKP Vx
 					case 0x9E:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKP V%01X (= 0x%02X).", Register_Index, Key_Code);
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
 						if (Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
 
 					// SKNP Vx
 					case 0xA1:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X).", Register_Index, Key_Code);
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
 						if (!Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
 				}
@@ -948,6 +950,24 @@ unsigned char InterpreterRunProgram(void)
 
 		// Increment the instruction address
 		Interpreter_Register_PC += 2;
+
+Next_Instruction:
+		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
+		{
+			unsigned char i;
+
+			// Display all registers
+			SerialPortWriteString("Registers :\r\n");
+			printf("PC=0x%04X, I=0x%04X, SP=0x%02X\r\n", Interpreter_Register_PC, Interpreter_Register_I, Interpreter_Register_SP);
+			for (i = 0; i < INTERPRETER_REGISTERS_V_COUNT; i++) printf("V%01X=0x%02X, ", i, Interpreter_Registers_V[i]);
+			SerialPortWriteString("\r\n");
+
+			// Wait for user input
+			SerialPortWriteString("Press 's' to continue.\r\n");
+			while (SerialPortReadByte() != 's');
+		}
+		#endif
+		continue; // Useless here but the compiler does not accept a label followed by no code
 	}
 
 Invalid_Instruction:

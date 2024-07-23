@@ -645,7 +645,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Byte, Rows_Count, Columns_Count_Byte, i;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Rows_Count, Columns_Count_Byte, i, Is_Collision_Detected = 0;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -687,21 +687,33 @@ unsigned char InterpreterRunProgram(void)
 					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
 
 					// Cache the sprite data
-					Byte = *Pointer_Sprite;
+					Sprite_Byte = *Pointer_Sprite;
 
 					// Directly display the sprite byte if it is aligned with a frame buffer byte
-					if (Shift_Offset == 0) *Pointer_Display ^= Byte;
+					if (Shift_Offset == 0)
+					{
+						Previous_Byte_Value = *Pointer_Display;
+						Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
+						*Pointer_Display = Rendered_Byte_Value;
+						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any bit was erased, so the new byte value is always lower than it was before
+					}
 					// The sprite is not aligned, draw a part on the first frame buffer byte, and draw the remaining part on the following frame buffer byte
 					else
 					{
 						// Render the first part of the sprite
-						*Pointer_Display ^= Byte >> Shift_Offset;
+						Previous_Byte_Value = *Pointer_Display;
+						Rendered_Byte_Value = Previous_Byte_Value ^ (Sprite_Byte >> Shift_Offset);
+						*Pointer_Display = Rendered_Byte_Value;
+						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1;
 
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
 						if (Sprite_Column >= (Columns_Count_Byte - 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
 						// Otherwise, just render the left over pixels to the following byte location
 						else Pointer_Display_Left_Over_Pixels = Pointer_Display + 1;
-						*Pointer_Display_Left_Over_Pixels ^= (unsigned char) (Byte << (8 - Shift_Offset));
+						Previous_Byte_Value = *Pointer_Display_Left_Over_Pixels;
+						Rendered_Byte_Value = Previous_Byte_Value ^ ((unsigned char) (Sprite_Byte << (8 - Shift_Offset)));
+						*Pointer_Display_Left_Over_Pixels = Rendered_Byte_Value;
+						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1;
 					}
 
 					// Draw the next sprite line
@@ -723,6 +735,9 @@ unsigned char InterpreterRunProgram(void)
 				// Display the picture according to the emulation mode display
 				if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 				else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
+
+				// Set register VF if at least one already lighted pixel has been turned off
+				Interpreter_Registers_V[15] = Is_Collision_Detected;
 				break;
 			}
 

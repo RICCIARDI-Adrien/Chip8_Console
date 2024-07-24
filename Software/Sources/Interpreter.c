@@ -705,7 +705,7 @@ unsigned char InterpreterRunProgram(void)
 						Previous_Byte_Value = *Pointer_Display;
 						Rendered_Byte_Value = Previous_Byte_Value ^ (Sprite_Byte >> Shift_Offset);
 						*Pointer_Display = Rendered_Byte_Value;
-						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1;
+						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1; // The end of the byte changes (the least significant bits), so the resulting value if some pixels are turned off will be greater than the previous value
 
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
 						if (Sprite_Column >= (Columns_Count_Byte - 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
@@ -714,7 +714,7 @@ unsigned char InterpreterRunProgram(void)
 						Previous_Byte_Value = *Pointer_Display_Left_Over_Pixels;
 						Rendered_Byte_Value = Previous_Byte_Value ^ ((unsigned char) (Sprite_Byte << (8 - Shift_Offset)));
 						*Pointer_Display_Left_Over_Pixels = Rendered_Byte_Value;
-						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1;
+						if (Previous_Byte_Value < Rendered_Byte_Value) Is_Collision_Detected = 1; // The beginning of the byte changes (the most significant bits), so the resulting value if some pixels are turned off will be lower than the previous value
 					}
 
 					// Draw the next sprite line

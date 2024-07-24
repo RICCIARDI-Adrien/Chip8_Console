@@ -253,6 +253,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Configure the registers for the program execution
 	Interpreter_Register_PC = INTERPRETER_PROGRAM_ENTRY_POINT; // The default entry point
 	Interpreter_Register_SP = 0; // Clear the stack
+	// Reset all other registers
+	Interpreter_Register_I = 0;
+	memset(Interpreter_Registers_V, 0, sizeof(Interpreter_Registers_V));
 
 	// Clear the frame buffer
 	memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));

@@ -12,7 +12,7 @@ void SPIInitialize(void)
 {
 	// Configure the baud rate
 	SPI1CLK = 0; // Clock the SPI module from Fosc (64MHz)
-	SPI1BAUD = 31; // SPIxBAUD = Fcsel / (2 * Fbaud) - 1, with Fcsel = HFINTOSC = 64MHz and Fbaud = 1MHz
+	SPI1BAUD = 15; // SPIxBAUD = Fcsel / (2 * Fbaud) - 1, with Fcsel = HFINTOSC = 64MHz and Fbaud = 2MHz
 
 	// Configure the module
 	SPI1TWIDTH = 0; // Select 8-bit communications

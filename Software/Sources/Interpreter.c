@@ -769,6 +769,9 @@ unsigned char InterpreterRunProgram(void)
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
 						if (!Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
+
+					default:
+						goto Invalid_Instruction;
 				}
 				break;
 			}
@@ -990,9 +993,15 @@ Next_Instruction:
 	}
 
 Invalid_Instruction:
-	// Always display this error, even if logging is not enabled
-	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
-	while (1);
+	{
+		char String_Message[70];
 
-	return 0;
+		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
+		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
+		snprintf(String_Message, sizeof(String_Message), "Invalid instruction\n0x%02X%02X at address\n0x%03X.\n\n\nPress Menu to exit.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
+		DisplayDrawTextMessage(Shared_Buffer_Display, "Error", String_Message);
+		while (!KeyboardIsMenuKeyPressed());
+	}
+
+	return 1;
 }

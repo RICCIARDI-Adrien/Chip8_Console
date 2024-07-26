@@ -649,7 +649,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Rows_Count, Columns_Count_Byte, i, Is_Collision_Detected = 0;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, i, Is_Collision_Detected = 0;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -665,13 +665,11 @@ unsigned char InterpreterRunProgram(void)
 				{
 					Sprite_Column &= INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 - 1;
 					Sprite_Row &= INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 - 1;
-					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
 				}
 				else
 				{
 					Sprite_Column &= INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 - 1;
 					Sprite_Row &= INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8 - 1;
-					Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
 				}
 				Pointer_Sprite = &Shared_Buffers.Interpreter_Memory[Interpreter_Register_I];
 
@@ -726,7 +724,7 @@ unsigned char InterpreterRunProgram(void)
 
 					// If the bottom side of the display is reached, the sprite must wrap over the top of the display
 					Row++;
-					if (Row >= Rows_Count)
+					if (Row >= Display_Rows_Count)
 					{
 						Row = 0;
 						// Subtract all rows but the last one, keeping only the "column" component of the display address

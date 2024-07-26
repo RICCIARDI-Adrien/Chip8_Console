@@ -30,3 +30,19 @@ Assembled PCB :
 Assembled PCB with the display module screwed and connected :
 ![Assembled PCB with display front view](Resources/Assembled_PCB_With_Display_Top.jpg)
 ![Assembled PCB with display bottom view](Resources/Assembled_PCB_With_Display_Bottom.jpg)
+
+## Casing
+
+Casing plates :
+![Casing top plate](Resources/Casing_Top_Plate.jpg)
+![Casing bottom plate](Resources/Casing_Bottom_Plate.jpg)
+
+Bottom plate with screws :
+![Casing bottom plate with screws](Resources/Casing_Bottom_Plate_With_Screws.jpg)
+
+Bottom plate with screwed PCB :
+![Casing bottom plate with PCB](Resources/Casing_Bottom_Plate_With_PCB.jpg)
+
+Fully assembled console :
+![Assembled console front](Resources/Assembled_Console_Front.jpg)
+![Assembled console batteries side](Resources/Assembled_Console_Side_Batteries.jpg)

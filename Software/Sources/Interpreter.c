@@ -649,7 +649,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Column, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, i, Is_Collision_Detected = 0;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, Is_Collision_Detected = 0;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -683,11 +683,8 @@ unsigned char InterpreterRunProgram(void)
 				Pointer_Display = &Shared_Buffer_Display[(Row * Columns_Count_Byte) + Sprite_Column];
 
 				// Render the sprite
-				for (i = 0; i < Display_Rows_Count; i++) // Do not use Row as the loop variable as its value can be reset
+				while (Sprite_Size > 0) // The Sprite_Size value has already been checked and can't be invalid
 				{
-					// Stop when the requested amount of sprite bytes has been displayed
-					if (Sprite_Size == 0) break; // Start with this check in case the specified sprite size is 0, so the loop immediately exits
-
 					// Cache the sprite data
 					Sprite_Byte = *Pointer_Sprite;
 

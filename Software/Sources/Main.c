@@ -431,6 +431,26 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 	}
 }
 
+#if MAIN_IS_LOGGING_ENABLED
+	/** Display the various reasons that could lead to a system reset. */
+	static void MainCheckResetReason(void)
+	{
+		if (PCON0bits.STKOVF) SERIAL_PORT_LOG(1, "Detected reset reason : stack overflow.");
+		if (PCON0bits.STKUNF) SERIAL_PORT_LOG(1, "Detected reset reason : stack underflow.");
+		if (!PCON0bits.WDTWV) SERIAL_PORT_LOG(1, "Detected reset reason : watchdog window violation.");
+		if (!PCON0bits.RWDT) SERIAL_PORT_LOG(1, "Detected reset reason : watchdog timer triggered.");
+		if (!PCON0bits.RMCLR) SERIAL_PORT_LOG(1, "Detected reset reason : /MCLR external reset.");
+		if (!PCON0bits.RI) SERIAL_PORT_LOG(1, "Detected reset reason : RESET instruction executed.");
+		if (!PCON0bits.POR) SERIAL_PORT_LOG(1, "Detected reset reason : power-on reset.");
+		if (!PCON0bits.BOR) SERIAL_PORT_LOG(1, "Detected reset reason : brown-out reset.");
+		if (!PCON1bits.MEMV) SERIAL_PORT_LOG(1, "Detected reset reason : memory violation.");
+
+		// Clear the registers to have a fresh status on next reset
+		PCON0 = 0x3F;
+		PCON1 = 0x02;
+	}
+#endif
+
 //-------------------------------------------------------------------------------------------------
 // Entry point
 //-------------------------------------------------------------------------------------------------
@@ -450,6 +470,9 @@ void main(void)
 
 	// Initialize all needed modules
 	SerialPortInitialize();
+	#if MAIN_IS_LOGGING_ENABLED
+		MainCheckResetReason(); // Right after the serial port is working to display the results, determine if there was an abnormal reset
+	#endif
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	KeyboardInitialize();

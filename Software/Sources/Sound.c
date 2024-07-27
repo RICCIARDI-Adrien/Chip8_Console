@@ -2,6 +2,7 @@
  * See Sound.h for description.
  * @author Adrien RICCIARDI
  */
+#include <EEPROM.h>
 #include <Sound.h>
 #include <xc.h>
 
@@ -19,6 +20,12 @@
 #define SOUND_PWM_PULSE_WIDTH 500
 
 //-------------------------------------------------------------------------------------------------
+// Private variables
+//-------------------------------------------------------------------------------------------------
+/** Cache the sound generation enabling state. */
+static unsigned char Sound_Is_Enabled = 1; // Always enable the sound on boot, so the initial call to SoundPlay() can correctly initialize the sound logic
+
+//-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
 void SoundInitialize(void)
@@ -27,7 +34,7 @@ void SoundInitialize(void)
 	CCPTMRS1 = (CCPTMRS1 & 0xFC) | 0x01; // Select TMR2 clock for PWM5
 	PWM5DCL = (SOUND_PWM_PULSE_WIDTH & 0x03) << 6;
 	PWM5DCH = SOUND_PWM_PULSE_WIDTH >> 2;
-	PWM5CON = 0; // Do not enable the PWM for now, do not invert the output signal TODO invert the output signal later as the buzzer will be driver by a transistor that will invert the polarity
+	PWM5CON = 0; // Do not enable the PWM for now, do not invert the output signal
 
 	// Configure the timer that clocks the PWM
 	T2CLK = 0x01; // The datasheet tells that the timer must be clocked by Fosc/4 for proper PWM operations
@@ -43,17 +50,17 @@ void SoundInitialize(void)
 	// Use two configurable logic cells to automatically stop the sound when the timer has elapsed
 	// This will save an interrupt during the game execution and also make use some of the transistors packed in the chip
 	// Below is the logic diagram :
-	//                                          +-------+
-	//      2KHz PWM5_out ----------------------|       |
-	//                                          |   &   |---- Output pin
-	//                                     +----|       |
-	//                                     |    +-------+
-	//                        +-------+    |      CLC1
-	//           TMR4_out ----| R     |    |
-	//                        |     Q |----+
-	// Sofware controlled ----| S     |
-	//                        +-------+
-	//                          CLC2
+	//                                           +-------+
+	//       4KHz PWM5_out ----------------------|       |
+	//                                           |   &   |---- Output pin
+	//                                      +----|       |
+	//                                      |    +-------+
+	//                         +-------+    |      CLC1
+	//            TMR4_out ----| R     |    |
+	//                         |     Q |----+
+	// Software controlled ----| S     |
+	//                         +-------+
+	//                           CLC2
 	//
 	// Configure the Configurable Logic Cell 2 as a S-R Latch, it is set by software and reset when the timer elapses (the timer generates a pulse when it reaches the programmed counter value)
 	// Select the input signals (inputs 1 and 2 are connected to the "set" input, inputs 3 and 4 are connected to the "reset" input)
@@ -100,10 +107,17 @@ void SoundInitialize(void)
 	RC2PPS = 0x01; // Select the RC2 pin as the Configurable Logic Cell 1 output
 	ANSELCbits.ANSELC2 = 0; // Configure the pin as digital
 	TRISCbits.TRISC2 = 0; // Set the pin as output
+
+	// Cache the enabling state
+	Sound_Is_Enabled = EEPROMReadByte(EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED);
+	if (Sound_Is_Enabled != 0) Sound_Is_Enabled = 1; // Normalize the "enabled" value to 1, because by default the EEPROM memory is erased, so the initial value is 0xFF (which is considered as "enabled")
 }
 
 void SoundPlay(unsigned char Duration)
 {
+	// Do nothing if the sound is muted
+	if (!Sound_Is_Enabled) return;
+
 	// Stop the timer in case it is already running
 	T4CONbits.ON = 0;
 
@@ -119,4 +133,15 @@ void SoundPlay(unsigned char Duration)
 
 	// Restart the timer
 	T4CONbits.ON = 1;
+}
+
+void SoundSetEnabled(unsigned char Is_Enabled)
+{
+	Sound_Is_Enabled = Is_Enabled;
+	EEPROMWriteByte(EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED, Sound_Is_Enabled);
+}
+
+unsigned char SoundIsEnabled(void)
+{
+	return Sound_Is_Enabled;
 }

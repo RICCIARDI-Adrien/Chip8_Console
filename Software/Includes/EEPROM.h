@@ -11,6 +11,9 @@
 /** How many bytes the EEPROM can store. */
 #define EEPROM_SIZE 1024
 
+/** The address in the EEPROM of the byte where the sound generation enabling state is stored. */
+#define EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED 0
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------

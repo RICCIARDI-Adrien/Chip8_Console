@@ -16,4 +16,14 @@ void SoundInitialize(void);
  */
 void SoundPlay(unsigned char Duration);
 
+/** Allow to turn off the sound generation.
+ * @param Is_Enabled Set to 1 to enable sound generation, or set to 0 to mute the sound.
+ */
+void SoundSetEnabled(unsigned char Is_Enabled);
+
+/** Tell the current sound enabling state.
+ * @return 0 if the sound generation is disabled, 1 otherwise.
+ */
+unsigned char SoundIsEnabled(void);
+
 #endif

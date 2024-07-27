@@ -463,7 +463,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
-	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask;
+	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask, Is_Sound_Enabled;
 	unsigned short Configuration_File_Size;
 
 	// Wait for the internal oscillator to stabilize
@@ -545,10 +545,39 @@ void main(void)
 				InterpreterRunProgram();
 			}
 		}
+		// Settings
+		else if (Keys_Mask & KEYBOARD_KEY_B)
+		{
+			while (1)
+			{
+				// Display the menu content
+				Is_Sound_Enabled = SoundIsEnabled();
+				snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound : %s\n\n\n\nA : configure sound.\nD : back.", Is_Sound_Enabled ? "enabled" : "disabled");
+				DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
+
+				// Wait for a key to be pressed
+				do
+				{
+					Keys_Mask = KeyboardReadKeysMask();
+				} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_D)) == 0);
+
+				if (Keys_Mask & KEYBOARD_KEY_A)
+				{
+					if (Is_Sound_Enabled) Is_Sound_Enabled = 0;
+					else Is_Sound_Enabled = 1;
+					SoundSetEnabled(Is_Sound_Enabled);
+					while (KeyboardReadKeysMask() & KEYBOARD_KEY_A); // Wait for the key to be released
+				}
+				else if (Keys_Mask & KEYBOARD_KEY_D)
+				{
+					while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
+					break;
+				}
+			}
+		}
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_C)
 		{
-			//snprintf(Shared_Buffer.String_Temporary, sizeof(Shared_Buffer.String_Temporary), ""Firmware build date:\n
 			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nD : back.");
 
 			// Wait for the 'back' key to be pressed

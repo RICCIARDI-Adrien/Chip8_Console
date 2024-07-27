@@ -16,6 +16,7 @@ typedef union
 {
 	unsigned char Interpreter_Memory[INTERPRETER_MEMORY_SIZE];
 	char Configuration_File[INTERPRETER_MEMORY_SIZE];
+	char String_Temporary[INTERPRETER_MEMORY_SIZE];
 } TSharedBuffers;
 
 //-------------------------------------------------------------------------------------------------

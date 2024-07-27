@@ -182,7 +182,7 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 
 	SPI_SELECT_DISPLAY();
 
-	// Convert a chunk of 32 pixels (8x4 pixels) at a time, outputing 64 pixels (8x8 pixels)
+	// Convert a chunk of 32 pixels (8x4 pixels) at a time, outputting 64 pixels (8x8 pixels)
 	for (Row = 0; Row < DISPLAY_ROWS_COUNT / 2; Row += 4) // Load a chunk of 4 vertical bytes, so increment the row per 4
 	{
 		for (Column = 0; Column < (DISPLAY_COLUMNS_COUNT / 2) / 8; Column++) // There are 8 horizontal pixels per byte in the local frame buffer

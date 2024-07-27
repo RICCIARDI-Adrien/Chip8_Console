@@ -905,7 +905,7 @@ unsigned char InterpreterRunProgram(void)
 							if (Value >= Divider)
 							{
 								Digit = Value / Divider;
-								Value -= Digit * Divider; // Subtract only the hudreds to the value
+								Value -= Digit * Divider; // Subtract only the hundreds to the value
 							}
 							else Digit = 0;
 

@@ -8,6 +8,25 @@
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
+unsigned char EEPROMReadByte(unsigned short Address)
+{
+	// Do nothing if the provided address is invalid
+	if (Address >= EEPROM_SIZE) return 0;
+
+	// Set the target address
+	NVMADRL = (unsigned char) Address;
+	NVMADRH = Address >> 8;
+
+	// Select the EEPROM memory
+	NVMCON1 = 0;
+
+	// Start the reading operation
+	NVMCON1bits.RD = 1;
+	while (NVMCON1bits.RD); // Wait for the read cycle to terminate
+
+	return NVMDAT;
+}
+
 void EEPROMWriteByte(unsigned short Address, unsigned char Value)
 {
 	// Do nothing if the provided address is invalid

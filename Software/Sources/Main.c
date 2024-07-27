@@ -28,7 +28,7 @@
 // CONFIG2L register
 #pragma config BOREN = SBORDIS, LPBOREN = OFF, IVT1WAY = OFF, MVECEN = ON, PWRTS = PWRT_64, MCLRE = EXTMCLR // Always enable the Brown-out Reset, disable Low Power Brown-out Reset, IVTLOCK bit can be cleared and set repeatedly, enable interrupts vector table, configure the Power-up timer to 64ms, enable /MCLR
 // CONFIG2H register
-#pragma config XINST = OFF, DEBUG = OFF, STVREN = ON, PPS1WAY = OFF, ZCD = OFF, BORV = VBOR_2P85 // Disable Extended Instruction Set (it is not yet supported by the compiler), disable the Background debugger, reset on stack overflow or underflow, PPSLOCK bit can be set and cleared repeatedly, disable the unused Zero-cross Detection module, set the Brown-out voltage to the highest available (2.85V)
+#pragma config XINST = OFF, DEBUG = OFF, STVREN = ON, PPS1WAY = OFF, ZCD = OFF, BORV = VBOR_2P7 // Disable Extended Instruction Set (it is not yet supported by the compiler), disable the Background debugger, reset on stack overflow or underflow, PPSLOCK bit can be set and cleared repeatedly, disable the unused Zero-cross Detection module, set the Brown-out voltage to the highest voltage at which the core can safely operate with a 64MHz clock
 // CONFIG3L register
 #pragma config WDTE = OFF // Disable the Watchdog timer
 // CONFIG3H register

@@ -545,5 +545,15 @@ void main(void)
 				InterpreterRunProgram();
 			}
 		}
+		// Information
+		else if (Keys_Mask & KEYBOARD_KEY_C)
+		{
+			//snprintf(Shared_Buffer.String_Temporary, sizeof(Shared_Buffer.String_Temporary), ""Firmware build date:\n
+			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nD : back.");
+
+			// Wait for the 'back' key to be pressed
+			while (!(KeyboardReadKeysMask() & KEYBOARD_KEY_D));
+			while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
+		}
 	}
 }

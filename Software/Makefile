@@ -3,6 +3,8 @@ PATH_INCLUDES = $(shell realpath .)/Includes
 PATH_OBJECTS = $(shell realpath .)/Objects
 PATH_SOURCES = $(shell realpath .)/Sources
 
+FIRMWARE_VERSION=0.1
+
 BINARY_NAME = Chip8_Console_Firmware.hex
 SOURCES = \
 	$(PATH_SOURCES)/Display.c \
@@ -23,7 +25,7 @@ SOURCES = \
 CC = xc8-cc
 # The -Wa,-a argument tells the assembler to generate a listing file
 # The -mundefints=ignore argument disable the compiler warning messages about the unassigned interrupt handlers in the vector table
-CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000 -muse-ivt -mundefints=ignore -O2 -Wa,-a
+CFLAGS = -mcpu=18F27K42 -D_XTAL_FREQ=64000000 -muse-ivt -mundefints=ignore -O2 -DMAKEFILE_FIRMWARE_VERSION=\\\"$(FIRMWARE_VERSION)\\\" -Wa,-a
 
 all: $(PATH_BINARIES) $(PATH_OBJECTS)
 	cd $(PATH_OBJECTS) && $(CC) $(CFLAGS) -I$(PATH_INCLUDES) $(SOURCES) -o $(BINARY_NAME)

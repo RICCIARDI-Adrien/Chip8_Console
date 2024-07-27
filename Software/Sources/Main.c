@@ -283,7 +283,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 
 /** Propose each available game to the user and allow him to select one.
  * @param Configuration_File_Size The size of the configuration file in bytes.
- * @param Pointer_Last_Played_Game_Index todo
+ * @param Pointer_Last_Played_Game_Index On input, set the displayed game index (use the value 0 if no previous game has been played). On output, contain the index in the current games list of the last game selected by the player.
  * @return NULL if an error occurred,
  * @return A string pointer on the INI section corresponding to the selected game.
  */
@@ -443,7 +443,7 @@ void main(void)
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
 
-	// TEST
+	// Turn the status LED on to tell that the microcontroller booted
 	ANSELBbits.ANSELB0 = 0;
 	LATBbits.LATB0 = 1;
 	TRISBbits.TRISB0 = 0;
@@ -501,18 +501,5 @@ void main(void)
 
 		// TEST
 		InterpreterRunProgram();
-	}
-
-	// TEST
-	SerialPortWriteString("\033[33m#######################################\033[0m\r\n");
-	DisplayDrawTextMessage(Shared_Buffer_Display, "TEST", "DEMARREE");
-
-	SerialPortWriteString("\033[35m@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\033[0m\r\n");
-
-	while (1)
-	{
-		LATBbits.LATB0 = !LATBbits.LATB0;
-
-		__delay_ms(1000);
 	}
 }

@@ -284,7 +284,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 /** Propose each available game to the user and allow him to select one.
  * @param Configuration_File_Size The size of the configuration file in bytes.
  * @param Pointer_Last_Played_Game_Index On input, set the displayed game index (use the value 0 if no previous game has been played). On output, contain the index in the current games list of the last game selected by the player.
- * @return NULL if an error occurred,
+ * @return NULL if an error occurred or if the player wants to return to the main menu,
  * @return A string pointer on the INI section corresponding to the selected game.
  */
 static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned char *Pointer_Last_Played_Game_Index)
@@ -397,7 +397,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 
 		// Display instructions
 		DisplaySetTextCursor(0, DISPLAY_TEXT_MODE_HEIGHT - 1);
-		DisplayWriteString(Shared_Buffer_Display, "Press C to start.");
+		DisplayWriteString(Shared_Buffer_Display, "C : start, D : back.");
 		DisplayDrawTextBuffer(Shared_Buffer_Display);
 
 		// Wait for a key press
@@ -426,6 +426,12 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 				*Pointer_Last_Played_Game_Index = Current_Game_Index;
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release
 				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
+			}
+			// Return to main menu
+			if (Keys_Mask & KEYBOARD_KEY_D)
+			{
+				while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for key release
+				return NULL;
 			}
 		}
 	}
@@ -457,7 +463,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
-	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0;
+	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask;
 	unsigned short Configuration_File_Size;
 
 	// Wait for the internal oscillator to stabilize
@@ -496,33 +502,48 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// Load the games configuration from the SD card
 	while (1)
 	{
-		DisplayDrawTextMessage(Shared_Buffer_Display, "- Welcome -", "Loading console\nconfiguration...");
-
-		// Block until an SD card with a valid FAT file system is inserted
-		Is_SD_Card_Removed = MainMountSDCard();
-
-		// Block until a valid configuration file is found
-		if (MainLoadConfigurationFile(&Configuration_File_Size) != 0) continue;
-
-		// Block until a game is found
-		if (Is_SD_Card_Removed) Last_Played_Game_Index = 0; // Restart displaying the game selection menu from the first one if the card has been changed, as we do not know its content
-		Pointer_String_Game_INI_Section = MainSelectGame(Configuration_File_Size, &Last_Played_Game_Index);
-		if (Pointer_String_Game_INI_Section == NULL) continue;
-
-		// Try to load the game from the SD card
-		if (InterpreterLoadProgramFromFile(Pointer_String_Game_INI_Section) != 0)
+		// Display the main menu
+		DisplayDrawTextMessage(Shared_Buffer_Display, "- Main menu -", "A. Games\nB. Settings\nC. Information");
+		// Wait for a key to be pressed
+		do
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
-			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\ngame. Replace the SD\ncard and press Menu.");
-			while (!KeyboardIsMenuKeyPressed());
-			continue;
-		}
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
+			Keys_Mask = KeyboardReadKeysMask();
+		} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C)) == 0);
 
-		// TEST
-		InterpreterRunProgram();
+		// Games
+		if (Keys_Mask & KEYBOARD_KEY_A)
+		{
+			// Load the games configuration from the SD card
+			while (1)
+			{
+				DisplayDrawTextMessage(Shared_Buffer_Display, "- Games -", "Loading console\nconfiguration...");
+
+				// Block until an SD card with a valid FAT file system is inserted
+				Is_SD_Card_Removed = MainMountSDCard();
+
+				// Block until a valid configuration file is found
+				if (MainLoadConfigurationFile(&Configuration_File_Size) != 0) continue;
+
+				// Block until a game is found
+				if (Is_SD_Card_Removed) Last_Played_Game_Index = 0; // Restart displaying the game selection menu from the first one if the card has been changed, as we do not know its content
+				Pointer_String_Game_INI_Section = MainSelectGame(Configuration_File_Size, &Last_Played_Game_Index);
+				if (Pointer_String_Game_INI_Section == NULL) break; // Return to main menu if the player wanted chose to, or if an error occurred
+
+				// Try to load the game from the SD card
+				if (InterpreterLoadProgramFromFile(Pointer_String_Game_INI_Section) != 0)
+				{
+					SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
+					DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\ngame. Replace the SD\ncard and press Menu.");
+					while (!KeyboardIsMenuKeyPressed());
+					continue;
+				}
+				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
+
+				// TEST
+				InterpreterRunProgram();
+			}
+		}
 	}
 }

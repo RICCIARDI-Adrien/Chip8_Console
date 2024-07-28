@@ -41,6 +41,9 @@
 /** The total amount of hardware keys supported by this console. */
 #define INTERPRETER_KEYS_COUNT_CONSOLE 8
 
+/** The NCO module is configured to generate a 60Hz frequency. Its interrupt flag is then toggling at 60Hz too. Use it as a rendering tick here. */
+#define INTERPRETER_60HZ_TICK (PIR4bits.NCO1IF)
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -268,7 +271,7 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 
 unsigned char InterpreterRunProgram(void)
 {
-	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Is_Super_Chip_8_Mode = 0; // TODO Initialize Is_Super_Chip_8_Mode according to the program to run
+	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Is_Rendering_Needed = 0, Is_Super_Chip_8_Mode = 0; // TODO Initialize Is_Super_Chip_8_Mode according to the program to run
 
 	// Configure the display settings according to the selected emulation mode
 	if (Is_Super_Chip_8_Mode)
@@ -731,9 +734,8 @@ unsigned char InterpreterRunProgram(void)
 					else Pointer_Display += Columns_Count_Byte;
 				}
 
-				// Display the picture according to the emulation mode display
-				if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
-				else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
+				// The frame buffer must be transferred to the display
+				Is_Rendering_Needed = 1;
 
 				// Set register VF if at least one already lighted pixel has been turned off
 				Interpreter_Registers_V[15] = Is_Collision_Detected;
@@ -805,6 +807,17 @@ unsigned char InterpreterRunProgram(void)
 						{
 							// Exit when the menu key is pressed
 							if (KeyboardIsMenuKeyPressed()) return 0;
+
+							// Also run the rendering loop in case a DRW instruction was issued just before calling this instruction, and the tick was not present (so the frame buffer could not be transferred to the display before blocking in this instruction)
+							if (Is_Rendering_Needed && INTERPRETER_60HZ_TICK)
+							{
+								// Display the picture according to the emulation mode display
+								if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+								else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
+
+								Is_Rendering_Needed = 0;
+								INTERPRETER_60HZ_TICK = 0; // The interrupt flag must be manually cleared
+							}
 
 							Key_Mask = KeyboardReadKeysMask();
 						} while (Key_Mask == 0);
@@ -969,6 +982,17 @@ unsigned char InterpreterRunProgram(void)
 		Interpreter_Register_PC += 2;
 
 Next_Instruction:
+		// Transfer the frame buffer to the display only when it has changed and not faster than 60 times per second
+		if (Is_Rendering_Needed && INTERPRETER_60HZ_TICK)
+		{
+			// Display the picture according to the emulation mode display
+			if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+			else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
+
+			Is_Rendering_Needed = 0;
+			INTERPRETER_60HZ_TICK = 0; // The interrupt flag must be manually cleared
+		}
+
 		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
 		{
 			unsigned char i;

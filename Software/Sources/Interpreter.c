@@ -269,6 +269,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Clear the frame buffer
 	memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
 
+	// Purge any spurious press of the menu key
+	KeyboardIsMenuKeyPressed();
+
 	// Use the timer feeding the sound PWM generation (which is always running) to initialize the random seed for the entire Chip-8 program execution
 	Interpreter_Random_Seed = T2TMR;
 

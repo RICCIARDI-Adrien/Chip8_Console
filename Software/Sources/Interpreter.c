@@ -104,6 +104,9 @@ static unsigned char Interpreter_Keys_Table_From_Console[INTERPRETER_KEYS_COUNT_
 /** The random seed. */
 static unsigned char Interpreter_Random_Seed;
 
+/** Tell whether the game enabled the fast display rendering feature. */
+static unsigned char Interpreter_Is_Fast_Rendering_Enabled;
+
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
@@ -203,6 +206,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 		return 1;
 	}
 	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
+
+	// If the key is not found, the fast rendering is disabled, in order to disable it by default
+	Interpreter_Is_Fast_Rendering_Enabled = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "FastRendering");
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -734,8 +740,14 @@ unsigned char InterpreterRunProgram(void)
 					else Pointer_Display += Columns_Count_Byte;
 				}
 
-				// The frame buffer must be transferred to the display
-				Is_Rendering_Needed = 1;
+				// The frame buffer must be transferred to the display at 60Hz
+				if (Interpreter_Is_Fast_Rendering_Enabled) Is_Rendering_Needed = 1; // This variable will never be set if Interpreter_Is_Fast_Rendering_Enabled is false
+				// Transfer the frame buffer at each DRW call because some games use this as a delay
+				else
+				{
+					if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+					else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
+				}
 
 				// Set register VF if at least one already lighted pixel has been turned off
 				Interpreter_Registers_V[15] = Is_Collision_Detected;

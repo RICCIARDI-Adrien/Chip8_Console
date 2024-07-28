@@ -205,7 +205,7 @@ unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char 
 	if (Pointer_String_Value == NULL)
 	{
 		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Could not find the key named \"%s\".", Pointer_String_Key_Name);
-		return 1;
+		return 0;
 	}
 
 	return (unsigned char) atoi(Pointer_String_Value);

@@ -553,7 +553,7 @@ unsigned char InterpreterRunProgram(void)
 
 						Value = Interpreter_Registers_V[Register_Index];
 						if (Value & 0x01) Interpreter_Registers_V[15] = 1; // Set VF if the Vx least significant bit is set
-						else Interpreter_Registers_V[Register_Index] = 0;
+						else Interpreter_Registers_V[15] = 0;
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).", Register_Index, Value);
 						Value >>= 1;
 						Interpreter_Registers_V[Register_Index] = Value;

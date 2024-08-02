@@ -10,5 +10,8 @@ all: $(BINARIES)
 Test_Sprites.CH8: Test_Sprites.asm
 	$(AS) $(ASFLAGS) $< -o $@
 
+Test_Collisions.CH8: Test_Collisions.asm
+	$(AS) $(ASFLAGS) $< -o $@
+
 clean:
 	rm -f *.CH8

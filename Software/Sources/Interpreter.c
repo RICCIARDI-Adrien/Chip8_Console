@@ -706,7 +706,7 @@ unsigned char InterpreterRunProgram(void)
 						Previous_Byte_Value = *Pointer_Display;
 						Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
 						*Pointer_Display = Rendered_Byte_Value;
-						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any bit was erased, so the new byte value is always lower than it was before
+						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
 					}
 					// The sprite is not aligned, draw a part on the first frame buffer byte, and draw the remaining part on the following frame buffer byte
 					else
@@ -715,7 +715,7 @@ unsigned char InterpreterRunProgram(void)
 						Previous_Byte_Value = *Pointer_Display;
 						Rendered_Byte_Value = Previous_Byte_Value ^ (Sprite_Byte >> Shift_Offset);
 						*Pointer_Display = Rendered_Byte_Value;
-						if (Previous_Byte_Value > Rendered_Byte_Value) Is_Collision_Detected = 1; // The end of the byte changes (the least significant bits), so the resulting value if some pixels are turned off will be greater than the previous value
+						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
 
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
 						if (Sprite_Column >= (Columns_Count_Byte - 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
@@ -724,7 +724,7 @@ unsigned char InterpreterRunProgram(void)
 						Previous_Byte_Value = *Pointer_Display_Left_Over_Pixels;
 						Rendered_Byte_Value = Previous_Byte_Value ^ ((unsigned char) (Sprite_Byte << (8 - Shift_Offset)));
 						*Pointer_Display_Left_Over_Pixels = Rendered_Byte_Value;
-						if (Previous_Byte_Value < Rendered_Byte_Value) Is_Collision_Detected = 1; // The beginning of the byte changes (the most significant bits), so the resulting value if some pixels are turned off will be lower than the previous value
+						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
 					}
 
 					// Draw the next sprite line

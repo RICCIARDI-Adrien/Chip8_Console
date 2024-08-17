@@ -2,6 +2,7 @@
  * Entry point and main loop for the Chip-8 Console.
  * @author Adrien RICCIARDI
  */
+#include <Battery.h>
 #include <Display.h>
 #include <FAT.h>
 #include <INI_Parser.h>
@@ -52,6 +53,7 @@
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
+/** The splash screen image displayed at console boot. */
 const unsigned char Main_Splash_Screen[] =
 {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -487,6 +489,7 @@ void main(void)
 	SPIInitialize(); // The SPI module must be initialized before the display
 	DisplayInitialize();
 	SDCardInitialize();
+	BatteryInitialize();
 
 	// Show the splash screen
 	memcpy(Shared_Buffer_Display, Main_Splash_Screen, sizeof(Shared_Buffer_Display));
@@ -501,6 +504,13 @@ void main(void)
 	// Enable interrupts
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
+
+	// TEST
+	while (1)
+	{
+		SERIAL_PORT_LOG(1, "Charge = %u%%", BatteryGetCurrentChargePercentage());
+		__delay_ms(1000);
+	}
 
 	while (1)
 	{

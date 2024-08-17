@@ -7,6 +7,7 @@ FIRMWARE_VERSION=0.1
 
 BINARY_NAME = Chip8_Console_Firmware.hex
 SOURCES = \
+	$(PATH_SOURCES)/Battery.c \
 	$(PATH_SOURCES)/Display.c \
 	$(PATH_SOURCES)/EEPROM.c \
 	$(PATH_SOURCES)/FAT.c \

@@ -7,6 +7,7 @@
 #include <INI_Parser.h>
 #include <Interpreter.h>
 #include <Keyboard.h>
+#include <NCO.h>
 #include <Serial_Port.h>
 #include <Shared_Buffer.h>
 #include <Sound.h>
@@ -40,9 +41,6 @@
 #define INTERPRETER_KEYS_COUNT_CHIP_8 16
 /** The total amount of hardware keys supported by this console. */
 #define INTERPRETER_KEYS_COUNT_CONSOLE 8
-
-/** The NCO module is configured to generate a 60Hz frequency. Its interrupt flag is then toggling at 60Hz too. Use it as a rendering tick here. */
-#define INTERPRETER_60HZ_TICK (PIR4bits.NCO1IF)
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -830,14 +828,14 @@ unsigned char InterpreterRunProgram(void)
 							if (KeyboardIsMenuKeyPressed()) return 0;
 
 							// Also run the rendering loop in case a DRW instruction was issued just before calling this instruction, and the tick was not present (so the frame buffer could not be transferred to the display before blocking in this instruction)
-							if (Is_Rendering_Needed && INTERPRETER_60HZ_TICK)
+							if (Is_Rendering_Needed && NCO_60HZ_TICK())
 							{
 								// Display the picture according to the emulation mode display
 								if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 								else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 								Is_Rendering_Needed = 0;
-								INTERPRETER_60HZ_TICK = 0; // The interrupt flag must be manually cleared
+								NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
 							}
 
 							Key_Mask = KeyboardReadKeysMask();
@@ -1004,14 +1002,14 @@ unsigned char InterpreterRunProgram(void)
 
 Next_Instruction:
 		// Transfer the frame buffer to the display only when it has changed and not faster than 60 times per second
-		if (Is_Rendering_Needed && INTERPRETER_60HZ_TICK)
+		if (Is_Rendering_Needed && NCO_60HZ_TICK())
 		{
 			// Display the picture according to the emulation mode display
 			if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 			else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 			Is_Rendering_Needed = 0;
-			INTERPRETER_60HZ_TICK = 0; // The interrupt flag must be manually cleared
+			NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
 		}
 
 		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1

@@ -10,7 +10,7 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
-#define BATTERY_IS_LOGGING_ENABLED 1
+#define BATTERY_IS_LOGGING_ENABLED 0
 
 /** ADC acquisition time registers value.
  * With a 3.3V microcontroller power supply, the sampling switch resistance Rss should be 6K, use 7K for a little safety margin.

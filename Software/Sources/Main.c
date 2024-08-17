@@ -50,6 +50,9 @@
 /** The configuration file name on the SD card. */
 #define MAIN_CONFIGURATION_FILE_NAME "CONFIG.INI"
 
+/** How many measures to compute the average on. */
+#define MAIN_BATTERY_SAMPLES_COUNT 8
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -125,6 +128,56 @@ const unsigned char Main_Splash_Screen[] =
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
+/** Display the main menu with the battery charge that is automatically updated.
+ * @return A keys mask with the allowed key pressed by the user.
+ */
+static TKeyboardKey MainDisplayMainMenu(void)
+{
+	unsigned char Battery_Charge_Samples[MAIN_BATTERY_SAMPLES_COUNT], Battery_Charge, Keys_Mask, i, Sample_Index = 0, Ticks_Counter_Samples = 0, Ticks_Counter_Show_Menu;
+	unsigned short Mean;
+
+	// Initialize all the samples with the current battery value
+	for (i = 0; i < MAIN_BATTERY_SAMPLES_COUNT; i++) Battery_Charge_Samples[i] = BatteryGetCurrentChargePercentage();
+
+	// Display the main menu until an allowed key is pressed
+	Ticks_Counter_Show_Menu = 250; // Set the counter to its expiring value, so the menu is immediately displayed when the function is called
+	do
+	{
+		// Increment the ticks counters (no need for a real time accuracy here)
+		if (NCO_60HZ_TICK())
+		{
+			Ticks_Counter_Samples++;
+			Ticks_Counter_Show_Menu++;
+			NCO_CLEAR_TICK_INTERRUPT_FLAG();
+		}
+
+		// Each ~1s, sample a new battery value
+		if (Ticks_Counter_Samples >= (1000 / 16))
+		{
+			Battery_Charge_Samples[Sample_Index] = BatteryGetCurrentChargePercentage();
+			Sample_Index++;
+			if (Sample_Index >= MAIN_BATTERY_SAMPLES_COUNT) Sample_Index = 0;
+			Ticks_Counter_Samples = 0;
+		}
+
+		// Each ~4s, display the menu with an updated battery charge value
+		if (Ticks_Counter_Show_Menu >= (4000 / 16))
+		{
+			Mean = 0;
+			for (i = 0; i < MAIN_BATTERY_SAMPLES_COUNT; i++) Mean += Battery_Charge_Samples[i];
+			Mean /= MAIN_BATTERY_SAMPLES_COUNT;
+
+			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "A. Games\nB. Settings\nC. Information\n\n\nBattery charge : %u%%", Mean);
+			DisplayDrawTextMessage(Shared_Buffer_Display, "- Main menu -", Shared_Buffers.String_Temporary);
+			Ticks_Counter_Show_Menu = 0;
+		}
+
+		Keys_Mask = KeyboardReadKeysMask();
+	} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C)) == 0);
+
+	return Keys_Mask;
+}
+
 /** Probe the SD card and mount the first FAT partition.
  * @return 0 if the SD card was not removed since the last time it was probed,
  * @return 1 if the SD card was removed since the last time it was probed.
@@ -505,22 +558,10 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// TEST
 	while (1)
 	{
-		SERIAL_PORT_LOG(1, "Charge = %u%%", BatteryGetCurrentChargePercentage());
-		__delay_ms(1000);
-	}
-
-	while (1)
-	{
-		// Display the main menu
-		DisplayDrawTextMessage(Shared_Buffer_Display, "- Main menu -", "A. Games\nB. Settings\nC. Information");
-		// Wait for a key to be pressed
-		do
-		{
-			Keys_Mask = KeyboardReadKeysMask();
-		} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C)) == 0);
+		// Main menu
+		Keys_Mask = MainDisplayMainMenu();
 
 		// Games
 		if (Keys_Mask & KEYBOARD_KEY_A)

@@ -33,6 +33,9 @@ Assembled PCB with the display module screwed and connected :
 
 ## Casing
 
+The casing is made of two laser-cut metal plates. They are both 4 mm thick and made of stainless 304 steel.  
+The metal spacers are 20 mm high. The reference used here is `970200471` from Würth Elektronik.  
+
 Casing plates :
 ![Casing top plate](Resources/Casing_Top_Plate.jpg)
 ![Casing bottom plate](Resources/Casing_Bottom_Plate.jpg)

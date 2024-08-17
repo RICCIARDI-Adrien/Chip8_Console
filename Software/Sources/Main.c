@@ -8,6 +8,7 @@
 #include <INI_Parser.h>
 #include <Interpreter.h>
 #include <Keyboard.h>
+#include <LED.h>
 #include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -524,12 +525,9 @@ void main(void)
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
 
-	// Turn the status LED on to tell that the microcontroller booted
-	ANSELBbits.ANSELB0 = 0;
-	LATBbits.LATB0 = 1;
-	TRISBbits.TRISB0 = 0;
-
 	// Initialize all needed modules
+	LEDInitialize();
+	LED_SET_ENABLED(1); // Turn the LED on during the microcontroller boot
 	SerialPortInitialize();
 	#if MAIN_IS_LOGGING_ENABLED
 		MainCheckResetReason(); // Right after the serial port is working to display the results, determine if there was an abnormal reset
@@ -557,6 +555,9 @@ void main(void)
 	// Enable interrupts
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
+
+	// The boot was completed, turn the LED off to same some power
+	LED_SET_ENABLED(0);
 
 	while (1)
 	{

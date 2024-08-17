@@ -576,7 +576,7 @@ unsigned char InterpreterRunProgram(void)
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUBN V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Register_Value_1, Register_Index_2, Register_Value_2);
 
 						// Set VF register if borrow is clear
-						if (Register_Value_2 > Register_Value_1) Interpreter_Registers_V[15] = 1;
+						if (Register_Value_2 >= Register_Value_1) Interpreter_Registers_V[15] = 1;
 						else Interpreter_Registers_V[15] = 0;
 						break;
 					}

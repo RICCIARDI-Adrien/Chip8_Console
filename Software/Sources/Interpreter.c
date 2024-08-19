@@ -279,6 +279,10 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 unsigned char InterpreterRunProgram(void)
 {
 	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Is_Rendering_Needed = 0, Is_Super_Chip_8_Mode = 0; // TODO Initialize Is_Super_Chip_8_Mode according to the program to run
+	#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
+		unsigned char Is_Stepping_Enabled = 1;
+		unsigned short Breakpoint_Address = 0; // Set to 0 to disable the breakpoint feature, otherwise set to the address to break on
+	#endif
 
 	// Configure the display settings according to the selected emulation mode
 	if (Is_Super_Chip_8_Mode)
@@ -305,6 +309,42 @@ unsigned char InterpreterRunProgram(void)
 		Instruction_High_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC];
 		Instruction_Low_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC + 1];
 		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "**** Fetching instruction at address 0x%03X : 0x%02X 0x%02X.", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
+
+		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
+			if (Breakpoint_Address != 0)
+			{
+				if (Breakpoint_Address == Interpreter_Register_PC)
+				{
+					SerialPortWriteString("Reached breakpoint.\r\n");
+					Is_Stepping_Enabled = 1;
+				}
+			}
+
+			if (Is_Stepping_Enabled)
+			{
+				unsigned char i, Character;
+
+				// Display all registers
+				SerialPortWriteString("Registers :\r\n");
+				printf("PC=0x%04X, I=0x%04X, SP=0x%02X\r\n", Interpreter_Register_PC, Interpreter_Register_I, Interpreter_Register_SP);
+				for (i = 0; i < INTERPRETER_REGISTERS_V_COUNT; i++) printf("V%01X=0x%02X, ", i, Interpreter_Registers_V[i]);
+				SerialPortWriteString("\r\n");
+
+				// Wait for user input
+				SerialPortWriteString("Press 'c' to continue execution or 's' to step.\r\n");
+				while (1)
+				{
+					Character = SerialPortReadByte();
+					if (Character == 'c')
+					{
+						Is_Stepping_Enabled = 0;
+						SerialPortWriteString("Continuing execution...\r\n");
+						break;
+					}
+					if (Character == 's') break;
+				}
+			}
+		#endif
 
 		// Decode and execute the instruction
 		switch (Instruction_High_Byte & 0xF0)
@@ -1012,21 +1052,6 @@ Next_Instruction:
 			NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
 		}
 
-		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
-		{
-			unsigned char i;
-
-			// Display all registers
-			SerialPortWriteString("Registers :\r\n");
-			printf("PC=0x%04X, I=0x%04X, SP=0x%02X\r\n", Interpreter_Register_PC, Interpreter_Register_I, Interpreter_Register_SP);
-			for (i = 0; i < INTERPRETER_REGISTERS_V_COUNT; i++) printf("V%01X=0x%02X, ", i, Interpreter_Registers_V[i]);
-			SerialPortWriteString("\r\n");
-
-			// Wait for user input
-			SerialPortWriteString("Press 's' to continue.\r\n");
-			while (SerialPortReadByte() != 's');
-		}
-		#endif
 		continue; // Useless here but the compiler does not accept a label followed by no code
 	}
 

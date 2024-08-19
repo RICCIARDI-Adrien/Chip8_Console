@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Break_Tab")(type "KiCad")(uri "${KIPRJMOD}/Break_Tab.pretty")(options "")(descr ""))
+)

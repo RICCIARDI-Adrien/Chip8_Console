@@ -2,6 +2,8 @@
 
 A Chip-8/SuperChip-8 console powered by a 8-bit PIC18 microcontroller.
 
+![Console displaying the boot logo](Resources/Finished_Console_1.jpg)
+
 ## Specifications
 
 * Microchip PIC18F27K42 8-bit microcontroller
@@ -49,3 +51,8 @@ Bottom plate with screwed PCB :
 Fully assembled console :
 ![Assembled console front](Resources/Assembled_Console_Front.jpg)
 ![Assembled console batteries side](Resources/Assembled_Console_Side_Batteries.jpg)
+
+## Photo gallery
+
+The console boot logo :
+![Console boot logo](Resources/Finished_Console_2.jpg)

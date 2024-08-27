@@ -104,6 +104,8 @@ static unsigned char Interpreter_Random_Seed;
 
 /** Tell whether the game enabled the fast display rendering feature. */
 static unsigned char Interpreter_Is_Fast_Rendering_Enabled;
+/** Tell whether the game requires the display wrapping quirk. */
+static unsigned char Interpreter_Is_Display_Wrapping_Enabled;
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -205,8 +207,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	}
 	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
 
-	// If the key is not found, the fast rendering is disabled, in order to disable it by default
+	// If the corresponding key is not found, the variable is set to 0, in order to disable the feature by default
 	Interpreter_Is_Fast_Rendering_Enabled = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "FastRendering");
+	Interpreter_Is_Display_Wrapping_Enabled = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "DisplayWrapping");
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -762,7 +765,11 @@ unsigned char InterpreterRunProgram(void)
 						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
 
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
-						if (Sprite_Column >= (Columns_Count_Byte - 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
+						if (Sprite_Column >= (Columns_Count_Byte - 1))
+						{
+							if (Interpreter_Is_Display_Wrapping_Enabled) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
+							else goto Next_Line; // Discard the right part of the sprite if the clipping mode is enabled
+						}
 						// Otherwise, just render the left over pixels to the following byte location
 						else Pointer_Display_Left_Over_Pixels = Pointer_Display + 1;
 						Previous_Byte_Value = *Pointer_Display_Left_Over_Pixels;
@@ -771,6 +778,7 @@ unsigned char InterpreterRunProgram(void)
 						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
 					}
 
+				Next_Line:
 					// Draw the next sprite line
 					Pointer_Sprite++;
 					Sprite_Size--;
@@ -779,6 +787,9 @@ unsigned char InterpreterRunProgram(void)
 					Row++;
 					if (Row >= Display_Rows_Count)
 					{
+						// Stop rendering the sprite if the clipping mode is enabled
+						if (!Interpreter_Is_Display_Wrapping_Enabled) break;
+
 						Row = 0;
 						// Subtract all rows but the last one, keeping only the "column" component of the display address
 						Pointer_Display -= (Display_Rows_Count - 1) * Columns_Count_Byte;

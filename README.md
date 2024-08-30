@@ -52,6 +52,43 @@ Fully assembled console :
 ![Assembled console front](Resources/Assembled_Console_Front.jpg)
 ![Assembled console batteries side](Resources/Assembled_Console_Side_Batteries.jpg)
 
+## Battery pack hatch
+
+The hatch is made of PCB FR4. The hatch does not require to be as strong as the console casing and the FR4 is a good material to cut complex shapes into.
+
+The hatch is cut as a PCB panel containing all the required parts :
+![Battery hatch panel](Resources/Battery_Hatch_Panel.jpg)
+
+The first assembly step is to glue the hinges :
+![Battery hatch hinges 1](Resources/Battery_Hatch_Hinges_1.jpg)
+![Battery hatch hinges 2](Resources/Battery_Hatch_Hinges_2.jpg)
+![Battery hatch hinges 3](Resources/Battery_Hatch_Hinges_3.jpg)
+![Battery hatch hinges 4](Resources/Battery_Hatch_Hinges_4.jpg)
+
+The second step is to screw the sliding part, and also the bolt used to manipulate the hatch slider :
+![Battery hatch assembled 1](Resources/Battery_Hatch_Assembled_1.jpg)
+![Battery hatch assembled 2](Resources/Battery_Hatch_Assembled_2.jpg)
+![Battery hatch assembled 3](Resources/Battery_Hatch_Assembled_3.jpg)
+
+There is not enough room to use Nyloc nuts, so normal nuts are used and held in place with threadlocker.  
+The tightening of these bolts allows the slider to slide with a little force, so the hatch can't open alone.
+![Battery hatch assembled 4](Resources/Battery_Hatch_Assembled_4.jpg)
+
+The strike is made of a piece of PCB coming from the panel edge that is inserted by force between the two metal plates :
+![Battery hatch strike 1](Resources/Battery_Hatch_Strike_1.jpg)
+![Battery hatch strike 2](Resources/Battery_Hatch_Strike_2.jpg)
+![Battery hatch strike 3](Resources/Battery_Hatch_Strike_3.jpg)
+
+Now the hatch can be assembled onto the console.  
+Locked hatch :
+![Battery hatch locked](Resources/Battery_Hatch_Locked.jpg)
+
+Unlocked hatch :
+![Battery hatch unlocked](Resources/Battery_Hatch_Unlocked.jpg)
+
+Opened hatch :
+![Battery hatch opened](Resources/Battery_Hatch_Opened.jpg)
+
 ## Photo gallery
 
 The console boot logo :

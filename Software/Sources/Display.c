@@ -13,7 +13,7 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
-#define DISPLAY_IS_LOGGING_ENABLED 1
+#define DISPLAY_IS_LOGGING_ENABLED 0
 
 /** The display controller reset pin. */
 #define DISPLAY_PIN_RESET LATBbits.LATB1

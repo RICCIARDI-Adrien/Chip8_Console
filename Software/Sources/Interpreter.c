@@ -678,6 +678,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Extract the operands
 				Address = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
+				Address |= Instruction_Low_Byte;
 
 				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP V0 (= 0x%02X), 0x%03X with PC = 0x%03X.", Interpreter_Registers_V[0], Address, Interpreter_Register_PC);
 				Interpreter_Register_PC = Interpreter_Registers_V[0] + Address;

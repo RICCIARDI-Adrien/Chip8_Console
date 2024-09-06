@@ -60,3 +60,22 @@ unsigned char KeyboardIsMenuKeyPressed(void)
 
 	return Is_Pressed;
 }
+
+unsigned char KeyboardWaitForKeys(TKeyboardKey Keys_Mask)
+{
+	unsigned char Read_Keys_Mask;
+
+	// Wait for at least one key to be pressed
+	do
+	{
+		Read_Keys_Mask = KeyboardReadKeysMask();
+	} while ((Read_Keys_Mask & Keys_Mask) == 0);
+
+	// Wait for all the keys to be released
+	while (KeyboardReadKeysMask() != 0);
+
+	// Add a little debounce timer
+	__delay_ms(20);
+
+	return Read_Keys_Mask;
+}

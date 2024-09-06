@@ -38,4 +38,10 @@ unsigned char KeyboardReadKeysMask(void);
  */
 unsigned char KeyboardIsMenuKeyPressed(void);
 
+/** Block until one of the keys of the specified mask is pressed.
+ * @param Keys_Mask A mask of the keys to wait for.
+ * @return A mask of the pressed keys.
+ */
+unsigned char KeyboardWaitForKeys(TKeyboardKey Keys_Mask);
+
 #endif

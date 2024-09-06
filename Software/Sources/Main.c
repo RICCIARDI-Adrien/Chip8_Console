@@ -199,6 +199,9 @@ static TKeyboardKey MainDisplayMainMenu(void)
 		Keys_Mask = KeyboardReadKeysMask();
 	} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C)) == 0);
 
+	// Wait for all the keys to be released
+	while (KeyboardReadKeysMask() != 0);
+
 	return Keys_Mask;
 }
 
@@ -538,17 +541,12 @@ static void MainDisplaySettingsMenu(void)
 		DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
 
 		// Wait for a key to be pressed
-		do
-		{
-			Keys_Mask = KeyboardReadKeysMask();
-		} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_D)) == 0);
-
+		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_D);
 		if (Keys_Mask & KEYBOARD_KEY_A)
 		{
 			if (Is_Sound_Enabled) Is_Sound_Enabled = 0;
 			else Is_Sound_Enabled = 1;
 			SoundSetEnabled(Is_Sound_Enabled);
-			while (KeyboardReadKeysMask() & KEYBOARD_KEY_A); // Wait for the key to be released
 		}
 		else if (Keys_Mask & KEYBOARD_KEY_B)
 		{
@@ -557,13 +555,8 @@ static void MainDisplaySettingsMenu(void)
 			else Brightness = EEPROM_DISPLAY_BRIGHTNESS_LOW;
 			DisplaySetBrightness(Brightness);
 			EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, Brightness);
-			while (KeyboardReadKeysMask() & KEYBOARD_KEY_B); // Wait for the key to be released
 		}
-		else if (Keys_Mask & KEYBOARD_KEY_D)
-		{
-			while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
-			break;
-		}
+		else if (Keys_Mask & KEYBOARD_KEY_D) break;
 	}
 }
 
@@ -673,23 +666,14 @@ void main(void)
 			}
 		}
 		// Settings
-		else if (Keys_Mask & KEYBOARD_KEY_B)
-		{
-			// Wait for the B key to be released before showing the menu, otherwise some option may be changed
-			while (KeyboardReadKeysMask() & KEYBOARD_KEY_B);
-			__delay_ms(20); // Little debounce timer
-
-			// Execute the menu
-			MainDisplaySettingsMenu();
-		}
+		else if (Keys_Mask & KEYBOARD_KEY_B) MainDisplaySettingsMenu();
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_C)
 		{
 			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nD : back.");
 
 			// Wait for the 'back' key to be pressed
-			while (!(KeyboardReadKeysMask() & KEYBOARD_KEY_D));
-			while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
+			KeyboardWaitForKeys(KEYBOARD_KEY_D);
 		}
 	}
 }

@@ -39,38 +39,40 @@ void SerialPortInitialize(void)
 	SERIAL_PORT_LOG(1, "Serial port logging is enabled.");
 }
 
-unsigned char SerialPortReadByte(void)
-{
-	// Wait for a byte to be received
-	while (!PIR3bits.U1RXIF);
-
-	// Retrieve the byte from the FIFO
-	return U1RXB;
-}
-
-void SerialPortWriteByte(unsigned char Data)
-{
-	// Wait for the previous transmission to finish
-	while (!PIR3bits.U1TXIF);
-	
-	// Send the byte
-	U1TXB = Data;
-}
-
-void SerialPortWriteString(const char *Pointer_String)
-{
-	while (*Pointer_String != 0)
+#ifdef SERIAL_PORT_ENABLE_LOGGING
+	unsigned char SerialPortReadByte(void)
 	{
-		// Send the next character (do not call SerialPortWriteByte() to save some cycle and stack space)
-		while (!PIR3bits.U1TXIF); // Wait for the previous transmission to finish
-		U1TXB = *Pointer_String; // Send the character
+		// Wait for a byte to be received
+		while (!PIR3bits.U1RXIF);
 
-		Pointer_String++;
+		// Retrieve the byte from the FIFO
+		return U1RXB;
 	}
-}
 
-// Implement the XC8 C library putch() function to be able to directly use printf() in the code
-void putch(char data)
-{
-	SerialPortWriteByte(data);
-}
+	void SerialPortWriteByte(unsigned char Data)
+	{
+		// Wait for the previous transmission to finish
+		while (!PIR3bits.U1TXIF);
+
+		// Send the byte
+		U1TXB = Data;
+	}
+
+	void SerialPortWriteString(const char *Pointer_String)
+	{
+		while (*Pointer_String != 0)
+		{
+			// Send the next character (do not call SerialPortWriteByte() to save some cycle and stack space)
+			while (!PIR3bits.U1TXIF); // Wait for the previous transmission to finish
+			U1TXB = *Pointer_String; // Send the character
+
+			Pointer_String++;
+		}
+	}
+
+	// Implement the XC8 C library putch() function to be able to directly use printf() in the code
+	void putch(char data)
+	{
+		SerialPortWriteByte(data);
+	}
+#endif

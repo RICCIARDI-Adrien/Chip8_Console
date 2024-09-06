@@ -11,8 +11,14 @@
 /** How many bytes the EEPROM can store. */
 #define EEPROM_SIZE 1024
 
-/** The address in the EEPROM of the byte where the sound generation enabling state is stored. */
-#define EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED 0
+//-------------------------------------------------------------------------------------------------
+// Types
+//-------------------------------------------------------------------------------------------------
+typedef enum
+{
+	EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, //!< Tell whether the EEPROM contains valid data.
+	EEPROM_ADDRESS_IS_SOUND_ENABLED //!< Enable or disable the sound generation.
+} TEEPROMAddress;
 
 //-------------------------------------------------------------------------------------------------
 // Functions

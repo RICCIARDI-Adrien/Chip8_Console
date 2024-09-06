@@ -109,7 +109,7 @@ void SoundInitialize(void)
 	TRISCbits.TRISC2 = 0; // Set the pin as output
 
 	// Cache the enabling state
-	Sound_Is_Enabled = EEPROMReadByte(EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED);
+	Sound_Is_Enabled = EEPROMReadByte(EEPROM_ADDRESS_IS_SOUND_ENABLED);
 	if (Sound_Is_Enabled != 0) Sound_Is_Enabled = 1; // Normalize the "enabled" value to 1, because by default the EEPROM memory is erased, so the initial value is 0xFF (which is considered as "enabled")
 }
 
@@ -138,7 +138,7 @@ void SoundPlay(unsigned char Duration)
 void SoundSetEnabled(unsigned char Is_Enabled)
 {
 	Sound_Is_Enabled = Is_Enabled;
-	EEPROMWriteByte(EEPROM_DATA_ADDRESS_IS_SOUND_ENABLED, Sound_Is_Enabled);
+	EEPROMWriteByte(EEPROM_ADDRESS_IS_SOUND_ENABLED, Sound_Is_Enabled);
 }
 
 unsigned char SoundIsEnabled(void)

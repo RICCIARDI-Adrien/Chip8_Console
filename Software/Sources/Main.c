@@ -4,6 +4,7 @@
  */
 #include <Battery.h>
 #include <Display.h>
+#include <EEPROM.h>
 #include <FAT.h>
 #include <INI_Parser.h>
 #include <Interpreter.h>
@@ -129,6 +130,25 @@ const unsigned char Main_Splash_Screen[] =
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
+/** Program the EEPROM relevant locations with the default values. */
+static void MainInitializeEEPROM()
+{
+	// Do nothing if the EEPROM contains already data
+	if (EEPROMReadByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED) == 1)
+	{
+		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content is already initialized, skipping initialization.");
+		return;
+	}
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization.");
+
+	// Enable the sound by default
+	EEPROMWriteByte(EEPROM_ADDRESS_IS_SOUND_ENABLED, 1);
+
+	// Tell that the EEPROM is initialized
+	EEPROMWriteByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, 1);
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content has been successfully initialized.");
+}
+
 /** Display the main menu with the battery charge that is automatically updated.
  * @return A keys mask with the allowed key pressed by the user.
  */
@@ -532,6 +552,7 @@ void main(void)
 	#if MAIN_IS_LOGGING_ENABLED
 		MainCheckResetReason(); // Right after the serial port is working to display the results, determine if there was an abnormal reset
 	#endif
+	MainInitializeEEPROM(); // Initialize the EEPROM content if the microcontroller EEPROM area is not yet programmed
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();
 	KeyboardInitialize();

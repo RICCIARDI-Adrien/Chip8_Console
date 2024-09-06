@@ -3,6 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <Display.h>
+#include <EEPROM.h>
 #include <Serial_Port.h>
 #include <Shared_Buffer.h>
 #include <SPI.h>
@@ -140,6 +141,7 @@ static const unsigned char Display_Font_Sprites[][DISPLAY_TEXT_CHARACTER_WIDTH] 
 void DisplayInitialize(void)
 {
 	unsigned short i;
+	unsigned char Brightness;
 
 	SPI_SELECT_DISPLAY();
 
@@ -169,6 +171,11 @@ void DisplayInitialize(void)
 	DISPLAY_PIN_DC = DISPLAY_DC_MODE_COMMAND;
 	SPITransferByte(0xAF);
 	__delay_ms(10);
+
+	// Adjust the brightness according to the configuration
+	Brightness = EEPROMReadByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS);
+	SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "Brightness value loaded from the configuration : %u.", Brightness);
+	DisplaySetBrightness(Brightness);
 
 	// Leave the display in data mode by default
 	DISPLAY_PIN_DC = DISPLAY_DC_MODE_DATA;

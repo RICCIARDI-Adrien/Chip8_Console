@@ -14,11 +14,21 @@
 //-------------------------------------------------------------------------------------------------
 // Types
 //-------------------------------------------------------------------------------------------------
+/** All mapped EEPROM memory locations. */
 typedef enum
 {
 	EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, //!< Tell whether the EEPROM contains valid data.
-	EEPROM_ADDRESS_IS_SOUND_ENABLED //!< Enable or disable the sound generation.
+	EEPROM_ADDRESS_IS_SOUND_ENABLED, //!< Enable or disable the sound generation.
+	EEPROM_ADDRESS_DISPLAY_BRIGHTNESS //!< The display pixels brightness.
 } TEEPROMAddress;
+
+/** All possible brightness values, can be provided as-is to the DisplaySetBrightness() function. */
+typedef enum
+{
+	EEPROM_DISPLAY_BRIGHTNESS_LOW = 0,
+	EEPROM_DISPLAY_BRIGHTNESS_MEDIUM = 63,
+	EEPROM_DISPLAY_BRIGHTNESS_HIGH = 127
+} TEEPROMDisplayBrightness;
 
 //-------------------------------------------------------------------------------------------------
 // Functions

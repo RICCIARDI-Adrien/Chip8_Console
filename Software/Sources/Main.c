@@ -139,10 +139,13 @@ static void MainInitializeEEPROM()
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content is already initialized, skipping initialization.");
 		return;
 	}
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization.");
+	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization process...");
 
 	// Enable the sound by default
 	EEPROMWriteByte(EEPROM_ADDRESS_IS_SOUND_ENABLED, 1);
+
+	// Set the maximum display brightness
+	EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, EEPROM_DISPLAY_BRIGHTNESS_HIGH);
 
 	// Tell that the EEPROM is initialized
 	EEPROMWriteByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, 1);
@@ -513,6 +516,57 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 	}
 }
 
+/** Display the settings menu and interact with the user. */
+static void MainDisplaySettingsMenu(void)
+{
+	const char *Pointer_String_Brightness;
+	unsigned char Is_Sound_Enabled, Brightness, Keys_Mask;
+
+	while (1)
+	{
+		// Retrieve the settings value
+		// Sound
+		Is_Sound_Enabled = SoundIsEnabled();
+		// Display brightness
+		Brightness = EEPROMReadByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS);
+		if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_LOW) Pointer_String_Brightness = "25%\n";
+		else if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_MEDIUM) Pointer_String_Brightness = "50%\n";
+		else Pointer_String_Brightness = "100%";
+
+		// Display the menu content
+		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nD : back.", Is_Sound_Enabled ? "enabled" : "disabled", Pointer_String_Brightness);
+		DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
+
+		// Wait for a key to be pressed
+		do
+		{
+			Keys_Mask = KeyboardReadKeysMask();
+		} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_D)) == 0);
+
+		if (Keys_Mask & KEYBOARD_KEY_A)
+		{
+			if (Is_Sound_Enabled) Is_Sound_Enabled = 0;
+			else Is_Sound_Enabled = 1;
+			SoundSetEnabled(Is_Sound_Enabled);
+			while (KeyboardReadKeysMask() & KEYBOARD_KEY_A); // Wait for the key to be released
+		}
+		else if (Keys_Mask & KEYBOARD_KEY_B)
+		{
+			if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_LOW) Brightness = EEPROM_DISPLAY_BRIGHTNESS_MEDIUM;
+			else if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_MEDIUM) Brightness = EEPROM_DISPLAY_BRIGHTNESS_HIGH;
+			else Brightness = EEPROM_DISPLAY_BRIGHTNESS_LOW;
+			DisplaySetBrightness(Brightness);
+			EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, Brightness);
+			while (KeyboardReadKeysMask() & KEYBOARD_KEY_B); // Wait for the key to be released
+		}
+		else if (Keys_Mask & KEYBOARD_KEY_D)
+		{
+			while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
+			break;
+		}
+	}
+}
+
 #if MAIN_IS_LOGGING_ENABLED
 	/** Display the various reasons that could lead to a system reset. */
 	static void MainCheckResetReason(void)
@@ -539,7 +593,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
-	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask, Is_Sound_Enabled;
+	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask;
 	unsigned short Configuration_File_Size;
 
 	// Wait for the internal oscillator to stabilize
@@ -621,32 +675,12 @@ void main(void)
 		// Settings
 		else if (Keys_Mask & KEYBOARD_KEY_B)
 		{
-			while (1)
-			{
-				// Display the menu content
-				Is_Sound_Enabled = SoundIsEnabled();
-				snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound : %s\n\n\n\nA : configure sound.\nD : back.", Is_Sound_Enabled ? "enabled" : "disabled");
-				DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
+			// Wait for the B key to be released before showing the menu, otherwise some option may be changed
+			while (KeyboardReadKeysMask() & KEYBOARD_KEY_B);
+			__delay_ms(20); // Little debounce timer
 
-				// Wait for a key to be pressed
-				do
-				{
-					Keys_Mask = KeyboardReadKeysMask();
-				} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_D)) == 0);
-
-				if (Keys_Mask & KEYBOARD_KEY_A)
-				{
-					if (Is_Sound_Enabled) Is_Sound_Enabled = 0;
-					else Is_Sound_Enabled = 1;
-					SoundSetEnabled(Is_Sound_Enabled);
-					while (KeyboardReadKeysMask() & KEYBOARD_KEY_A); // Wait for the key to be released
-				}
-				else if (Keys_Mask & KEYBOARD_KEY_D)
-				{
-					while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for the key to be released
-					break;
-				}
-			}
+			// Execute the menu
+			MainDisplaySettingsMenu();
 		}
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_C)

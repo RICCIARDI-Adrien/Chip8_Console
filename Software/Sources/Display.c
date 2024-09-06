@@ -354,3 +354,24 @@ void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Tit
 
 	DisplayDrawTextBuffer(Pointer_Buffer);
 }
+
+void DisplaySetBrightness(unsigned char Brightness)
+{
+	// The default brightness at display reset is 0x7F, so avoid higher values in case they could harm the OLED pixels
+	if (Brightness > 0x7F)
+	{
+		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The specified brightness 0x%08X is too high, capping it to 0x7F.\n", Brightness);
+		Brightness = 0x7F;
+	}
+
+	SPI_SELECT_DISPLAY();
+
+	// Send the "Set Contrast Control" command
+	DISPLAY_PIN_DC = DISPLAY_DC_MODE_COMMAND;
+	SPITransferByte(0x81);
+	SPITransferByte(Brightness);
+	__delay_ms(4);
+	DISPLAY_PIN_DC = DISPLAY_DC_MODE_DATA;
+
+	SPI_DESELECT_DISPLAY();
+}

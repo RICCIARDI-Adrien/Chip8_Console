@@ -70,4 +70,9 @@ void DisplayDrawTextBuffer(void *Pointer_Buffer);
  */
 void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Title, const char *Pointer_String_Message);
 
+/** Set the brightness of the display pixels.
+ * @param Brightness A value between 0 (minimum) and 127 (maximum).
+ */
+void DisplaySetBrightness(unsigned char Brightness);
+
 #endif

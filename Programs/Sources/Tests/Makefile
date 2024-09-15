@@ -13,6 +13,9 @@ Test_Collisions.CH8: Test_Collisions.asm
 Test_Sprites.CH8: Test_Sprites.asm
 	$(AS) $(ASFLAGS) $< -o $@
 
+Test_Stack_Overflow.CH8: Test_Stack_Overflow.asm
+	$(AS) $(ASFLAGS) $< -o $@
+
 Test_Stack_Underflow.CH8: Test_Stack_Underflow.asm
 	$(AS) $(ASFLAGS) $< -o $@
 

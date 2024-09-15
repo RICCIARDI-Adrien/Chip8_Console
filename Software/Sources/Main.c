@@ -141,8 +141,8 @@ static void MainInitializeEEPROM()
 	}
 	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization process...");
 
-	// Enable the sound by default
-	EEPROMWriteByte(EEPROM_ADDRESS_IS_SOUND_ENABLED, 1);
+	// Set the maximum sound level
+	EEPROMWriteByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE, EEPROM_SOUND_LEVEL_PERCENTAGE_HIGH);
 
 	// Set the maximum display brightness
 	EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, EEPROM_DISPLAY_BRIGHTNESS_HIGH);
@@ -522,14 +522,18 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 /** Display the settings menu and interact with the user. */
 static void MainDisplaySettingsMenu(void)
 {
-	const char *Pointer_String_Brightness;
-	unsigned char Is_Sound_Enabled, Brightness, Keys_Mask;
+	const char *Pointer_String_Sound, *Pointer_String_Brightness;
+	unsigned char Sound_Level_Percentage, Brightness, Keys_Mask;
 
 	while (1)
 	{
 		// Retrieve the settings value
-		// Sound
-		Is_Sound_Enabled = SoundIsEnabled();
+		// Sound level
+		Sound_Level_Percentage = EEPROMReadByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE);
+		if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Pointer_String_Sound = "disabled";
+		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_LOW) Pointer_String_Sound = "low";
+		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_MEDIUM) Pointer_String_Sound = "medium";
+		else Pointer_String_Sound = "high";
 		// Display brightness
 		Brightness = EEPROMReadByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS);
 		if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_LOW) Pointer_String_Brightness = "25%\n";
@@ -537,16 +541,19 @@ static void MainDisplaySettingsMenu(void)
 		else Pointer_String_Brightness = "100%";
 
 		// Display the menu content
-		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nD : back.", Is_Sound_Enabled ? "enabled" : "disabled", Pointer_String_Brightness);
+		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nD : back.", Pointer_String_Sound, Pointer_String_Brightness);
 		DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
 
 		// Wait for a key to be pressed
 		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_D);
 		if (Keys_Mask & KEYBOARD_KEY_A)
 		{
-			if (Is_Sound_Enabled) Is_Sound_Enabled = 0;
-			else Is_Sound_Enabled = 1;
-			SoundSetEnabled(Is_Sound_Enabled);
+			if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_LOW;
+			else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_LOW) Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_MEDIUM;
+			else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_MEDIUM) Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_HIGH;
+			else Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_OFF;
+			SoundSetLevel(Sound_Level_Percentage);
+			EEPROMWriteByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE, Sound_Level_Percentage);
 		}
 		else if (Keys_Mask & KEYBOARD_KEY_B)
 		{

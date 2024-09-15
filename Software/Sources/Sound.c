@@ -18,19 +18,22 @@
 // Private variables
 //-------------------------------------------------------------------------------------------------
 /** Cache the sound generation enabling state. */
-static unsigned char Sound_Is_Enabled = 1; // Always enable the sound on boot, so the initial call to SoundPlay() can correctly initialize the sound logic
+static unsigned char Sound_Is_Enabled;
 
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
 void SoundInitialize(void)
 {
+	unsigned char Percentage;
+
 	// Configure the PWM module
 	CCPTMRS1 = (CCPTMRS1 & 0xFC) | 0x01; // Select TMR2 clock for PWM5
 	PWM5CON = 0; // Do not enable the PWM for now, do not invert the output signal
 
-	// Set the maximum sound level
-	SoundSetLevel(100);
+	// Set the configured sound level
+	Percentage = EEPROMReadByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE);
+	SoundSetLevel(Percentage);
 
 	// Configure the timer that clocks the PWM
 	T2CLK = 0x01; // The datasheet tells that the timer must be clocked by Fosc/4 for proper PWM operations
@@ -103,10 +106,6 @@ void SoundInitialize(void)
 	RC2PPS = 0x01; // Select the RC2 pin as the Configurable Logic Cell 1 output
 	ANSELCbits.ANSELC2 = 0; // Configure the pin as digital
 	TRISCbits.TRISC2 = 0; // Set the pin as output
-
-	// Cache the enabling state
-	Sound_Is_Enabled = EEPROMReadByte(EEPROM_ADDRESS_IS_SOUND_ENABLED);
-	if (Sound_Is_Enabled != 0) Sound_Is_Enabled = 1; // Normalize the "enabled" value to 1, because by default the EEPROM memory is erased, so the initial value is 0xFF (which is considered as "enabled")
 }
 
 void SoundPlay(unsigned char Duration)
@@ -131,17 +130,6 @@ void SoundPlay(unsigned char Duration)
 	T4CONbits.ON = 1;
 }
 
-void SoundSetEnabled(unsigned char Is_Enabled)
-{
-	Sound_Is_Enabled = Is_Enabled;
-	EEPROMWriteByte(EEPROM_ADDRESS_IS_SOUND_ENABLED, Sound_Is_Enabled);
-}
-
-unsigned char SoundIsEnabled(void)
-{
-	return Sound_Is_Enabled;
-}
-
 void SoundSetLevel(unsigned char Level_Percentage)
 {
 	unsigned short Register_Value;
@@ -157,4 +145,8 @@ void SoundSetLevel(unsigned char Level_Percentage)
 	// Configure the duty cycle
 	PWM5DCL = (unsigned char) ((Register_Value & 0x03) << 6);
 	PWM5DCH = (unsigned char) (Register_Value >> 2);
+
+	// Cache the sound enabling state to save some cycles when calling SoundPlay()
+	if (Level_Percentage == 0) Sound_Is_Enabled = 0;
+	else Sound_Is_Enabled = 1;
 }

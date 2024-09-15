@@ -369,8 +369,11 @@ unsigned char InterpreterRunProgram(void)
 						// Make sure there is a valid address on the stack
 						if (Interpreter_Register_SP == 0)
 						{
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack underflow. Stopping interpreter.");
-							while (1);
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack underflow. Stopping interpreter.");
+							memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
+							DisplayDrawTextMessage(Shared_Buffer_Display, "Error", "Virtual stack\nunderflow.\n\n\n\nPress Menu to exit.");
+							while (!KeyboardIsMenuKeyPressed());
+							return 1;
 						}
 						Interpreter_Register_SP--; // The CALL instruction increments the stack pointer after pushing, so the RET instruction needs to decrement the stack pointer before popping
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];

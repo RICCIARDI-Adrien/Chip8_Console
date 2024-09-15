@@ -405,8 +405,11 @@ unsigned char InterpreterRunProgram(void)
 				// Make sure there is still room on the stack
 				if (Interpreter_Register_SP >= INTERPRETER_STACK_SIZE)
 				{
-					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Virtual program error : stack overflow. Stopping interpreter.");
-					while (1);
+					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack overflow. Stopping interpreter.");
+					memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
+					DisplayDrawTextMessage(Shared_Buffer_Display, "Error", "Virtual stack\noverflow.\n\n\n\nPress Menu to exit.");
+					while (!KeyboardIsMenuKeyPressed());
+					return 1;
 				}
 				Interpreter_Stack[Interpreter_Register_SP] = Interpreter_Register_PC + 2; // Store the address of the instruction following this one
 				Interpreter_Register_SP++;

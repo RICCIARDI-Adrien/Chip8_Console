@@ -26,4 +26,9 @@ void SoundSetEnabled(unsigned char Is_Enabled);
  */
 unsigned char SoundIsEnabled(void);
 
+/** Allow to configure the level of the generated sound.
+ * @param Level_Percentage Set to 0 to mute the sound, set to 100 to for maximum sound level.
+ */
+void SoundSetLevel(unsigned char Level_Percentage);
+
 #endif

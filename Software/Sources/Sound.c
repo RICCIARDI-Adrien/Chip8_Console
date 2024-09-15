@@ -14,11 +14,6 @@
  */
 #define SOUND_PWM_PERIOD 249
 
-/** The pulse width is a 10-bit value computed as follow : PWMxDC = Pulse_Width / ((1 / Fosc) * Prescaler).
- * The pulse width is here 1 / 4000 / 2 to get a 50% duty cycle.
- */
-#define SOUND_PWM_PULSE_WIDTH 500
-
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -32,9 +27,10 @@ void SoundInitialize(void)
 {
 	// Configure the PWM module
 	CCPTMRS1 = (CCPTMRS1 & 0xFC) | 0x01; // Select TMR2 clock for PWM5
-	PWM5DCL = (SOUND_PWM_PULSE_WIDTH & 0x03) << 6;
-	PWM5DCH = SOUND_PWM_PULSE_WIDTH >> 2;
 	PWM5CON = 0; // Do not enable the PWM for now, do not invert the output signal
+
+	// Set the maximum sound level
+	SoundSetLevel(100);
 
 	// Configure the timer that clocks the PWM
 	T2CLK = 0x01; // The datasheet tells that the timer must be clocked by Fosc/4 for proper PWM operations
@@ -144,4 +140,21 @@ void SoundSetEnabled(unsigned char Is_Enabled)
 unsigned char SoundIsEnabled(void)
 {
 	return Sound_Is_Enabled;
+}
+
+void SoundSetLevel(unsigned char Level_Percentage)
+{
+	unsigned short Register_Value;
+
+	// Clamp any percentage higher than 100%
+	if (Level_Percentage > 100) Level_Percentage = 100;
+
+	// Assume that the maximum sound level is reached when the duty cycle is 50% : with PWM frequency being 4KHz, the full duty cycle period is 1 / 4000, so for instance 50% duty cycle is 1 / 4000 / 2
+	// The pulse width is a 10-bit value computed as follow : PWMxDC = Pulse_Width / ((1 / Fosc) * Prescaler)
+	// Here, the oscillator frequency is 64MHz and the prescaler is 1:16, so the register value for a 50% duty cycle is 500
+	Register_Value = (500 * Level_Percentage) / (unsigned short) 100; // As the percentage is clamped to 100, the multiplication can't overflow an unsigned 16-bit variable
+
+	// Configure the duty cycle
+	PWM5DCL = (unsigned char) ((Register_Value & 0x03) << 6);
+	PWM5DCH = (unsigned char) (Register_Value >> 2);
 }

@@ -281,24 +281,15 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 
 unsigned char InterpreterRunProgram(void)
 {
-	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Is_Rendering_Needed = 0, Is_Super_Chip_8_Mode = 0; // TODO Initialize Is_Super_Chip_8_Mode according to the program to run
+	unsigned char Display_Rows_Count, Display_Columns_Count, Instruction_High_Byte, Instruction_Low_Byte, Is_Rendering_Needed = 0, Is_High_Resolution_Enabled = 0;
 	#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
 		unsigned char Is_Stepping_Enabled = 1;
 		unsigned short Breakpoint_Address = 0; // Set to 0 to disable the breakpoint feature, otherwise set to the address to break on
 	#endif
 
-	// Configure the display settings according to the selected emulation mode
-	if (Is_Super_Chip_8_Mode)
-	{
-		Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8;
-		Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
-	}
-	else
-	{
-		Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8;
-		Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
-	}
-	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Emulation mode : %s, display columns count = %d, display rows count = %d.", Is_Super_Chip_8_Mode ? "SuperChip-8" : "Chip-8", Display_Columns_Count, Display_Rows_Count);
+	// Configure the Chip-8 display settings by default, they may be updated later by the resolution changing instructions
+	Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8;
+	Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
 
 	while (1)
 	{
@@ -378,6 +369,14 @@ unsigned char InterpreterRunProgram(void)
 						Interpreter_Register_SP--; // The CALL instruction increments the stack pointer after pushing, so the RET instruction needs to decrement the stack pointer before popping
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
 						goto Next_Instruction; // Bypass PC incrementation
+
+					// LOW
+					case 0xFE:
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LOW (display resolution is 64x32).");
+						Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8;
+						Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
+						Is_High_Resolution_Enabled = 0;
+						break;
 
 					default:
 						goto Invalid_Instruction;
@@ -727,7 +726,7 @@ unsigned char InterpreterRunProgram(void)
 				Sprite_Column = Interpreter_Registers_V[Register_Index_1];
 				Sprite_Row = Interpreter_Registers_V[Register_Index_2];
 
-				if (Is_Super_Chip_8_Mode)
+				if (Is_High_Resolution_Enabled)
 				{
 					Sprite_Column &= INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 - 1;
 					Sprite_Row &= INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 - 1;
@@ -810,7 +809,7 @@ unsigned char InterpreterRunProgram(void)
 				// Transfer the frame buffer at each DRW call because some games use this as a delay
 				else
 				{
-					if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+					if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 					else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 				}
 
@@ -889,7 +888,7 @@ unsigned char InterpreterRunProgram(void)
 							if (Is_Rendering_Needed && NCO_60HZ_TICK())
 							{
 								// Display the picture according to the emulation mode display
-								if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+								if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 								else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 								Is_Rendering_Needed = 0;
@@ -1063,7 +1062,7 @@ Next_Instruction:
 		if (Is_Rendering_Needed && NCO_60HZ_TICK())
 		{
 			// Display the picture according to the emulation mode display
-			if (Is_Super_Chip_8_Mode) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
+			if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 			else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 			Is_Rendering_Needed = 0;

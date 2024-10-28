@@ -378,6 +378,14 @@ unsigned char InterpreterRunProgram(void)
 						Is_High_Resolution_Enabled = 0;
 						break;
 
+					// HIGH
+					case 0xFF:
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "HIGH (display resolution is 128x64).");
+						Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8;
+						Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
+						Is_High_Resolution_Enabled = 1;
+						break;
+
 					default:
 						goto Invalid_Instruction;
 				}

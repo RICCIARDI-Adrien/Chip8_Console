@@ -16,7 +16,7 @@ void SerialPortInitialize(void)
 {
 	// Configure baud rate generation, computed with following formula : SPBRGH:SPBRG = (Fosc / (4 * Baud_Rate)) - 1
 	U1BRGH = 0;
-	U1BRGL = 138; // With this value we get 115107.9 bit/s, which is a 0.08% error
+	U1BRGL = 16; // With this value we get 941176.47 bit/s, which is a (941176.47 - 921600) / 921600 = 0.021% error
 
 	// Configure the UART for asynchronous operation
 	U1CON0 = 0xB0; // Select the high-speed baud rate generator, disable auto-baud detection, enable transmission, enable reception, select the asynchronous 8-bit UART mode without parity

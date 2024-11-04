@@ -370,6 +370,11 @@ unsigned char InterpreterRunProgram(void)
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
 						goto Next_Instruction; // Bypass PC incrementation
 
+					// EXIT
+					case 0xFD:
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "EXIT.");
+						return 0;
+
 					// LOW
 					case 0xFE:
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LOW (display resolution is 64x32).");

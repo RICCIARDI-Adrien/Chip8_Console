@@ -1126,6 +1126,22 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
+					// LD Vx, R
+					case 0x85:
+					{
+						unsigned char Register_Index, Value;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+						if (Register_Index >= INTERPRETER_FLAG_REGISTERS_COUNT) goto Invalid_Instruction; // Only indexes from 0 to 7 are allowed
+
+						// Read the value
+						Value = EEPROMReadByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + Register_Index);
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X (= 0x%02X), R.", Register_Index, Value);
+						Interpreter_Registers_V[Register_Index] = Value;
+						break;
+					}
+
 					default:
 						goto Invalid_Instruction;
 				}

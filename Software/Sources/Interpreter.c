@@ -3,6 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <Display.h>
+#include <EEPROM.h>
 #include <FAT.h>
 #include <INI_Parser.h>
 #include <Interpreter.h>
@@ -1022,14 +1023,14 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
-					// LD FL, Vx : load I with the large font sprite starting address precised by Vx
+					// LD HF, Vx : load I with the large font sprite starting address precised by Vx
 					case 0x30:
 					{
 						unsigned char Register_Index, Digit;
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD FL, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD HF, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
 
 						// Retrieve the digit value
 						Digit = Interpreter_Registers_V[Register_Index] & 0x0F; // The allowed digit values are 0 to 0xF (assume Octo compatibility)
@@ -1106,6 +1107,22 @@ unsigned char InterpreterRunProgram(void)
 							Interpreter_Registers_V[i] = Shared_Buffers.Interpreter_Memory[Interpreter_Register_I];
 							Interpreter_Register_I = (Interpreter_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
 						}
+						break;
+					}
+
+					// LD R, Vx
+					case 0x75:
+					{
+						unsigned char Register_Index, Value;
+
+						// Extract the operands
+						Register_Index = Instruction_High_Byte & 0x0F;
+						if (Register_Index >= INTERPRETER_FLAG_REGISTERS_COUNT) goto Invalid_Instruction; // Only indexes from 0 to 7 are allowed
+						Value = Interpreter_Registers_V[Register_Index];
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD R, V%01X (= 0x%02X).", Register_Index, Value);
+
+						// Store the value
+						EEPROMWriteByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + Register_Index, Value);
 						break;
 					}
 

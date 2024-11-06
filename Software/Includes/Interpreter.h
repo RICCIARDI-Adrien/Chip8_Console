@@ -11,6 +11,9 @@
 /** The interpreter memory size in bytes. */
 #define INTERPRETER_MEMORY_SIZE 4096
 
+/** The amount of non-volatile storage registers available in the Super-Chip architecture. */
+#define INTERPRETER_FLAG_REGISTERS_COUNT 8
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------

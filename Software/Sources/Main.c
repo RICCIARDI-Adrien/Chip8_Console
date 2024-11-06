@@ -133,6 +133,8 @@ const unsigned char Main_Splash_Screen[] =
 /** Program the EEPROM relevant locations with the default values. */
 static void MainInitializeEEPROM()
 {
+	unsigned char i;
+
 	// Do nothing if the EEPROM contains already data
 	if (EEPROMReadByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED) == 1)
 	{
@@ -146,6 +148,9 @@ static void MainInitializeEEPROM()
 
 	// Set the maximum display brightness
 	EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, EEPROM_DISPLAY_BRIGHTNESS_HIGH);
+
+	// Clear all non-volatile storage registers of the Super-Chip 8 interpreter
+	for (i = 0; i < INTERPRETER_FLAG_REGISTERS_COUNT; i++) EEPROMWriteByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + i, 0);
 
 	// Tell that the EEPROM is initialized
 	EEPROMWriteByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, 1);

@@ -947,6 +947,9 @@ unsigned char InterpreterRunProgram(void)
 							Key_Mask = KeyboardReadKeysMask();
 						} while (Key_Mask == 0);
 
+						// Wait for the key to be released
+						while (KeyboardReadKeysMask() != 0);
+
 						// Retrieve the corresponding Chip-8 key (the first one matching)
 						for (i = 0; i < 8; i++)
 						{

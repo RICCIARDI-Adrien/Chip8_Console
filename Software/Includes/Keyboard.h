@@ -9,7 +9,7 @@
 // Types
 //-------------------------------------------------------------------------------------------------
 /** All available keys. */
-typedef enum
+typedef enum : unsigned char
 {
     KEYBOARD_KEY_UP = 0x80,
     KEYBOARD_KEY_DOWN = 0x40,

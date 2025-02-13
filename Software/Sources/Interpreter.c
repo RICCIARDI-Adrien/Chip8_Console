@@ -432,7 +432,7 @@ unsigned char InterpreterRunProgram(void)
 				}
 				break;
 			}
-			
+
 			// JP addr
 			case 0x10:
 				Interpreter_Register_PC = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
@@ -763,7 +763,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, Is_Collision_Detected = 0;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, Is_Collision_Detected = 0, Sprite_Horizontal_Bytes_Count;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -796,19 +796,52 @@ unsigned char InterpreterRunProgram(void)
 				// Find the location in the frame buffer where to draw the sprite
 				Pointer_Display = &Shared_Buffer_Display[(Row * Columns_Count_Byte) + Sprite_Column];
 
+				// Handle the special case of a 16x16 pixels sprite
+				if (Sprite_Size == 0)
+				{
+					Sprite_Size = 16;
+					Sprite_Horizontal_Bytes_Count = 2;
+				}
+				else Sprite_Horizontal_Bytes_Count = 1;
+
 				// Render the sprite
 				while (Sprite_Size > 0) // The Sprite_Size value has already been checked and can't be invalid
 				{
 					// Cache the sprite data
 					Sprite_Byte = *Pointer_Sprite;
 
-					// Directly display the sprite byte if it is aligned with a frame buffer byte
+					// Directly display the sprite bytes if they are aligned with a frame buffer byte
 					if (Shift_Offset == 0)
 					{
+						// The first byte is always displayed
 						Previous_Byte_Value = *Pointer_Display;
 						Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
 						*Pointer_Display = Rendered_Byte_Value;
 						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
+
+						// The second byte is displayed only for a 16x16 pixels sprite
+						if (Sprite_Horizontal_Bytes_Count > 1)
+						{
+							// Always update the sprite pointer to avoid desynchronizing the sprite displaying
+							Pointer_Sprite++;
+
+							// Display the sprite second byte only if it does not cross the display edge
+							if (Sprite_Column < (Columns_Count_Byte - 2))
+							{
+								// Write to the rightmost byte location
+								Pointer_Display++;
+
+								// Display the second byte
+								Sprite_Byte = *Pointer_Sprite;
+								Previous_Byte_Value = *Pointer_Display;
+								Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
+								*Pointer_Display = Rendered_Byte_Value;
+								if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
+
+								// Return to the initial display position, so the code that updates the display pointer to the next line still works
+								Pointer_Display--;
+							}
+						}
 					}
 					// The sprite is not aligned, draw a part on the first frame buffer byte, and draw the remaining part on the following frame buffer byte
 					else

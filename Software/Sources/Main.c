@@ -685,10 +685,10 @@ void main(void)
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_C)
 		{
-			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nD : back.");
+			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nMenu : back.");
 
 			// Wait for the 'back' key to be pressed
-			KeyboardWaitForKeys(KEYBOARD_KEY_D);
+			KeyboardWaitForKeys(KEYBOARD_KEY_MENU);
 		}
 	}
 }

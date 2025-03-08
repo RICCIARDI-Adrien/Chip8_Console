@@ -547,11 +547,11 @@ static void MainDisplaySettingsMenu(void)
 		else Pointer_String_Brightness = "100%";
 
 		// Display the menu content
-		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nD : back.", Pointer_String_Sound, Pointer_String_Brightness);
+		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nMenu : back.", Pointer_String_Sound, Pointer_String_Brightness);
 		DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
 
 		// Wait for a key to be pressed
-		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_D);
+		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_MENU);
 		if (Keys_Mask & KEYBOARD_KEY_A)
 		{
 			if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_LOW;
@@ -569,7 +569,7 @@ static void MainDisplaySettingsMenu(void)
 			DisplaySetBrightness(Brightness);
 			EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, Brightness);
 		}
-		else if (Keys_Mask & KEYBOARD_KEY_D) break;
+		else if (Keys_Mask & KEYBOARD_KEY_MENU) break;
 	}
 }
 

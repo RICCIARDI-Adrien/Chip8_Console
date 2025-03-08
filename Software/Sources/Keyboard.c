@@ -61,21 +61,30 @@ unsigned char KeyboardIsMenuKeyPressed(void)
 	return Is_Pressed;
 }
 
-unsigned char KeyboardWaitForKeys(TKeyboardKey Keys_Mask)
+TKeyboardKey KeyboardWaitForKeys(TKeyboardKey Keys_Mask)
 {
 	unsigned char Read_Keys_Mask;
+	TKeyboardKey Return_Value = 0;
 
 	// Wait for at least one key to be pressed
-	do
+	while (1)
 	{
+		// Check the menu key
+		if ((Keys_Mask & KEYBOARD_KEY_MENU) && KeyboardIsMenuKeyPressed()) Return_Value |= KEYBOARD_KEY_MENU;
+
+		// Check the other keys
 		Read_Keys_Mask = KeyboardReadKeysMask();
-	} while ((Read_Keys_Mask & Keys_Mask) == 0);
+		if (Read_Keys_Mask & Keys_Mask) Return_Value |= Read_Keys_Mask;
+
+		// Exit if at least one key is pressed
+		if (Return_Value != 0) break;
+	}
 
 	// Wait for all the keys to be released
-	while (KeyboardReadKeysMask() != 0);
+	while ((KeyboardReadKeysMask() != 0) || KeyboardIsMenuKeyPressed());
 
 	// Add a little debounce timer
 	__delay_ms(20);
 
-	return Read_Keys_Mask;
+	return Return_Value;
 }

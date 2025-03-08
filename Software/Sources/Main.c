@@ -528,7 +528,8 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 static void MainDisplaySettingsMenu(void)
 {
 	const char *Pointer_String_Sound, *Pointer_String_Brightness;
-	unsigned char Sound_Level_Percentage, Brightness, Keys_Mask;
+	unsigned char Sound_Level_Percentage, Brightness;
+	TKeyboardKey Keys_Mask;
 
 	while (1)
 	{
@@ -598,8 +599,9 @@ static void MainDisplaySettingsMenu(void)
 void main(void)
 {
 	char *Pointer_String_Game_INI_Section;
-	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0, Keys_Mask;
+	unsigned char Is_SD_Card_Removed, Last_Played_Game_Index = 0;
 	unsigned short Configuration_File_Size;
+	TKeyboardKey Keys_Mask;
 
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);

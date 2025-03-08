@@ -377,7 +377,8 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned char *Pointer_Last_Played_Game_Index)
 {
 	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
-	unsigned char Games_Count = 0, Current_Game_Index = 0, Keys_Mask, Is_Games_List_Incrementing = 1, Last_Played_Game_Index = *Pointer_Last_Played_Game_Index;
+	unsigned char Games_Count = 0, Current_Game_Index = 0, Is_Games_List_Incrementing = 1, Last_Played_Game_Index = *Pointer_Last_Played_Game_Index;
+	TKeyboardKey Keys_Mask;
 
 	// Count the available games
 	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
@@ -484,13 +485,13 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 
 		// Display instructions
 		DisplaySetTextCursor(0, DISPLAY_TEXT_MODE_HEIGHT - 1);
-		DisplayWriteString(Shared_Buffer_Display, "C : start, D : back.");
+		DisplayWriteString(Shared_Buffer_Display, "C : start, M : back.");
 		DisplayDrawTextBuffer(Shared_Buffer_Display);
 
 		// Wait for a key press
 		while (1)
 		{
-			Keys_Mask = KeyboardReadKeysMask();
+			Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_LEFT | KEYBOARD_KEY_RIGHT | KEYBOARD_KEY_C | KEYBOARD_KEY_MENU);
 
 			// Show the previous game
 			if (Keys_Mask & KEYBOARD_KEY_LEFT)
@@ -515,7 +516,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
 			}
 			// Return to main menu
-			if (Keys_Mask & KEYBOARD_KEY_D)
+			if (Keys_Mask & KEYBOARD_KEY_MENU)
 			{
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for key release
 				return NULL;

@@ -16,6 +16,9 @@ void SoundInitialize(void);
  */
 void SoundPlay(unsigned char Duration);
 
+/** Immediately stop ringing the buzzer. */
+void SoundStop(void);
+
 /** Allow to turn off the sound generation.
  * @param Is_Enabled Set to 1 to enable sound generation, or set to 0 to mute the sound.
  */

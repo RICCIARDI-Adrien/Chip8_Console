@@ -90,6 +90,15 @@ void SoundPlay(unsigned char Duration)
 	T4CONbits.ON = 1;
 }
 
+void SoundStop(void)
+{
+	// Stop the duration timer
+	T4CONbits.ON = 0;
+
+	// Stop the waveform generation
+	PWM5CONbits.EN = 0;
+}
+
 void SoundSetLevel(unsigned char Level_Percentage)
 {
 	unsigned short Register_Value;

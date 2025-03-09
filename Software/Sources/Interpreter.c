@@ -1215,15 +1215,12 @@ Next_Instruction:
 	}
 
 Invalid_Instruction:
-	{
-		char String_Message[70];
+	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
+	memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
+	snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Invalid instruction\n0x%02X%02X at address\n0x%03X.\n\n\nPress Menu to exit.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
+	DisplayDrawTextMessage(Shared_Buffer_Display, "Error", Shared_Buffers.String_Temporary);
+	while (!KeyboardIsMenuKeyPressed());
 
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
-		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
-		snprintf(String_Message, sizeof(String_Message), "Invalid instruction\n0x%02X%02X at address\n0x%03X.\n\n\nPress Menu to exit.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
-		DisplayDrawTextMessage(Shared_Buffer_Display, "Error", String_Message);
-		while (!KeyboardIsMenuKeyPressed());
-	}
 	return 1;
 
 Exit_Success:

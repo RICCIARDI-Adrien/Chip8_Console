@@ -338,11 +338,7 @@ unsigned char InterpreterRunProgram(void)
 	while (1)
 	{
 		// Exit when the menu key is pressed
-		if (KeyboardIsMenuKeyPressed())
-		{
-			SoundStop(); // Make sure any played sound is immediately stopped
-			return 0;
-		}
+		if (KeyboardIsMenuKeyPressed()) goto Exit_Success;
 
 		// Make sure only the instruction address can't go out the array bounds
 		Interpreter_Register_PC &= 0x0FFF;
@@ -421,7 +417,7 @@ unsigned char InterpreterRunProgram(void)
 					// EXIT
 					case 0xFD:
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "EXIT.");
-						return 0;
+						goto Exit_Success;
 
 					// LOW
 					case 0xFE:
@@ -976,7 +972,7 @@ unsigned char InterpreterRunProgram(void)
 						do
 						{
 							// Exit when the menu key is pressed
-							if (KeyboardIsMenuKeyPressed()) return 0;
+							if (KeyboardIsMenuKeyPressed()) goto Exit_Success;
 
 							// Also run the rendering loop in case a DRW instruction was issued just before calling this instruction, and the tick was not present (so the frame buffer could not be transferred to the display before blocking in this instruction)
 							if (Is_Rendering_Needed && NCO_60HZ_TICK())
@@ -1228,6 +1224,11 @@ Invalid_Instruction:
 		DisplayDrawTextMessage(Shared_Buffer_Display, "Error", String_Message);
 		while (!KeyboardIsMenuKeyPressed());
 	}
-
 	return 1;
+
+Exit_Success:
+	// Make sure any played sound is immediately stopped
+	SoundStop();
+
+	return 0;
 }

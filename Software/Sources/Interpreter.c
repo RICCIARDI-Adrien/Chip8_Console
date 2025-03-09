@@ -330,7 +330,11 @@ unsigned char InterpreterRunProgram(void)
 	while (1)
 	{
 		// Exit when the menu key is pressed
-		if (KeyboardIsMenuKeyPressed()) return 0;
+		if (KeyboardIsMenuKeyPressed())
+		{
+			SoundStop(); // Make sure any played sound is immediately stopped
+			return 0;
+		}
 
 		// Make sure only the instruction address can't go out the array bounds
 		Interpreter_Register_PC &= 0x0FFF;

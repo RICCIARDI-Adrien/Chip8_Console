@@ -561,6 +561,7 @@ static void MainDisplaySettingsMenu(void)
 			else Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_OFF;
 			SoundSetLevel(Sound_Level_Percentage);
 			EEPROMWriteByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE, Sound_Level_Percentage);
+			SoundPlay(6); // Thanks to the keys debouncing of about 20ms, the sound has plenty of time to finish playing before this code can be reached again
 		}
 		else if (Keys_Mask & KEYBOARD_KEY_B)
 		{

@@ -196,7 +196,7 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 	}
 }
 
-unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char *Pointer_String_Key_Name)
+unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char *Pointer_String_Key_Name, unsigned char *Pointer_Output_Value)
 {
 	char *Pointer_String_Value;
 
@@ -205,8 +205,10 @@ unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char 
 	if (Pointer_String_Value == NULL)
 	{
 		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Could not find the key named \"%s\".", Pointer_String_Key_Name);
-		return 0;
+		return 1;
 	}
 
-	return (unsigned char) atoi(Pointer_String_Value);
+	// Convert the data value to binary
+	*Pointer_Output_Value = (unsigned char) atoi(Pointer_String_Value);
+	return 0;
 }

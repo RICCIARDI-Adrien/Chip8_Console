@@ -173,6 +173,7 @@ static unsigned char InterpreterConfigureKeyBindings(char *Pointer_String_Game_I
 	unsigned char i, Console_Key_Mask, Console_Key_Index, Key_Index;
 
 	// Map each console key code to the corresponding Chip-8 code
+	memset(Interpreter_Keys_Table_From_Interpreter, 0, sizeof(Interpreter_Keys_Table_From_Interpreter)); // Make sure that the unmapped keys are ignored
 	for (i = 0; i < INTERPRETER_KEYS_COUNT_CONSOLE; i++)
 	{
 		// Cache the current binding access
@@ -180,16 +181,19 @@ static unsigned char InterpreterConfigureKeyBindings(char *Pointer_String_Game_I
 		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Retrieving key binding for \"%s\".", Pointer_Key_Binding->Pointer_String_INI_Key_Name);
 
 		// Try to retrieve the corresponding Chip-8 code
-		Key_Index = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, Pointer_Key_Binding->Pointer_String_INI_Key_Name);
-		if (Key_Index >= INTERPRETER_KEYS_COUNT_CHIP_8)
+		if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, Pointer_Key_Binding->Pointer_String_INI_Key_Name, &Key_Index) == 0)
 		{
-			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid Chip-8 key code, it must be in range 0 to 15 (read value is %u).", Key_Index);
-			DisplayDrawTextMessage(Shared_Buffer_Display, "Chip-8", "Invalid key code for\n%s.\nPress Menu to exit.");
-			while (!KeyboardIsMenuKeyPressed());
-			return 1;
+			if (Key_Index >= INTERPRETER_KEYS_COUNT_CHIP_8)
+			{
+				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid Chip-8 key code, it must be in range 0 to 15 (read value is %u).", Key_Index);
+				DisplayDrawTextMessage(Shared_Buffer_Display, "Chip-8", "Invalid key code for\n%s.\nPress Menu to exit.");
+				while (!KeyboardIsMenuKeyPressed());
+				return 1;
+			}
+			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Chip-8 key binding value is %u.", Key_Index);
+			Interpreter_Keys_Table_From_Interpreter[Key_Index] = Pointer_Key_Binding->Keyboard_Key_Code;
 		}
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Chip-8 key binding value is %u.", Key_Index);
-		Interpreter_Keys_Table_From_Interpreter[Key_Index] = Pointer_Key_Binding->Keyboard_Key_Code;
+		else SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "No key binding found.");
 	}
 
 	// Generate a reverse look-up table to match a Chip-8 key code with a console key switch
@@ -244,8 +248,12 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
 
 	// If the corresponding key is not found, the variable is set to 0, in order to disable the feature by default
-	Interpreter_Is_Fast_Rendering_Enabled = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "FastRendering");
-	Interpreter_Is_Display_Wrapping_Enabled = INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "DisplayWrapping");
+	// Fast rendering
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "FastRendering", &Result) == 0) Interpreter_Is_Fast_Rendering_Enabled = Result;
+	else Interpreter_Is_Fast_Rendering_Enabled = 0;
+	// Display wrapping
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "DisplayWrapping", &Result) == 0) Interpreter_Is_Display_Wrapping_Enabled = Result;
+	else Interpreter_Is_Display_Wrapping_Enabled = 0;
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)

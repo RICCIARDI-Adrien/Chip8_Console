@@ -864,12 +864,34 @@ unsigned char InterpreterRunProgram(void)
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
 						if (Sprite_Column >= (Columns_Count_Byte - 1))
 						{
-							if (Interpreter_Is_Display_Wrapping_Enabled) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1);
-							else goto Next_Line; // Discard the right part of the sprite if the clipping mode is enabled
+							if (Interpreter_Is_Display_Wrapping_Enabled && (Sprite_Horizontal_Bytes_Count == 1)) Pointer_Display_Left_Over_Pixels = Pointer_Display - (Columns_Count_Byte - 1); // TODO support screen wrapping if needed
+							// Discard the right part of the sprite if the clipping mode is enabled
+							else
+							{
+								// Bypass the 16x16 sprite second byte if the first one was already clipped
+								if (Sprite_Horizontal_Bytes_Count > 1) Pointer_Sprite++;
+								goto Next_Line;
+							}
 						}
 						// Otherwise, just render the left over pixels to the following byte location
 						else Pointer_Display_Left_Over_Pixels = Pointer_Display + 1;
 						INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display_Left_Over_Pixels, Sprite_Byte << (8 - Shift_Offset), Is_Collision_Detected);
+
+						// If this is a 16x16 sprite, prepare to display the second byte (this is not really efficient because the byte that has just be written needs to be read and XORed again, but this makes the algorithm simpler and this is fast enough for now
+						if (Sprite_Horizontal_Bytes_Count > 1)
+						{
+							// Render the first part of the sprite second byte (this is always possible to render this byte, the display right limit has already been checked in the previous step)
+							Pointer_Sprite++; // Point to the sprite second byte
+							Sprite_Byte = *Pointer_Sprite;
+							INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display_Left_Over_Pixels, Sprite_Byte >> Shift_Offset, Is_Collision_Detected);
+
+							// Discard the second part of the sprite second byte if the clipping mode is enabled (TODO support wrapping if needed)
+							if ((Sprite_Column + 1) > (Columns_Count_Byte - 1)) goto Next_Line;
+
+							// Render the second part of the sprite second byte
+							Pointer_Display_Left_Over_Pixels++;
+							INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display_Left_Over_Pixels, Sprite_Byte << (8 - Shift_Offset), Is_Collision_Detected);
+						}
 					}
 
 				Next_Line:

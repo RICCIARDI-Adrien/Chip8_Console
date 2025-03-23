@@ -16,7 +16,7 @@
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
-// Private constants
+// Private constants and macros
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
 #define INTERPRETER_IS_LOGGING_ENABLED 1
@@ -42,6 +42,21 @@
 #define INTERPRETER_KEYS_COUNT_CHIP_8 16
 /** The total amount of hardware keys supported by this console. */
 #define INTERPRETER_KEYS_COUNT_CONSOLE 8
+
+/** Display a sprite byte to the specified display location, XORing with what is already displayed. This is made as macro to make sure that the content will be inlined.
+ * @param Pointer_Display The display location in the frame buffer.
+ * @param Sprite_Byte The sprite data to render.
+ * @param Is_Collision_Detected On output, set to 1 if a collision was detected (i.e. if an already lighted pixel was cleared). The variable is not modified if no collision was detected, so make sure it is set to 0 before calling the macro.
+ */
+#define INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display, Sprite_Byte, Is_Collision_Detected) \
+	{ \
+		unsigned char Previous_Byte_Value, Rendered_Byte_Value; \
+		Previous_Byte_Value = *(Pointer_Display); \
+		Rendered_Byte_Value = Previous_Byte_Value ^ ((unsigned char) (Sprite_Byte)); \
+		*(Pointer_Display) = Rendered_Byte_Value; \
+		/* A collision occurred if any lighted pixel was turned off */ \
+		if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) (Is_Collision_Detected) = 1; \
+	}
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -771,7 +786,7 @@ unsigned char InterpreterRunProgram(void)
 			// DRW Vx, Vy, nibble
 			case 0xD0:
 			{
-				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Previous_Byte_Value, Rendered_Byte_Value, Columns_Count_Byte, Is_Collision_Detected = 0, Sprite_Horizontal_Bytes_Count;
+				unsigned char Register_Index_1, Register_Index_2, *Pointer_Sprite, *Pointer_Display, *Pointer_Display_Left_Over_Pixels, Sprite_Size, Shift_Offset, Row, Sprite_Row, Sprite_Column, Sprite_Byte, Columns_Count_Byte, Is_Collision_Detected = 0, Sprite_Horizontal_Bytes_Count;
 
 				// Extract the operands
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
@@ -822,10 +837,7 @@ unsigned char InterpreterRunProgram(void)
 					if (Shift_Offset == 0)
 					{
 						// The first byte is always displayed
-						Previous_Byte_Value = *Pointer_Display;
-						Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
-						*Pointer_Display = Rendered_Byte_Value;
-						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
+						INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display, Sprite_Byte, Is_Collision_Detected);
 
 						// The second byte is displayed only for a 16x16 pixels sprite
 						if (Sprite_Horizontal_Bytes_Count > 1)
@@ -833,21 +845,13 @@ unsigned char InterpreterRunProgram(void)
 							// Always update the sprite pointer to avoid desynchronizing the sprite displaying
 							Pointer_Sprite++;
 
-							// Display the sprite second byte only if it does not cross the display edge
+							// Display the sprite second byte only if it does not cross the display edge (TODO support screen wrapping if needed)
 							if (Sprite_Column < (Columns_Count_Byte - 2))
 							{
 								// Write to the rightmost byte location
-								Pointer_Display++;
-
-								// Display the second byte
+								Pointer_Display_Left_Over_Pixels = Pointer_Display + 1; // Use another pointer to avoid modifying the value of Pointer_Display, which will be updated later in the loop
 								Sprite_Byte = *Pointer_Sprite;
-								Previous_Byte_Value = *Pointer_Display;
-								Rendered_Byte_Value = Previous_Byte_Value ^ Sprite_Byte;
-								*Pointer_Display = Rendered_Byte_Value;
-								if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
-
-								// Return to the initial display position, so the code that updates the display pointer to the next line still works
-								Pointer_Display--;
+								INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display_Left_Over_Pixels, Sprite_Byte, Is_Collision_Detected);
 							}
 						}
 					}
@@ -855,10 +859,7 @@ unsigned char InterpreterRunProgram(void)
 					else
 					{
 						// Render the first part of the sprite
-						Previous_Byte_Value = *Pointer_Display;
-						Rendered_Byte_Value = Previous_Byte_Value ^ (Sprite_Byte >> Shift_Offset);
-						*Pointer_Display = Rendered_Byte_Value;
-						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
+						INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display, Sprite_Byte >> Shift_Offset, Is_Collision_Detected);
 
 						// If the right side of the display is reached, the left over pixels must wrap around the left side of the display
 						if (Sprite_Column >= (Columns_Count_Byte - 1))
@@ -868,10 +869,7 @@ unsigned char InterpreterRunProgram(void)
 						}
 						// Otherwise, just render the left over pixels to the following byte location
 						else Pointer_Display_Left_Over_Pixels = Pointer_Display + 1;
-						Previous_Byte_Value = *Pointer_Display_Left_Over_Pixels;
-						Rendered_Byte_Value = Previous_Byte_Value ^ ((unsigned char) (Sprite_Byte << (8 - Shift_Offset)));
-						*Pointer_Display_Left_Over_Pixels = Rendered_Byte_Value;
-						if ((Rendered_Byte_Value & Previous_Byte_Value) != Previous_Byte_Value) Is_Collision_Detected = 1; // A collision occurred if any lighted pixel was turned off
+						INTERPRETER_RENDER_SPRITE_BYTE(Pointer_Display_Left_Over_Pixels, Sprite_Byte << (8 - Shift_Offset), Is_Collision_Detected);
 					}
 
 				Next_Line:

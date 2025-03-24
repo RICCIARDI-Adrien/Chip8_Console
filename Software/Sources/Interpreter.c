@@ -429,6 +429,44 @@ unsigned char InterpreterRunProgram(void)
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
 						goto Next_Instruction; // Bypass PC incrementation
 
+					// SCROLL LEFT
+					case 0xFC:
+					{
+						unsigned char Row, Column, Columns_Count_Byte, *Pointer_Byte, Current_Byte, Next_Byte;
+
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-LEFT.");
+
+						// Cache some values
+						Columns_Count_Byte = Display_Columns_Count / 8; // Address the bytes directly
+						Columns_Count_Byte--; // Remove one because the following loop is addressing the current and next bytes
+						Pointer_Byte = Shared_Buffer_Display; // Use a pointer to avoid computing the byte position in the array every time
+
+						// Shift all rows by 4 bits on the left (this is a simple implementation that is not optimized)
+						for (Row = 0; Row < Display_Rows_Count; Row++)
+						{
+							for (Column = 0; Column < Columns_Count_Byte; Column++)
+							{
+								Current_Byte = *Pointer_Byte;
+								Next_Byte = *(Pointer_Byte + 1);
+
+								Current_Byte <<= 4; // TODO it would be nice to use SWAPF followed by logical and to gain some cycles instead of the shifts, but there seem to be no compiler builtin for that and using assembly is not really portable
+								Next_Byte >>= 4;
+								Current_Byte |= Next_Byte;
+
+								*Pointer_Byte = Current_Byte;
+								Pointer_Byte++;
+							}
+
+							// Handle the last row byte, which must be only shifted
+							Current_Byte = *Pointer_Byte;
+							Current_Byte <<= 4;
+							*Pointer_Byte = Current_Byte;
+							Pointer_Byte++;
+						}
+
+						break;
+					}
+
 					// EXIT
 					case 0xFD:
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "EXIT.");

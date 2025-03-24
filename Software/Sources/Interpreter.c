@@ -157,6 +157,8 @@ static unsigned char Interpreter_Random_Seed;
 static unsigned char Interpreter_Is_Fast_Rendering_Enabled;
 /** Tell whether the game requires the display wrapping quirk. */
 static unsigned char Interpreter_Is_Display_Wrapping_Enabled;
+/** Tell whether the game requires the I register being incremented by the Fx55 and Fx65 instructions (this is the case for Chip-8, but not for SuperChip-8. */
+static unsigned char Interpreter_Is_Memory_Load_Store_Increment_Enabled;
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -269,6 +271,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Display wrapping
 	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "DisplayWrapping", &Result) == 0) Interpreter_Is_Display_Wrapping_Enabled = Result;
 	else Interpreter_Is_Display_Wrapping_Enabled = 0;
+	// Memory
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "MemoryLoadStoreIncrement", &Result) == 0) Interpreter_Is_Memory_Load_Store_Increment_Enabled = Result;
+	else Interpreter_Is_Memory_Load_Store_Increment_Enabled = 0;
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -1180,17 +1185,22 @@ unsigned char InterpreterRunProgram(void)
 					case 0x55:
 					{
 						unsigned char Last_Register_Index, i;
+						unsigned short Temporary_Register_I;
 
 						// Extract the operands
 						Last_Register_Index = Instruction_High_Byte & 0x0F;
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD [I] (= 0x%03X), V%01X.", Interpreter_Register_I, Last_Register_Index);
 
 						// Store the requested amount of registers to the address pointed by the I register
+						Temporary_Register_I = Interpreter_Register_I;
 						for (i = 0; i <= Last_Register_Index; i++)
 						{
-							Shared_Buffers.Interpreter_Memory[Interpreter_Register_I] = Interpreter_Registers_V[i];
-							Interpreter_Register_I = (Interpreter_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
+							Shared_Buffers.Interpreter_Memory[Temporary_Register_I] = Interpreter_Registers_V[i];
+							Temporary_Register_I = (Temporary_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
 						}
+
+						// Increment the I register only for required games
+						if (Interpreter_Is_Memory_Load_Store_Increment_Enabled) Interpreter_Register_I = Temporary_Register_I;
 						break;
 					}
 
@@ -1198,17 +1208,22 @@ unsigned char InterpreterRunProgram(void)
 					case 0x65:
 					{
 						unsigned char Last_Register_Index, i;
+						unsigned short Temporary_Register_I;
 
 						// Extract the operands
 						Last_Register_Index = Instruction_High_Byte & 0x0F;
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, [I] (= 0x%03X).", Last_Register_Index, Interpreter_Register_I);
 
 						// Store the requested amount of registers to the address pointed by the I register
+						Temporary_Register_I = Interpreter_Register_I;
 						for (i = 0; i <= Last_Register_Index; i++)
 						{
-							Interpreter_Registers_V[i] = Shared_Buffers.Interpreter_Memory[Interpreter_Register_I];
-							Interpreter_Register_I = (Interpreter_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
+							Interpreter_Registers_V[i] = Shared_Buffers.Interpreter_Memory[Temporary_Register_I];
+							Temporary_Register_I = (Temporary_Register_I + 1) & 0x0FFF; // Avoid overflowing the interpreter memory buffer
 						}
+
+						// Increment the I register only for required games
+						if (Interpreter_Is_Memory_Load_Store_Increment_Enabled) Interpreter_Register_I = Temporary_Register_I;
 						break;
 					}
 

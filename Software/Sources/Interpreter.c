@@ -157,8 +157,10 @@ static unsigned char Interpreter_Random_Seed;
 static unsigned char Interpreter_Is_Fast_Rendering_Enabled;
 /** Tell whether the game requires the display wrapping quirk. */
 static unsigned char Interpreter_Is_Display_Wrapping_Enabled;
-/** Tell whether the game requires the I register being incremented by the Fx55 and Fx65 instructions (this is the case for Chip-8, but not for SuperChip-8. */
+/** Tell whether the game requires the I register being incremented by the Fx55 and Fx65 instructions (this is the case for Chip-8, but not for SuperChip-8). */
 static unsigned char Interpreter_Is_Memory_Load_Store_Increment_Enabled;
+/** Tell whether the game requires the shift instructions to ignore the Vy register. */
+static unsigned char Interpreter_Is_Shift_Using_Vy_Enabled;
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -274,6 +276,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Memory
 	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "MemoryLoadStoreIncrement", &Result) == 0) Interpreter_Is_Memory_Load_Store_Increment_Enabled = Result;
 	else Interpreter_Is_Memory_Load_Store_Increment_Enabled = 0;
+	// Shift
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "ShiftUsingVy", &Result) == 0) Interpreter_Is_Shift_Using_Vy_Enabled = Result;
+	else Interpreter_Is_Shift_Using_Vy_Enabled = 0;
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -704,20 +709,32 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
-					// SHR Vx
+					// SHR Vx, Vy
 					case 0x06:
 					{
-						unsigned char Register_Index, Value, Is_Bit_Shifted_Out;
+						unsigned char Register_Index_1, Register_Index_2, Value, Is_Bit_Shifted_Out;
 
 						// Extract the operands
-						Register_Index = Instruction_High_Byte & 0x0F;
+						Register_Index_1 = Instruction_High_Byte & 0x0F; // Vx
 
-						Value = Interpreter_Registers_V[Register_Index];
+						// Use the value provided by Vy if asked to
+						if (Interpreter_Is_Shift_Using_Vy_Enabled)
+						{
+							Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F; // Vy
+							Value = Interpreter_Registers_V[Register_Index_2];
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
+						}
+						else
+						{
+							// Retrieve the Vx value
+							Value = Interpreter_Registers_V[Register_Index_1];
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).", Register_Index_1, Value);
+						}
+
 						if (Value & 0x01) Is_Bit_Shifted_Out = 1; // Set VF if the Vx least significant bit is set
 						else Is_Bit_Shifted_Out = 0;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).", Register_Index, Value);
 						Value >>= 1;
-						Interpreter_Registers_V[Register_Index] = Value;
+						Interpreter_Registers_V[Register_Index_1] = Value;
 
 						// Set VF at the end, in case VF was the output register just before
 						Interpreter_Registers_V[15] = Is_Bit_Shifted_Out;
@@ -744,20 +761,32 @@ unsigned char InterpreterRunProgram(void)
 						break;
 					}
 
-					// SHL Vx
+					// SHL Vx, Vy
 					case 0x0E:
 					{
-						unsigned char Register_Index, Value, Is_Bit_Shifted_Out;
+						unsigned char Register_Index_1, Register_Index_2, Value, Is_Bit_Shifted_Out;
 
 						// Extract the operands
-						Register_Index = Instruction_High_Byte & 0x0F;
+						Register_Index_1 = Instruction_High_Byte & 0x0F;
 
-						Value = Interpreter_Registers_V[Register_Index];
+						// Use the value provided by Vy if asked to
+						if (Interpreter_Is_Shift_Using_Vy_Enabled)
+						{
+							Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F; // Vy
+							Value = Interpreter_Registers_V[Register_Index_2];
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
+						}
+						else
+						{
+							// Retrieve the Vx value
+							Value = Interpreter_Registers_V[Register_Index_1];
+							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X).", Register_Index_1, Value);
+						}
+
 						if (Value & 0x80) Is_Bit_Shifted_Out = 1; // Set VF if the Vx most significant bit is set
 						else Is_Bit_Shifted_Out = 0;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X).", Register_Index, Value);
 						Value <<= 1;
-						Interpreter_Registers_V[Register_Index] = Value;
+						Interpreter_Registers_V[Register_Index_1] = Value;
 
 						// Set VF at the end, in case VF was the output register just before
 						Interpreter_Registers_V[15] = Is_Bit_Shifted_Out;

@@ -1,7 +1,7 @@
 (kicad_sch
-	(version 20231120)
+	(version 20250114)
 	(generator "eeschema")
-	(generator_version "8.0")
+	(generator_version "9.0")
 	(uuid "b24cc209-2cbb-4d17-be98-7f106140ce76")
 	(paper "A4")
 	(title_block
@@ -13,7 +13,9 @@
 	(lib_symbols
 		(symbol "Connector_Generic:Conn_01x07"
 			(pin_names
-				(offset 1.016) hide)
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -80,52 +82,19 @@
 			)
 			(symbol "Conn_01x07_1_1"
 				(rectangle
-					(start -1.27 -7.493)
-					(end 0 -7.747)
+					(start -1.27 8.89)
+					(end 1.27 -8.89)
 					(stroke
-						(width 0.1524)
+						(width 0.254)
 						(type default)
 					)
 					(fill
-						(type none)
+						(type background)
 					)
 				)
 				(rectangle
-					(start -1.27 -4.953)
-					(end 0 -5.207)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 -2.413)
-					(end 0 -2.667)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 0.127)
-					(end 0 -0.127)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.27 2.667)
-					(end 0 2.413)
+					(start -1.27 7.747)
+					(end 0 7.493)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -146,8 +115,8 @@
 					)
 				)
 				(rectangle
-					(start -1.27 7.747)
-					(end 0 7.493)
+					(start -1.27 2.667)
+					(end 0 2.413)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -157,14 +126,47 @@
 					)
 				)
 				(rectangle
-					(start -1.27 8.89)
-					(end 1.27 -8.89)
+					(start -1.27 0.127)
+					(end 0 -0.127)
 					(stroke
-						(width 0.254)
+						(width 0.1524)
 						(type default)
 					)
 					(fill
-						(type background)
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
 					)
 				)
 				(pin passive line
@@ -294,6 +296,7 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "DM1B-DSF-PEJ(92):DM1B-DSF-PEJ(92)"
 			(exclude_from_sim no)
@@ -343,64 +346,21 @@
 				)
 			)
 			(symbol "DM1B-DSF-PEJ(92)_0_1"
-				(rectangle
-					(start -7.62 -9.525)
-					(end -5.08 -10.795)
+				(polyline
+					(pts
+						(xy -8.89 8.89) (xy -6.35 11.43) (xy 21.59 11.43) (xy 21.59 -11.43) (xy -8.89 -11.43) (xy -8.89 8.89)
+					)
 					(stroke
 						(width 0)
 						(type default)
 					)
 					(fill
-						(type outline)
+						(type background)
 					)
 				)
 				(rectangle
-					(start -7.62 -6.985)
-					(end -5.08 -8.255)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start -7.62 -4.445)
-					(end -5.08 -5.715)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start -7.62 -1.905)
-					(end -5.08 -3.175)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start -7.62 0.635)
-					(end -5.08 -0.635)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type outline)
-					)
-				)
-				(rectangle
-					(start -7.62 3.175)
-					(end -5.08 1.905)
+					(start -7.62 8.255)
+					(end -5.08 6.985)
 					(stroke
 						(width 0)
 						(type default)
@@ -421,8 +381,63 @@
 					)
 				)
 				(rectangle
-					(start -7.62 8.255)
-					(end -5.08 6.985)
+					(start -7.62 3.175)
+					(end -5.08 1.905)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -7.62 0.635)
+					(end -5.08 -0.635)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -7.62 -1.905)
+					(end -5.08 -3.175)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -7.62 -4.445)
+					(end -5.08 -5.715)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -7.62 -6.985)
+					(end -5.08 -8.255)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start -7.62 -9.525)
+					(end -5.08 -10.795)
 					(stroke
 						(width 0)
 						(type default)
@@ -444,18 +459,6 @@
 				)
 				(polyline
 					(pts
-						(xy -8.89 8.89) (xy -6.35 11.43) (xy 21.59 11.43) (xy 21.59 -11.43) (xy -8.89 -11.43) (xy -8.89 8.89)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(polyline
-					(pts
 						(xy 17.78 11.43) (xy 17.78 12.7) (xy -19.05 12.7) (xy -19.05 -12.7) (xy 17.78 -12.7) (xy 17.78 -11.43)
 					)
 					(stroke
@@ -469,6 +472,24 @@
 			)
 			(symbol "DM1B-DSF-PEJ(92)_1_1"
 				(pin input line
+					(at -21.59 10.16 0)
+					(length 2.54)
+					(name "DAT2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
 					(at -21.59 7.62 0)
 					(length 2.54)
 					(name "CD/DAT3"
@@ -479,168 +500,6 @@
 						)
 					)
 					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 24.13 7.62 180)
-					(length 2.54)
-					(name "COMMON_CD_WP"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "10"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 24.13 5.08 180)
-					(length 2.54)
-					(name "CARD_DETECT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "11"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 24.13 2.54 180)
-					(length 2.54)
-					(name "WRITE_PROTECT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "12"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54)
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "13"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54) hide
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "14"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54) hide
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "15"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54) hide
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "16"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54) hide
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "17"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 24.13 -5.08 180)
-					(length 2.54) hide
-					(name "SHELL"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "18"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -775,16 +634,165 @@
 					)
 				)
 				(pin input line
-					(at -21.59 10.16 0)
+					(at 24.13 7.62 180)
 					(length 2.54)
-					(name "DAT2"
+					(name "COMMON_CD_WP"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "9"
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 24.13 5.08 180)
+					(length 2.54)
+					(name "CARD_DETECT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 24.13 2.54 180)
+					(length 2.54)
+					(name "WRITE_PROTECT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "17"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 24.13 -5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "SHELL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "18"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -793,10 +801,13 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:Buzzer"
 			(pin_names
-				(offset 0.0254) hide)
+				(offset 0.0254)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -864,18 +875,6 @@
 				)
 			)
 			(symbol "Buzzer_0_1"
-				(arc
-					(start 0 -3.175)
-					(mid 3.1612 0)
-					(end 0 3.175)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
 				(polyline
 					(pts
 						(xy -1.651 1.905) (xy -1.143 1.905)
@@ -892,6 +891,18 @@
 					(pts
 						(xy -1.397 2.159) (xy -1.397 1.651)
 					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 3.175)
+					(mid 3.1612 0)
+					(end 0 -3.175)
 					(stroke
 						(width 0)
 						(type default)
@@ -951,9 +962,12 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:C"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0.254)
 			)
@@ -1026,7 +1040,7 @@
 			(symbol "C_0_1"
 				(polyline
 					(pts
-						(xy -2.032 -0.762) (xy 2.032 -0.762)
+						(xy -2.032 0.762) (xy 2.032 0.762)
 					)
 					(stroke
 						(width 0.508)
@@ -1038,7 +1052,7 @@
 				)
 				(polyline
 					(pts
-						(xy -2.032 0.762) (xy 2.032 0.762)
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
 					)
 					(stroke
 						(width 0.508)
@@ -1087,9 +1101,12 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:R"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
 			)
@@ -1208,11 +1225,16 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Mechanical:MountingHole_Pad"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 1.016) hide)
+				(offset 1.016)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1310,6 +1332,7 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Waveshare_2.42inch_OLED_Module:2.42inch_OLED_Module"
 			(exclude_from_sim no)
@@ -1371,12 +1394,17 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "power:+3.3V"
 			(power)
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0) hide)
+				(offset 0)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1448,7 +1476,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 0) (xy 0 2.54)
+						(xy 0 2.54) (xy 0.762 1.27)
 					)
 					(stroke
 						(width 0)
@@ -1460,7 +1488,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
+						(xy 0 0) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -1491,12 +1519,17 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "power:GND"
 			(power)
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0) hide)
+				(offset 0)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1587,7 +1620,107 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
+	)
+	(text "Reset resistor"
+		(exclude_from_sim no)
+		(at 95.25 128.27 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "22222c97-591d-4f35-b6ff-f5059edc593c")
+	)
+	(text "RST"
+		(exclude_from_sim no)
+		(at 246.38 29.21 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "26596f44-5ee5-4505-8b05-5d5e68313ce3")
+	)
+	(text "DIN"
+		(exclude_from_sim no)
+		(at 246.38 39.37 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "37463a8a-4eaa-4829-923b-ebe490c194fa")
+	)
+	(text "DC"
+		(exclude_from_sim no)
+		(at 246.38 31.75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "5021de62-8c93-41bc-b36a-d9df5bead85a")
+	)
+	(text "CS"
+		(exclude_from_sim no)
+		(at 246.38 34.29 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9ca84e82-93a8-4570-a50a-be4b3a026e1f")
+	)
+	(text "VCC"
+		(exclude_from_sim no)
+		(at 246.38 44.45 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a66a9b2b-56cf-4f35-b27c-361a38da1126")
+	)
+	(text "CLK"
+		(exclude_from_sim no)
+		(at 246.38 36.83 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "df5f6561-460d-4f64-ae62-cd7651682a42")
+	)
+	(text "The buzzer needs 5mA @ 3V\nto generate 81dB at 10cm,\nso a MCU pin is enough to\ndrive it."
+		(exclude_from_sim no)
+		(at 29.21 130.81 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ebc6f1e3-63da-4e78-acc9-6689f9ee1875")
+	)
+	(text "GND"
+		(exclude_from_sim no)
+		(at 246.38 41.91 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f4c0a109-f83b-4ade-84d6-95eed6a68369")
 	)
 	(junction
 		(at 195.58 81.28)
@@ -2636,105 +2769,6 @@
 			(type default)
 		)
 		(uuid "fca1d448-e536-4ff0-bace-7d4b7a9c9a82")
-	)
-	(text "Reset resistor"
-		(exclude_from_sim no)
-		(at 95.25 128.27 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "22222c97-591d-4f35-b6ff-f5059edc593c")
-	)
-	(text "RST"
-		(exclude_from_sim no)
-		(at 246.38 29.21 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "26596f44-5ee5-4505-8b05-5d5e68313ce3")
-	)
-	(text "DIN"
-		(exclude_from_sim no)
-		(at 246.38 39.37 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "37463a8a-4eaa-4829-923b-ebe490c194fa")
-	)
-	(text "DC"
-		(exclude_from_sim no)
-		(at 246.38 31.75 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "5021de62-8c93-41bc-b36a-d9df5bead85a")
-	)
-	(text "CS"
-		(exclude_from_sim no)
-		(at 246.38 34.29 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "9ca84e82-93a8-4570-a50a-be4b3a026e1f")
-	)
-	(text "VCC"
-		(exclude_from_sim no)
-		(at 246.38 44.45 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "a66a9b2b-56cf-4f35-b27c-361a38da1126")
-	)
-	(text "CLK"
-		(exclude_from_sim no)
-		(at 246.38 36.83 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "df5f6561-460d-4f64-ae62-cd7651682a42")
-	)
-	(text "The buzzer needs 5mA @ 3V\nto generate 81dB at 10cm,\nso a MCU pin is enough to\ndrive it."
-		(exclude_from_sim no)
-		(at 29.21 130.81 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "ebc6f1e3-63da-4e78-acc9-6689f9ee1875")
-	)
-	(text "GND"
-		(exclude_from_sim no)
-		(at 246.38 41.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "f4c0a109-f83b-4ade-84d6-95eed6a68369")
 	)
 	(symbol
 		(lib_id "Mechanical:MountingHole_Pad")
@@ -4498,6 +4532,10 @@
 	(sheet
 		(at 99.06 26.67)
 		(size 25.4 12.7)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -4527,13 +4565,13 @@
 		)
 		(pin "BATTERY_MEASURE" passive
 			(at 124.46 33.02 0)
+			(uuid "153b2283-3596-4848-af5e-20a1c4111041")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "153b2283-3596-4848-af5e-20a1c4111041")
 		)
 		(instances
 			(project "Console"
@@ -4546,6 +4584,10 @@
 	(sheet
 		(at 38.1 58.42)
 		(size 25.4 40.64)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -4575,93 +4617,93 @@
 		)
 		(pin "KEY_DOWN" output
 			(at 63.5 67.31 0)
+			(uuid "966fe1cf-cfd6-4c92-890f-4dd5965276c1")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "966fe1cf-cfd6-4c92-890f-4dd5965276c1")
 		)
 		(pin "KEY_LEFT" output
 			(at 63.5 69.85 0)
+			(uuid "52ddd7f0-9ab2-4245-a8a3-2ecd6f339772")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "52ddd7f0-9ab2-4245-a8a3-2ecd6f339772")
 		)
 		(pin "KEY_D" output
 			(at 63.5 85.09 0)
+			(uuid "cabaf271-6e34-4152-9422-a7c1da545158")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "cabaf271-6e34-4152-9422-a7c1da545158")
 		)
 		(pin "KEY_RIGHT" output
 			(at 63.5 72.39 0)
+			(uuid "5a606ee5-8356-4f91-86b0-c379d4664d23")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "5a606ee5-8356-4f91-86b0-c379d4664d23")
 		)
 		(pin "KEY_C" output
 			(at 63.5 82.55 0)
+			(uuid "46480c45-da12-495a-a272-87d3068d412c")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "46480c45-da12-495a-a272-87d3068d412c")
 		)
 		(pin "KEY_A" output
 			(at 63.5 77.47 0)
+			(uuid "00af2edf-6f49-442f-9488-b39d1c64fd53")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "00af2edf-6f49-442f-9488-b39d1c64fd53")
 		)
 		(pin "KEY_B" output
 			(at 63.5 80.01 0)
+			(uuid "54d9849e-a411-420c-a6cb-1df4afb2e4ab")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "54d9849e-a411-420c-a6cb-1df4afb2e4ab")
 		)
 		(pin "KEY_UP" output
 			(at 63.5 64.77 0)
+			(uuid "5db148c0-7a12-4190-a2d4-d04aaff8021e")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "5db148c0-7a12-4190-a2d4-d04aaff8021e")
 		)
 		(pin "KEY_MENU" output
 			(at 63.5 90.17 0)
+			(uuid "1d6913a6-4a8f-4bb7-9740-d68f8acfb7b7")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "1d6913a6-4a8f-4bb7-9740-d68f8acfb7b7")
 		)
 		(instances
 			(project "Console"
@@ -4674,6 +4716,10 @@
 	(sheet
 		(at 99.06 58.42)
 		(size 62.23 43.18)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -4703,193 +4749,193 @@
 		)
 		(pin "KEY_A" input
 			(at 99.06 77.47 180)
+			(uuid "37dc5cca-f823-469e-93b0-106b6c2bdc8d")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "37dc5cca-f823-469e-93b0-106b6c2bdc8d")
 		)
 		(pin "KEY_D" input
 			(at 99.06 85.09 180)
+			(uuid "cbb7d00f-6c8e-48d3-9f3a-6cc9fbed3b36")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "cbb7d00f-6c8e-48d3-9f3a-6cc9fbed3b36")
 		)
 		(pin "KEY_LEFT" input
 			(at 99.06 69.85 180)
+			(uuid "074244c1-c298-4a7b-93d2-5fe37e248cac")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "074244c1-c298-4a7b-93d2-5fe37e248cac")
 		)
 		(pin "KEY_UP" input
 			(at 99.06 64.77 180)
+			(uuid "b8c9791f-c6e3-44ea-8723-7364fc3438b5")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "b8c9791f-c6e3-44ea-8723-7364fc3438b5")
 		)
 		(pin "KEY_DOWN" input
 			(at 99.06 67.31 180)
+			(uuid "0849c4a5-6e2a-4166-b871-1d7d4240e563")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "0849c4a5-6e2a-4166-b871-1d7d4240e563")
 		)
 		(pin "KEY_RIGHT" input
 			(at 99.06 72.39 180)
+			(uuid "4437a2ca-7084-4005-bc3b-ea7af84c8471")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "4437a2ca-7084-4005-bc3b-ea7af84c8471")
 		)
 		(pin "KEY_C" input
 			(at 99.06 82.55 180)
+			(uuid "f92cdb71-4a48-4588-abdf-a885ac6668ce")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "f92cdb71-4a48-4588-abdf-a885ac6668ce")
 		)
 		(pin "KEY_B" input
 			(at 99.06 80.01 180)
+			(uuid "69b81b5a-9c60-4c02-a38a-5b53ad380402")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "69b81b5a-9c60-4c02-a38a-5b53ad380402")
 		)
 		(pin "BUZZER" output
 			(at 99.06 97.79 180)
+			(uuid "dd4e963e-0a69-4bb2-850c-4b65d6d6be98")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "dd4e963e-0a69-4bb2-850c-4b65d6d6be98")
 		)
 		(pin "SPI_SCLK" output
 			(at 161.29 83.82 0)
+			(uuid "e1b819f1-0273-4d3e-961b-dcacb2ca7c70")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "e1b819f1-0273-4d3e-961b-dcacb2ca7c70")
 		)
 		(pin "SPI_MOSI" output
 			(at 161.29 81.28 0)
+			(uuid "f2b44dbf-844d-4aca-b8d4-013cfd567d98")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "f2b44dbf-844d-4aca-b8d4-013cfd567d98")
 		)
 		(pin "{slash}SPI_SS_SD_CARD" output
 			(at 161.29 78.74 0)
+			(uuid "e77a1028-f232-44fc-aadf-f85468ab7a14")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "e77a1028-f232-44fc-aadf-f85468ab7a14")
 		)
 		(pin "SPI_MISO" input
 			(at 161.29 86.36 0)
+			(uuid "91801b91-e5d4-43f8-9deb-0b59e4e16a27")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "91801b91-e5d4-43f8-9deb-0b59e4e16a27")
 		)
 		(pin "{slash}SPI_SS_DISPLAY" output
 			(at 161.29 71.12 0)
+			(uuid "bca30a9f-fdf2-4ddb-96c8-d1ff78f9125e")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "bca30a9f-fdf2-4ddb-96c8-d1ff78f9125e")
 		)
 		(pin "KEY_MENU" input
 			(at 99.06 90.17 180)
+			(uuid "81b1b0ad-b03a-4874-bcaf-6e7405cb5cd1")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "81b1b0ad-b03a-4874-bcaf-6e7405cb5cd1")
 		)
 		(pin "{slash}DISPLAY_RESET" output
 			(at 161.29 66.04 0)
+			(uuid "fc5ca5b4-2a47-41ef-aa79-ce06239e354a")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "fc5ca5b4-2a47-41ef-aa79-ce06239e354a")
 		)
 		(pin "{slash}SD_CARD_DETECT" input
 			(at 139.7 101.6 270)
+			(uuid "4cf775a6-589a-4cf3-9362-c09f86104982")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify left)
 			)
-			(uuid "4cf775a6-589a-4cf3-9362-c09f86104982")
 		)
 		(pin "DISPLAY_DC" output
 			(at 161.29 68.58 0)
+			(uuid "b535d5c2-ca1e-494f-afe9-0a03383b0e34")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "b535d5c2-ca1e-494f-afe9-0a03383b0e34")
 		)
 		(pin "BATTERY_MEASURE" passive
 			(at 134.62 58.42 90)
+			(uuid "7643fa30-f7d6-42a0-822e-b6ea52a7e8a8")
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(justify right)
 			)
-			(uuid "7643fa30-f7d6-42a0-822e-b6ea52a7e8a8")
 		)
 		(instances
 			(project "Console"
@@ -4904,4 +4950,5 @@
 			(page "1")
 		)
 	)
+	(embedded_fonts no)
 )

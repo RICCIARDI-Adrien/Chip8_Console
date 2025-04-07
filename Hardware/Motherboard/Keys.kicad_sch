@@ -1,7 +1,7 @@
 (kicad_sch
-	(version 20231120)
+	(version 20250114)
 	(generator "eeschema")
-	(generator_version "8.0")
+	(generator_version "9.0")
 	(uuid "eda3b4f1-b638-4963-9723-9b92c4022ab4")
 	(paper "A4")
 	(title_block
@@ -89,10 +89,9 @@
 						(type none)
 					)
 				)
-				(polyline
-					(pts
-						(xy 5.08 0) (xy 2.921 0)
-					)
+				(circle
+					(center 2.54 0)
+					(radius 0.3302)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -101,9 +100,10 @@
 						(type none)
 					)
 				)
-				(circle
-					(center 2.54 0)
-					(radius 0.3302)
+				(polyline
+					(pts
+						(xy 5.08 0) (xy 2.921 0)
+					)
 					(stroke
 						(width 0.1524)
 						(type default)
@@ -152,7 +152,8 @@
 			(symbol "D6R90_F1_LFS_1_0"
 				(pin passive line
 					(at -7.62 0 0)
-					(length 2.54) hide
+					(length 2.54)
+					(hide yes)
 					(name "~"
 						(effects
 							(font
@@ -170,7 +171,8 @@
 				)
 				(pin passive line
 					(at 7.62 0 180)
-					(length 2.54) hide
+					(length 2.54)
+					(hide yes)
 					(name "~"
 						(effects
 							(font
@@ -187,9 +189,12 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:C"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0.254)
 			)
@@ -262,7 +267,7 @@
 			(symbol "C_0_1"
 				(polyline
 					(pts
-						(xy -2.032 -0.762) (xy 2.032 -0.762)
+						(xy -2.032 0.762) (xy 2.032 0.762)
 					)
 					(stroke
 						(width 0.508)
@@ -274,7 +279,7 @@
 				)
 				(polyline
 					(pts
-						(xy -2.032 0.762) (xy 2.032 0.762)
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
 					)
 					(stroke
 						(width 0.508)
@@ -323,9 +328,12 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "Device:R"
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 0)
 			)
@@ -444,12 +452,17 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "power:+3.3V"
 			(power)
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0) hide)
+				(offset 0)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -521,7 +534,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 0) (xy 0 2.54)
+						(xy 0 2.54) (xy 0.762 1.27)
 					)
 					(stroke
 						(width 0)
@@ -533,7 +546,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
+						(xy 0 0) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -564,12 +577,17 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 		(symbol "power:GND"
 			(power)
-			(pin_numbers hide)
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
-				(offset 0) hide)
+				(offset 0)
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -660,7 +678,19 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
+	)
+	(text "Microcontroller pin high level is 2.64V with a 3.3V power supply.\nThe estimated switch boucing time is said to be 10ms by the datasheet.\nWith the current RC filter, the bouncing delay is set to approximately 16ms,\nallowing the player to press the button more than 60 times per second."
+		(exclude_from_sim no)
+		(at 66.04 185.42 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "5d068207-5259-41cd-b677-0b3d9b097717")
 	)
 	(junction
 		(at 58.42 109.22)
@@ -1436,21 +1466,9 @@
 		)
 		(uuid "f6a8d4ed-0684-43a1-878d-c9d4d48d35f2")
 	)
-	(text "Microcontroller pin high level is 2.64V with a 3.3V power supply.\nThe estimated switch boucing time is said to be 10ms by the datasheet.\nWith the current RC filter, the bouncing delay is set to approximately 16ms,\nallowing the player to press the button more than 60 times per second."
-		(exclude_from_sim no)
-		(at 66.04 185.42 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "5d068207-5259-41cd-b677-0b3d9b097717")
-	)
 	(hierarchical_label "KEY_A"
 		(shape output)
 		(at 166.37 33.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1462,7 +1480,6 @@
 	(hierarchical_label "KEY_DOWN"
 		(shape output)
 		(at 74.93 71.12 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1474,7 +1491,6 @@
 	(hierarchical_label "KEY_MENU"
 		(shape output)
 		(at 257.81 33.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1486,7 +1502,6 @@
 	(hierarchical_label "KEY_C"
 		(shape output)
 		(at 166.37 109.22 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1498,7 +1513,6 @@
 	(hierarchical_label "KEY_UP"
 		(shape output)
 		(at 74.93 33.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1510,7 +1524,6 @@
 	(hierarchical_label "KEY_LEFT"
 		(shape output)
 		(at 74.93 109.22 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1522,7 +1535,6 @@
 	(hierarchical_label "KEY_RIGHT"
 		(shape output)
 		(at 74.93 147.32 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1534,7 +1546,6 @@
 	(hierarchical_label "KEY_D"
 		(shape output)
 		(at 166.37 147.32 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1546,7 +1557,6 @@
 	(hierarchical_label "KEY_B"
 		(shape output)
 		(at 166.37 71.12 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)

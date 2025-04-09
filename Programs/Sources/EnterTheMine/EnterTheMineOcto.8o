@@ -1,0 +1,2677 @@
+: main             jump gmain
+	:alias Enemy.x v0
+	:alias Enemy.y v1
+	:alias Enemy.dx v2
+	:alias Enemy.dy v3
+	:alias Enemy.minx v4
+	:alias Enemy.maxx v5
+	:alias Enemy.miny v6
+	:alias Enemy.maxy v7
+	:alias Enemy.frame v8
+	:alias Enemy.maxframe v9
+	:alias Enemy.dframe va
+	:alias Enemy.drawx vb
+	:alias Enemy.drawy vc
+	:alias Enemy.drawframe vd
+	:alias Enemy.init ve
+: enemyReverseX         vf := 0
+                        Enemy.dx =- vf
+                        return
+: enemyReverseY         vf := 0
+                        Enemy.dy =- vf
+                        return
+: enemyReverseFrame        
+                        vf := 0
+                        Enemy.dframe =- vf
+                        return
+: calcEnemyCoords        
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        if Enemy.dx == 0 then
+                        jump label0017
+                        Enemy.x += Enemy.dx
+                        vf := Enemy.minx
+                        vf -= v0
+                        if vf != 0 then
+                        enemyReverseX
+                        vf := Enemy.maxx
+                        vf =- v0
+                        if vf != 0 then
+                        enemyReverseX
+: label0017             if Enemy.dy == 0 then
+                        jump label0018
+                        Enemy.y += Enemy.dy
+                        vf := Enemy.miny
+                        vf -= v1
+                        if vf != 0 then
+                        enemyReverseY
+                        vf := Enemy.maxy
+                        vf =- v1
+                        if vf != 0 then
+                        enemyReverseY
+: label0018             Enemy.frame += Enemy.dframe
+                        vf := 0
+                        vf =- v8
+                        if vf != 0 then
+                        jump label0019
+                        enemyReverseFrame
+                        Enemy.frame += Enemy.dframe
+: label0019             vf := Enemy.maxframe
+                        vf =- v8
+                        if vf == 0 then
+                        jump label0020
+                        enemyReverseFrame
+                        Enemy.frame += Enemy.dframe
+: label0020             return
+: copyEnemyCoords        
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        return
+                        0x00	#          
+                        0x00	#          
+	:alias TileDecoder.dataByte v0
+	:alias TileDecoder.line v1
+	:alias TileDecoder.byteInLine v2
+	:alias TileDecoder.source v3
+	:alias TileDecoder.dest v4
+	:alias TileDecoder.count v5
+	:alias TileDecoder.x v6
+	:alias TileDecoder.y v7
+	:alias TileDecoder.tile v8
+	:alias TileDecoder.displayX v9
+	:alias TileDecoder.displayY va
+	:alias TileDecoder.tilexy vb
+: decompressLevelStart        
+                        TileDecoder.line := 0
+                        TileDecoder.byteInLine := 0
+                        TileDecoder.source := 0
+                        TileDecoder.dest := 0
+                        TileDecoder.x := 0
+                        TileDecoder.y := 0
+                        TileDecoder.tilexy := -1
+                        return
+: decompressByteCheckNewLine        
+                        if TileDecoder.byteInLine != 16 then
+                        jump label0024
+                        TileDecoder.byteInLine := 0
+                        TileDecoder.line += 1
+: label0024             return
+: decompressByteWrite        
+                        i := levelData
+                        i += TileDecoder.dest
+                        save   v0
+                        TileDecoder.dest += 1
+                        TileDecoder.byteInLine += 1
+                        return
+: decompressCopyBytes        
+                        if TileDecoder.count == 0 then
+                        return
+                        decompressByteWrite
+                        decompressByteCheckNewLine
+                        TileDecoder.count += -1
+                        jump decompressCopyBytes
+: decompressByte        
+                        i += TileDecoder.source
+                        load   TileDecoder.dataByte
+                        TileDecoder.source += 1
+                        if TileDecoder.dataByte != -1 then
+                        jump label0030
+                        TileDecoder.dataByte := 0
+: label0028             vf := 16
+                        vf =- v2
+                        if vf != 0 then
+                        jump label0029
+                        decompressByteWrite
+                        jump label0028
+: label0029             TileDecoder.line += 1
+                        TileDecoder.byteInLine := 0
+                        return
+: label0030             if TileDecoder.dataByte != -2 then
+                        jump label0031
+                        load   v0
+                        TileDecoder.count := TileDecoder.dataByte
+                        TileDecoder.source += 1
+                        TileDecoder.dataByte := 0
+                        jump decompressCopyBytes
+: label0031             if TileDecoder.dataByte != -3 then
+                        jump label0032
+                        load   v0
+                        TileDecoder.count := v0
+                        load   v0
+                        TileDecoder.source += 2
+                        jump decompressCopyBytes
+: label0032             decompressByteWrite
+                        decompressByteCheckNewLine
+                        return
+: v0x16                 v0 += v0
+: v0x8                  v0 += v0
+: v0x4                  v0 += v0
+                        v0 += v0
+                        return
+: displayTileSub        
+                        v0 += -1
+                        v0x8
+                        i := scenesprites
+                        i += v0
+                        sprite v1 v2 8
+                        return
+: tileAtV0V1            v0x16
+                        v0 += v1
+                        i := levelData
+                        i += v0
+                        load   v0
+                        return
+: drawTileLevel         i := levelData
+                        TileDecoder.displayX := 0
+                        TileDecoder.displayY := 0
+                        TileDecoder.source := 0
+                        TileDecoder.source := 0
+: label0039             i := levelData
+                        i += TileDecoder.source
+                        load   v0
+                        if v0 == 0 then
+                        jump label0040
+                        v0 += -1
+                        v0x8
+                        i := scenesprites
+                        i += v0
+                        sprite TileDecoder.displayX TileDecoder.displayY 8
+: label0040             TileDecoder.displayX += 8
+                        if TileDecoder.displayX != -128 then
+                        jump label0041
+                        TileDecoder.displayX := 0
+                        TileDecoder.displayY += 8
+: label0041             v3 += 1
+                        if v3 != -128 then
+                        jump label0039
+                        return
+: levelData             0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: drawTinyLetter2        
+                        if v0 != 1 then
+                        jump label0044
+                        v1 := 0
+                        v2 += 6
+                        return
+: label0044             v0 += -2
+                        i := tinyA
+                        vf := 30
+                        vf -= v0
+                        if vf != 0 then
+                        jump label0045
+                        v4 := -106
+                        i += v4
+                        v0 += -30
+: label0045             v4 := v0
+                        v0 += v0
+                        v0 += v0
+                        v0 += v4
+                        i += v0
+                        sprite v1 v2 5
+                        v1 += 5
+                        return
+: drawTinyString        
+                        i := txtAmoebetronsRevance
+                        i += v3
+                        load   v0
+                        if v0 == 0 then
+                        return
+                        drawTinyLetter2
+                        v3 += 1
+                        jump drawTinyString
+: tinyA                 0xe0		####       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xe0		####       
+                        0x60		# ##      `
+                        0x80		##         
+                        0x80		##         
+                        0x80		##         
+                        0x60		# ##      `
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xe0		####       
+                        0x80		##         
+                        0xc0		###        
+                        0x80		##         
+                        0xe0		####       
+                        0xe0		####       
+                        0x80		##         
+                        0xc0		###        
+                        0x80		##         
+                        0x80		##         
+                        0x60		# ##      `
+                        0x80		##         
+                        0x80		##         
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xe0		####       
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x80		##         
+                        0x80		##         
+                        0x80		##         
+                        0x80		##         
+                        0xe0		####       
+                        0xe0		####       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x60		# ##      `
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xe0		####       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x80		##         
+                        0x80		##         
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0x60		# ##      `
+                        0xe0		####       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x60		# ##      `
+                        0x80		##         
+                        0xe0		####       
+                        0x20		#  #       
+                        0xc0		###        
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x20		#  #       
+                        0xe0		####       
+                        0xe0		####       
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x80		##         
+                        0xe0		####       
+: tinySmallA            0x00		#          
+                        0xe0		####       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0x00		#          
+                        0xc0		###        
+                        0xe0		####       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0x80		##         
+                        0x80		##         
+                        0xe0		####       
+                        0x00		#          
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0x00		#          
+                        0xe0		####       
+                        0xc0		###        
+                        0x80		##         
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0xc0		###        
+                        0x80		##         
+                        0x80		##         
+                        0x00		#          
+                        0xe0		####       
+                        0x80		##         
+                        0xa0		## #       
+                        0xe0		####       
+                        0x00		#          
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0x00		#          
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xc0		###        
+                        0x00		#          
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x00		#          
+                        0x80		##         
+                        0x80		##         
+                        0x80		##         
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0xe0		####       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x00		#          
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x00		#          
+                        0x60		# ##      `
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xc0		###        
+                        0x00		#          
+                        0xe0		####       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x80		##         
+                        0x00		#          
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xc0		###        
+                        0x60		# ##      `
+                        0x00		#          
+                        0xe0		####       
+                        0xa0		## #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0x00		#          
+                        0x60		# ##      `
+                        0x80		##         
+                        0x20		#  #       
+                        0xc0		###        
+                        0x00		#          
+                        0xe0		####       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x00		#          
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x60		# ##      `
+                        0x00		#          
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x40		# #       @
+                        0x00		#          
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0xe0		####       
+                        0x00		#          
+                        0xa0		## #       
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x00		#          
+                        0xa0		## #       
+                        0xe0		####       
+                        0x20		#  #       
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0x20		#  #       
+                        0x80		##         
+                        0xe0		####       
+                        0x40		# #       @
+                        0xa0		## #       
+                        0xe0		####       
+                        0xa0		## #       
+                        0x40		# #       @
+                        0x60		# ##      `
+                        0xa0		## #       
+                        0x20		#  #       
+                        0x20		#  #       
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0xa0		## #       
+                        0x20		#  #       
+                        0x40		# #       @
+                        0xe0		####       
+                        0xc0		###        
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x20		#  #       
+                        0xc0		###        
+                        0xa0		## #       
+                        0xa0		## #       
+                        0xe0		####       
+                        0x20		#  #       
+                        0x20		#  #       
+                        0xe0		####       
+                        0x80		##         
+                        0xc0		###        
+                        0x20		#  #       
+                        0xc0		###        
+                        0x40		# #       @
+                        0x80		##         
+                        0xe0		####       
+                        0xa0		## #       
+                        0x40		# #       @
+                        0xe0		####       
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0x80		##         
+                        0x40		# #       @
+                        0xa0		## #       
+                        0x40		# #       @
+                        0xa0		## #       
+                        0x40		# #       @
+                        0x40		# #       @
+                        0xa0		## #       
+                        0x60		# ##      `
+                        0x20		#  #       
+                        0xc0		###        
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0x00		#          
+                        0x60		# ##      `
+                        0x40		# #       @
+                        0xa0		## #       
+                        0x20		#  #       
+                        0x00		#          
+                        0x40		# #       @
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x20		#  #       
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xe0		####       
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x40		# #       @
+                        0xe0		####       
+                        0x40		# #       @
+                        0x00		#          
+                        0x10		#   #      
+                        0x20		#  #       
+                        0x40		# #       @
+                        0x80		##         
+                        0x00		#          
+                        0x90		##  #      
+                        0x60		# ##      `
+                        0x60		# ##      `
+                        0x90		##  #      
+                        0x00		#          
+                        0x00		#          
+                        0xe0		####       
+                        0x00		#          
+                        0xe0		####       
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xa0		## #       
+                        0xa0		## #       
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+	:alias PlayerData.moveFlag v0
+	:alias PlayerData.x v1
+	:alias PlayerData.y v2
+	:alias PlayerData.x1 v3
+	:alias PlayerData.y1 v4
+	:alias PlayerData.xdir1 v5
+	:alias PlayerData.xdir v6
+	:alias PlayerData.jumping v7
+	:alias PlayerData.iPlayer v8
+	:alias PlayerData.diPlayer v9
+	:alias PlayerData.iPlayer1 va
+	:alias PlayerData.falling vb
+	:alias PlayerTilePos.moveFlag v0
+	:alias PlayerTilePos.x v1
+	:alias PlayerTilePos.y v2
+	:alias PlayerTilePos.tilex v3
+	:alias PlayerTilePos.tiley v4
+	:alias PlayerTilePos.collision v5
+: playerData            0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: playerSaveData        
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: playerTilePos         0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: playerInitData        
+                        0x00	#          
+                        0x00	#          
+                        0x14	#   # #    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x00	#          
+: loadPlayerData        
+                        i := playerData
+                        load   vb
+                        return
+: savePlayerData        
+                        i := playerData
+                        save   vb
+                        return
+: playerTileAddress        
+                        PlayerData.x1 := PlayerData.x
+                        PlayerData.y1 := PlayerData.y
+                        PlayerData.y1 += 15
+                        PlayerData.x1 += 4
+                        PlayerData.x1 >>= PlayerData.x1
+                        PlayerData.x1 >>= PlayerData.x1
+                        PlayerData.x1 >>= PlayerData.x1
+                        PlayerData.y1 >>= PlayerData.y1
+                        PlayerData.y1 >>= PlayerData.y1
+                        PlayerData.y1 >>= PlayerData.y1
+                        return
+: movePlayer            i := playerSprite
+                        if PlayerData.xdir == -1 then
+                        i := playerReverseSprite
+                        i += PlayerData.iPlayer
+                        PlayerData.x1 := PlayerData.x
+                        PlayerData.y1 := PlayerData.y
+                        PlayerData.iPlayer1 := PlayerData.iPlayer
+                        PlayerData.iPlayer += 15
+                        if PlayerData.iPlayer == 75 then
+                        PlayerData.iPlayer := 0
+                        PlayerData.x += PlayerData.xdir
+                        vf := 0
+                        vf -= v1
+                        if vf != 0 then
+                        PlayerData.x := 0
+                        vf := 116
+                        vf -= v1
+                        if vf == 0 then
+                        PlayerData.x := 116
+                        if PlayerData.jumping != -2 then
+                        jump label0057
+                        PlayerData.y += 1
+                        PlayerData.x -= PlayerData.xdir
+                        PlayerData.iPlayer := 0
+                        jump label0060
+: label0057             vf := 0
+                        vf -= v7
+                        if vf != 0 then
+                        jump label0060
+                        vf := 14
+                        vf -= v7
+                        if vf == 0 then
+                        jump label0058
+                        PlayerData.y += -1
+                        jump label0059
+: label0058             PlayerData.y += 1
+: label0059             PlayerData.jumping += 1
+                        vf := 29
+                        vf =- v7
+                        if vf == 0 then
+                        jump label0060
+                        PlayerData.jumping := 0
+: label0060             drawPlayer
+                        PlayerData.x1 := PlayerData.x
+                        PlayerData.y1 := PlayerData.y
+                        PlayerData.iPlayer1 := PlayerData.iPlayer
+                        PlayerData.xdir1 := PlayerData.xdir
+                        drawPlayer
+                        PlayerData.xdir1 := vf
+                        playerTileAddress
+                        if PlayerData.jumping == -2 then
+                        PlayerData.xdir1 := 0
+                        vf := PlayerData.xdir1
+                        return
+: playerProcessKeys        
+                        i := playerData
+                        load   vb
+                        PlayerData.moveFlag := 0
+                        PlayerData.xdir1 := PlayerData.xdir
+                        PlayerData.x1 := 9
+                        vf := 9
+                        if vf -key then
+                        jump label0062
+                        PlayerData.xdir := 1
+                        PlayerData.moveFlag := 1
+: label0062             vf := 7
+                        if vf -key then
+                        jump label0065
+                        vf := 1
+                        vf -= v1
+                        if vf != 0 then
+                        jump label0063
+                        PlayerData.xdir := -1
+                        jump label0064
+: label0063             PlayerData.xdir := 0
+: label0064             PlayerData.moveFlag := 1
+: label0065             if PlayerData.jumping != 0 then
+                        jump label0066
+                        vf := 5
+                        if vf key then
+                        PlayerData.jumping := 1
+                        jump label0067
+: label0066             PlayerData.moveFlag := 1
+: label0067             vf := 0
+                        if PlayerData.moveFlag != 1 then
+                        jump label0068
+                        movePlayer
+: label0068             i := playerData
+                        save   vb
+                        return
+: playerInitDraw        
+                        PlayerData.xdir := 1
+                        PlayerData.jumping := 0
+                        PlayerData.iPlayer := 0
+                        PlayerData.x1 := PlayerData.x
+                        PlayerData.y1 := PlayerData.y
+                        PlayerData.iPlayer1 := PlayerData.iPlayer
+                        drawPlayer
+                        i := playerData
+                        save   vb
+                        return
+: playerCheckJump        
+                        0xa5	## #  # #  
+                        0x6e	# ## ###  n
+                        0xfb	###### ##  
+                        0x55	# # # # # U
+                        0xa5	## #  # #  
+                        0x62	# ##   #  b
+                        0xfb	###### ##  
+                        0x65	# ##  # # e
+                        0x37	#  ## ### 7
+                        0x00	#          
+                        0x25	#  #  # # %
+                        0xae	## # ###   
+                        0xa5	## #  # #  
+                        0x6e	# ## ###  n
+                        0xf4	##### #    
+                        0x65	# ##  # # e
+                        0x00	#          
+                        0xee	#### ###   
+                        0x00	#          
+                        0x00	#          
+: initfast              return
+: fast                  
+                        return
+: slow                  0xf1	#####   #  
+                        0xe0	####       
+                        0x00	#          
+                        0xee	#### ###   
+: redraw                
+                        return
+                        0x00	#          
+                        0x00	#          
+: drawPlayer            i := playerSprite
+                        if PlayerData.xdir1 == -1 then
+                        i := playerReverseSprite
+                        i += PlayerData.iPlayer1
+                        sprite PlayerData.x1 PlayerData.y1 15
+                        return
+: txtAmoebetronsRevance        
+                        0x02	#      #   
+                        0x28	#  # #    (
+                        0x2a	#  # # #  *
+                        0x20	#  #       
+                        0x1d	#   ### #  
+                        0x20	#  #       
+                        0x2f	#  # #### /
+                        0x2d	#  # ## # -
+                        0x2a	#  # # #  *
+                        0x29	#  # #  # )
+                        0x2e	#  # ###  .
+                        0x4a	# #  # #  J
+                        0x38	#  ###    8
+                        0x29	#  # #  # )
+                        0x1f	#   #####  
+                        0x4a	# #  # #  J
+                        0x2d	#  # ## # -
+                        0x20	#  #       
+                        0x31	#  ##   # 1
+                        0x1c	#   ###    
+                        0x29	#  # #  # )
+                        0x1e	#   ####   
+                        0x23	#  #   ## #
+                        0x20	#  #       
+                        0x41	# #     # A
+                        0x00	#          
+: txtCellPhones1        
+                        0x02	#      #   
+                        0x2f	#  # #### /
+                        0x2f	#  # #### /
+                        0x1c	#   ###    
+                        0x1e	#   ####   
+                        0x26	#  #  ##  &
+                        0x4a	# #  # #  J
+                        0x2a	#  # # #  *
+                        0x21	#  #    # !
+                        0x4a	# #  # #  J
+                        0x28	#  # #    (
+                        0x30	#  ##     0
+                        0x2f	#  # #### /
+                        0x1c	#   ###    
+                        0x29	#  # #  # )
+                        0x2f	#  # #### /
+                        0x4a	# #  # #  J
+                        0x00	#          
+: txtCellPhones2        
+                        0x1e	#   ####   
+                        0x20	#  #       
+                        0x27	#  #  ### '
+                        0x27	#  #  ### '
+                        0x4a	# #  # #  J
+                        0x2b	#  # # ## +
+                        0x23	#  #   ## #
+                        0x2a	#  # # #  *
+                        0x29	#  # #  # )
+                        0x20	#  #       
+                        0x2e	#  # ###  .
+                        0x41	# #     # A
+                        0x00	#          
+: mariowashere1         0x0e	#    ###   
+                        0x1c	#   ###    
+                        0x2d	#  # ## # -
+                        0x24	#  #  #   $
+                        0x2a	#  # # #  *
+                        0x4a	# #  # #  J
+                        0x2f	#  # #### /
+                        0x2a	#  # # #  *
+                        0x2a	#  # # #  *
+                        0x26	#  #  ##  &
+                        0x00	#          
+: mariowashere2         0x2f	#  # #### /
+                        0x23	#  #   ## #
+                        0x20	#  #       
+                        0x4a	# #  # #  J
+                        0x1e	#   ####   
+                        0x2a	#  # # #  *
+                        0x24	#  #  #   $
+                        0x29	#  # #  # )
+                        0x41	# #     # A
+                        0x00	#          
+: whereiseugene         0x18	#   ##     
+                        0x23	#  #   ## #
+                        0x20	#  #       
+                        0x2d	#  # ## # -
+                        0x20	#  #       
+                        0x4a	# #  # #  J
+                        0x24	#  #  #   $
+                        0x2e	#  # ###  .
+                        0x4a	# #  # #  J
+                        0x06	#     ##   
+                        0x30	#  ##     0
+                        0x22	#  #   #  "
+                        0x20	#  #       
+                        0x29	#  # #  # )
+                        0x20	#  #       
+                        0x42	# #    #  B
+                        0x00	#          
+: txtpackman            0x05	#     # #  
+                        0x2a	#  # # #  *
+                        0x29	#  # #  # )
+                        0x2f	#  # #### /
+                        0x4a	# #  # #  J
+                        0x2b	#  # # ## +
+                        0x27	#  #  ### '
+                        0x1c	#   ###    
+                        0x34	#  ## #   4
+                        0x4a	# #  # #  J
+                        0x32	#  ##  #  2
+                        0x24	#  #  #   $
+                        0x2f	#  # #### /
+                        0x23	#  #   ## #
+                        0x4a	# #  # #  J
+                        0x2b	#  # # ## +
+                        0x1c	#   ###    
+                        0x1e	#   ####   
+                        0x26	#  #  ##  &
+                        0x28	#  # #    (
+                        0x1c	#   ###    
+                        0x29	#  # #  # )
+                        0x41	# #     # A
+                        0x00	#          
+: welldone              0x18	#   ##     
+                        0x20	#  #       
+                        0x27	#  #  ### '
+                        0x27	#  #  ### '
+                        0x4a	# #  # #  J
+                        0x1f	#   #####  
+                        0x2a	#  # # #  *
+                        0x29	#  # #  # )
+                        0x20	#  #       
+                        0x41	# #     # A
+                        0x00	#          
+: welldone2             0x1a	#   ## #   
+                        0x2a	#  # # #  *
+                        0x30	#  ##     0
+                        0x4a	# #  # #  J
+                        0x2c	#  # ##   ,
+                        0x30	#  ##     0
+                        0x1c	#   ###    
+                        0x27	#  #  ### '
+                        0x24	#  #  #   $
+                        0x21	#  #    # !
+                        0x34	#  ## #   4
+                        0x00	#          
+: welldone3             0x1c	#   ###    
+                        0x2e	#  # ###  .
+                        0x4a	# #  # #  J
+                        0x1c	#   ###    
+                        0x4a	# #  # #  J
+                        0x2d	#  # ## # -
+                        0x20	#  #       
+                        0x2f	#  # #### /
+                        0x2d	#  # ## # -
+                        0x2a	#  # # #  *
+                        0x45	# #   # # E
+                        0x00	#          
+: welldone4             0x22	#  #   #  "
+                        0x1c	#   ###    
+                        0x28	#  # #    (
+                        0x20	#  #       
+                        0x2d	#  # ## # -
+                        0x00	#          
+	:alias ObjectData.tilex v0
+	:alias ObjectData.tiley v1
+	:alias ObjectData.objtype v2
+: bcdbuf1               0x00	#          
+                        0x00	#          
+                        0x00	#          
+: bcdbuf2               0x00	#          
+                        0x00	#          
+                        0x00	#          
+: bcdbuf3               0x00	#          
+                        0x00	#          
+                        0x00	#          
+: bcdfirst              0x01	#       #  
+: printsave             0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: printCoords           i := amoebetron0
+                        jump drawSprite12
+: drawToilette          i := toilette
+: drawSprite12          i += Enemy.drawframe
+                        sprite Enemy.drawx Enemy.drawy 12
+                        return
+: drawStomper           i := stomper
+                        jump drawSprite12
+: drawRobo              i := robo
+                        jump drawSprite12
+: drawCellphone         i := cellphone
+                        jump drawSprite12
+: checkFalling          v0 := PlayerTilePos.tiley
+                        v1 := PlayerTilePos.tilex
+                        tileAtV0V1
+                        if v0 != 0 then
+                        jump label0100
+                        if PlayerData.jumping != 0 then
+                        jump label0099
+                        loadPlayerData
+                        PlayerData.jumping := -2
+                        savePlayerData
+: label0099             jump label0101
+: label0100             vf := 6
+                        vf =- v0
+                        if vf != 0 then
+                        jump label0101
+                        if PlayerData.jumping == 0 then
+                        jump label0101
+                        loadPlayerData
+                        PlayerData.jumping := 0
+                        savePlayerData
+: label0101             return
+: gmain                 hires
+                        initfast
+                        fast
+: scene1                clear
+                        v1 := 0
+: label0104             i := scene1SpriteData
+                        i += v1
+                        load   v0
+                        i := enemydata1
+                        i += v1
+                        save   v0
+                        v1 += 1
+                        if v1 != 30 then
+                        jump label0104
+                        TileDecoder.displayX := -1
+                        decompressLevelStart
+: label0105             if TileDecoder.line == 8 then
+                        jump label0106
+                        i := level1
+                        decompressByte
+                        jump label0105
+: label0106             drawTileLevel
+                        v1 := 5
+                        v2 := 58
+                        v3 := 0
+                        drawTinyString
+                        i := playerInitData
+                        load   vb
+                        PlayerData.y := 25
+                        playerInitDraw
+                        i := enemydata1
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        printCoords
+                        i := enemydata2
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        printCoords
+: label0107             v0 := 1
+                        if v0 key then
+                        jump scene2
+                        v0 := 2
+                        if v0 key then
+                        jump scene3
+                        v0 := 3
+                        if v0 key then
+                        jump scene4
+                        playerProcessKeys
+                        PlayerTilePos.collision := vf
+                        if PlayerTilePos.moveFlag != 1 then
+                        jump scene1cont
+                        checkFalling
+                        if PlayerTilePos.tiley == 8 then
+                        jump scene1
+                        if PlayerTilePos.collision != 1 then
+                        jump scene1cont
+                        i := level1Objects
+                        checkCollision
+                        if v0 != 2 then
+                        jump label0108
+                        v1 := 0
+                        v2 := 5
+                        v3 := 57
+                        drawTinyString
+                        v1 := 0
+                        v2 := 13
+                        v3 := 68
+                        drawTinyString
+                        jump scene1cont
+: label0108             if v0 == 1 then
+                        jump scene2
+                        jump scene1
+: scene1cont            i := enemydata1
+                        load   ve
+                        calcEnemyCoords
+                        printCoords
+                        copyEnemyCoords
+                        printCoords
+                        i := enemydata1
+                        save   ve
+                        if vf == 1 then
+                        jump scene1
+                        i := enemydata2
+                        load   ve
+                        calcEnemyCoords
+                        printCoords
+                        copyEnemyCoords
+                        printCoords
+                        i := enemydata2
+                        save   ve
+                        if vf == 1 then
+                        jump scene1
+                        redraw
+                        jump label0107
+: fuelflag              0x01	#       #  
+: key1flag              0x01	#       #  
+: key2flag              0x01	#       #  
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: scene2                clear
+                        v0 := 1
+                        v1 := 1
+                        v2 := 1
+                        i := fuelflag
+                        save   v3
+                        clear
+                        ve := 1
+                        v1 := 0
+: label0114             i := scene2SpriteData
+                        i += v1
+                        load   v0
+                        i := enemydata1
+                        i += v1
+                        save   v0
+                        v1 += 1
+                        if v1 != 30 then
+                        jump label0114
+                        TileDecoder.displayX := -1
+                        decompressLevelStart
+: label0115             if TileDecoder.line == 8 then
+                        jump label0116
+                        i := level2
+                        decompressByte
+                        jump label0115
+: label0116             drawTileLevel
+                        v1 := 0
+                        v2 := 58
+                        v3 := 78
+                        drawTinyString
+                        i := playerInitData
+                        load   vb
+                        PlayerData.y := 17
+                        playerInitDraw
+                        i := enemydata1
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawToilette
+                        i := enemydata2
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawToilette
+: label0117             playerProcessKeys
+                        PlayerTilePos.collision := vf
+                        if PlayerTilePos.moveFlag != 1 then
+                        jump scene2cont
+                        checkFalling
+                        if PlayerTilePos.tiley == 8 then
+                        jump scene1
+                        if PlayerTilePos.collision != 1 then
+                        jump scene2cont
+                        i := level2Objects
+                        checkCollision
+                        if v0 != 5 then
+                        jump label0119
+                        i := fuelflag
+                        load   v0
+                        vf := v0
+                        i := fuelflag
+                        v0 := 0
+                        save   v0
+                        if vf != 1 then
+                        jump label0118
+                        v1 := 0
+                        v2 := 0
+                        v0 := 7
+                        displayTileSub
+                        v1 := 8
+                        v2 := 0
+                        v0 := 8
+                        displayTileSub
+                        v1 := 0
+                        v2 := 8
+                        v0 := 9
+                        displayTileSub
+                        v1 := 8
+                        v2 := 8
+                        v0 := 10
+                        displayTileSub
+: label0118             jump scene2cont
+: label0119             if v0 != 3 then
+                        jump label0121
+                        i := key1flag
+                        load   v0
+                        vf := v0
+                        i := key1flag
+                        v0 := 0
+                        save   v0
+                        if vf != 1 then
+                        jump label0120
+                        v1 := 72
+                        v2 := 0
+                        v0 := 12
+                        displayTileSub
+: label0120             jump scene2cont
+: label0121             if v0 != 4 then
+                        jump label0123
+                        i := key2flag
+                        load   v0
+                        vf := v0
+                        i := key2flag
+                        v0 := 0
+                        save   v0
+                        if vf != 1 then
+                        jump label0122
+                        v1 := 120
+                        v2 := 24
+                        v0 := 12
+                        displayTileSub
+: label0122             jump scene2cont
+: label0123             if v0 == 1 then
+                        jump scene3
+                        jump scene2
+: scene2cont            i := enemydata1
+                        load   ve
+                        calcEnemyCoords
+                        drawToilette
+                        copyEnemyCoords
+                        drawToilette
+                        i := enemydata1
+                        save   ve
+                        if vf == 1 then
+                        jump scene2
+                        i := enemydata2
+                        load   ve
+                        calcEnemyCoords
+                        drawToilette
+                        copyEnemyCoords
+                        drawToilette
+                        i := enemydata2
+                        save   ve
+                        if vf == 1 then
+                        jump scene2
+                        redraw
+                        jump label0117
+: scene3                clear
+                        v1 := 0
+: label0126             i := scene3SpriteData
+                        i += v1
+                        load   v0
+                        i := enemydata1
+                        i += v1
+                        save   v0
+                        v1 += 1
+                        if v1 != 30 then
+                        jump label0126
+                        TileDecoder.displayX := -1
+                        decompressLevelStart
+: label0127             if TileDecoder.line == 8 then
+                        jump label0128
+                        i := level3
+                        decompressByte
+                        jump label0127
+: label0128             drawTileLevel
+                        v1 := 0
+                        v2 := 58
+                        v3 := 95
+                        drawTinyString
+                        i := playerInitData
+                        load   vb
+                        PlayerData.y := 9
+                        playerInitDraw
+                        i := enemydata1
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawStomper
+                        i := enemydata2
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawRobo
+: label0129             playerProcessKeys
+                        PlayerTilePos.collision := vf
+                        if PlayerTilePos.tiley == 8 then
+                        jump scene3
+                        if PlayerTilePos.moveFlag != 1 then
+                        jump scene3cont
+                        checkFalling
+                        if PlayerTilePos.tiley == 8 then
+                        jump scene2
+                        vf := 6
+                        vf =- v3
+                        if vf == 0 then
+                        jump scene3cont
+                        if PlayerTilePos.collision != 1 then
+                        jump scene3cont
+                        i := level3Objects
+                        checkCollision
+                        if v0 == 7 then
+                        jump rocketHit
+                        if v0 == 1 then
+                        jump scene4
+                        jump scene3
+: scene3cont            i := enemydata1
+                        load   ve
+                        calcEnemyCoords
+                        drawStomper
+                        copyEnemyCoords
+                        drawStomper
+                        i := enemydata1
+                        save   ve
+                        if vf == 1 then
+                        jump scene3
+                        i := enemydata2
+                        load   ve
+                        calcEnemyCoords
+                        drawRobo
+                        copyEnemyCoords
+                        drawRobo
+                        i := enemydata2
+                        save   ve
+                        if vf == 1 then
+                        jump scene3
+                        redraw
+                        jump label0129
+: rocketHit             i := playerData
+                        load   vb
+                        PlayerData.x1 := PlayerData.x
+                        PlayerData.y1 := PlayerData.y
+                        PlayerData.iPlayer1 := PlayerData.iPlayer
+                        drawPlayer
+                        v1 := 112
+                        v2 := 32
+                        v0 := 18
+                        displayTileSub
+                        v1 := 120
+                        v2 := 32
+                        v0 := 19
+                        displayTileSub
+                        v1 := 112
+                        v2 := 40
+                        v0 := 20
+                        displayTileSub
+                        v1 := 120
+                        v2 := 40
+                        v0 := 21
+                        displayTileSub
+                        v4 := 8
+                        v3 := 0
+: label0132             drawRocket
+                        redraw
+                        v5 := 0
+: label0133             v5 += 0
+                        v5 += 1
+                        if v5 != 30 then
+                        jump label0133
+                        drawRocket
+                        v3 += 1
+                        if v3 != 30 then
+                        jump label0132
+                        i := playerData
+                        load   vb
+                        PlayerData.x := 104
+                        PlayerData.y := 1
+                        i := playerData
+                        savePlayerData
+                        playerInitDraw
+                        jump scene3cont
+: drawRocket            v4 := 8
+                        i := data0161
+                        v1 := 112
+                        v2 := 32
+                        v2 -= v3
+                        sprite v1 v2 8
+                        v1 += 8
+                        i += v4
+                        sprite v1 v2 8
+                        v1 += -8
+                        v2 += 8
+                        i += v4
+                        sprite v1 v2 8
+                        v1 += 8
+                        i += v4
+                        sprite v1 v2 8
+                        return
+: scene4                clear
+                        clear
+                        v1 := 0
+: label0136             i := scene4SpriteData
+                        i += v1
+                        load   v0
+                        i := enemydata1
+                        i += v1
+                        save   v0
+                        v1 += 1
+                        if v1 != 30 then
+                        jump label0136
+                        TileDecoder.displayX := -1
+                        decompressLevelStart
+: label0137             if TileDecoder.line == 8 then
+                        jump label0138
+                        i := level4
+                        decompressByte
+                        jump label0137
+: label0138             drawTileLevel
+                        v1 := 0
+                        v2 := 52
+                        v3 := 26
+                        drawTinyString
+                        v1 := 0
+                        v2 := 58
+                        v3 := 44
+                        drawTinyString
+                        i := playerInitData
+                        load   vb
+                        PlayerData.y := 25
+                        playerInitDraw
+                        i := enemydata1
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawCellphone
+                        i := enemydata2
+                        load   ve
+                        Enemy.drawx := Enemy.x
+                        Enemy.drawy := Enemy.y
+                        Enemy.drawframe := Enemy.frame
+                        drawCellphone
+: label0139             playerProcessKeys
+                        PlayerTilePos.collision := vf
+                        loadPlayerData
+                        if PlayerTilePos.moveFlag != 1 then
+                        jump label0140
+                        checkFalling
+                        if PlayerTilePos.collision != 1 then
+                        jump label0140
+                        i := level4Objects
+                        checkCollision
+                        if v0 == 1 then
+                        jump endofgame
+                        jump scene4
+: label0140             i := enemydata1
+                        load   ve
+                        calcEnemyCoords
+                        drawCellphone
+                        copyEnemyCoords
+                        drawCellphone
+                        i := enemydata1
+                        save   ve
+                        if vf == 1 then
+                        jump scene4
+                        i := enemydata2
+                        load   ve
+                        calcEnemyCoords
+                        drawCellphone
+                        copyEnemyCoords
+                        drawCellphone
+                        i := enemydata2
+                        save   ve
+                        if vf == 1 then
+                        jump scene4
+                        redraw
+                        jump label0139
+: checkCollision        
+                        load   v2
+                        if ObjectData.tilex == -1 then
+                        return
+                        if ObjectData.tilex != PlayerTilePos.tilex then
+                        jump label0142
+                        if ObjectData.tiley != PlayerTilePos.tiley then
+                        jump label0142
+                        v0 := ObjectData.objtype
+                        return
+: label0142             jump checkCollision
+: endofgame             clear
+                        v1 := 0
+                        v2 := 10
+                        v3 := 119
+                        drawTinyString
+                        v1 := 0
+                        v2 := 18
+                        v3 := -126
+                        drawTinyString
+                        v1 := 0
+                        v2 := 26
+                        v3 := -114
+                        drawTinyString
+                        v1 := 0
+                        v2 := 34
+                        v3 := -102
+                        drawTinyString
+                        v0 := key
+                        jump scene1
+: scene1SpriteData        
+                        0x30	#  ##     0
+                        0x0f	#    ####  
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x00	#          
+                        0x28	#  # #    (
+                        0x04	#     #    
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: initEnemyData1        
+                        0x60	# ##      `
+                        0x08	#    #     
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x00	#          
+                        0x01	#       #  
+                        0x28	#  # #    (
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: scene2SpriteData        
+                        0x2d	#  # ## # -
+                        0x15	#   # # #  
+                        0x01	#       #  
+                        0x00	#          
+                        0x23	#  #   ## #
+                        0x46	# #   ##  F
+                        0x09	#    #  #  
+                        0x1e	#   ####   
+                        0x00	#          
+                        0x48	# #  #    H
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x60	# ##      `
+                        0x08	#    #     
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x7f	# ####### 
+                        0x08	#    #     
+                        0x28	#  # #    (
+                        0x00	#          
+                        0x48	# #  #    H
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: scene3SpriteData        
+                        0x45	# #   # # E
+                        0x24	#  #  #   $
+                        0x01	#       #  
+                        0x00	#          
+                        0x40	# #       @
+                        0x60	# ##      `
+                        0x09	#    #  #  
+                        0x26	#  #  ##  &
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x30	#  ##     0
+                        0x0a	#    # #   
+                        0x00	#          
+                        0x01	#       #  
+                        0x00	#          
+                        0x80	##         
+                        0x08	#    #     
+                        0x28	#  # #    (
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: scene4SpriteData        
+                        0x5a	# # ## #  Z
+                        0x0a	#    # #   
+                        0x01	#       #  
+                        0x01	#       #  
+                        0x44	# #   #   D
+                        0x6e	# ## ###  n
+                        0x01	#       #  
+                        0x19	#   ##  #  
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x1e	#   ####   
+                        0x05	#     # #  
+                        0x01	#       #  
+                        0x01	#       #  
+                        0x06	#     ##   
+                        0x32	#  ##  #  2
+                        0x00	#          
+                        0x15	#   # # #  
+                        0x00	#          
+                        0x24	#  #  #   $
+                        0x0c	#    ##    
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: enemydata1            0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: enemydata2            0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: savedata              0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+                        0x00	#          
+: temp                  0x00	#          
+: amoebetron0           0x00		#          
+                        0x00		#          
+                        0x12		#   #  #   
+                        0x6d		# ## ## # m
+                        0xc9		###  #  #  
+                        0xf2		#####  #   
+                        0xbc		## ####    
+                        0xb8		## ###     
+                        0x58		# # ##    X
+                        0x14		#   # #    
+                        0x14		#   # #    
+                        0x24		#  #  #   $
+: amoebetron1           0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x6c		# ## ##   l
+                        0x49		# #  #  # I
+                        0x72		# ###  #  r
+                        0xbc		## ####    
+                        0xb8		## ###     
+                        0x58		# # ##    X
+                        0x14		#   # #    
+                        0x14		#   # #    
+                        0x24		#  #  #   $
+: amoebetron2           0x00		#          
+                        0x00		#          
+                        0xc8		###  #     
+                        0x48		# #  #    H
+                        0x48		# #  #    H
+                        0x70		# ###     p
+                        0x3c		#  ####   <
+                        0x3a		#  ### #  :
+                        0x58		# # ##    X
+                        0x54		# # # #   T
+                        0x92		##  #  #   
+                        0x10		#   #      
+: toilette              0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0x04		#     #    
+                        0x04		#     #    
+                        0x02		#      #   
+                        0x02		#      #   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0x10		#   #      
+                        0x08		#    #     
+                        0x04		#     #    
+                        0x02		#      #   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0xc0		###        
+                        0x30		#  ##     0
+                        0x0c		#    ##    
+                        0x02		#      #   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0x00		#          
+                        0xe0		####       
+                        0x1c		#   ###    
+                        0x02		#      #   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xe0		####       
+                        0x1e		#   ####   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xfe		########   
+                        0xfd		####### #  
+                        0xff		#########  
+                        0xfc		#######    
+                        0x76		# ### ##  v
+                        0x79		# ####  # y
+                        0x39		#  ###  # 9
+                        0x39		#  ###  # 9
+                        0x00		#          
+: stomper               0x00		#          
+                        0x38		#  ###    8
+                        0x74		# ### #   t
+                        0xfe		########   
+                        0xe0		####       
+                        0xe0		####       
+                        0xfe		########   
+                        0x7e		# ######  ~
+                        0x28		#  # #    (
+                        0x28		#  # #    (
+                        0x28		#  # #    (
+                        0x7e		# ######  ~
+                        0x00		#          
+                        0x38		#  ###    8
+                        0x74		# ### #   t
+                        0xfe		########   
+                        0xe0		####       
+                        0xfc		#######    
+                        0xfe		########   
+                        0x7e		# ######  ~
+                        0x28		#  # #    (
+                        0x28		#  # #    (
+                        0x7e		# ######  ~
+                        0x00		#          
+                        0x00		#          
+                        0x38		#  ###    8
+                        0x74		# ### #   t
+                        0xfe		########   
+                        0xf8		######     
+                        0xfc		#######    
+                        0xfe		########   
+                        0x7e		# ######  ~
+                        0x28		#  # #    (
+                        0x7e		# ######  ~
+                        0x00		#          
+                        0x00		#          
+: robo                  0x38		#  ###    8
+                        0x6a		# ## # #  j
+                        0x7e		# ######  ~
+                        0x3e		#  #####  >
+                        0x12		#   #  #   
+                        0xb8		## ###     
+                        0xb8		## ###     
+                        0xfc		#######    
+                        0xa0		## #       
+                        0xbc		## ####    
+                        0x38		#  ###    8
+                        0x18		#   ##     
+                        0x38		#  ###    8
+                        0x6a		# ## # #  j
+                        0x7e		# ######  ~
+                        0x3e		#  #####  >
+                        0x12		#   #  #   
+                        0x38		#  ###    8
+                        0xb8		## ###     
+                        0xfc		#######    
+                        0xa0		## #       
+                        0x3c		#  ####   <
+                        0x38		#  ###    8
+                        0x18		#   ##     
+                        0x38		#  ###    8
+                        0x6a		# ## # #  j
+                        0x7e		# ######  ~
+                        0x3e		#  #####  >
+                        0x12		#   #  #   
+                        0x38		#  ###    8
+                        0x38		#  ###    8
+                        0xfc		#######    
+                        0x30		#  ##     0
+                        0x3c		#  ####   <
+                        0x38		#  ###    8
+                        0x18		#   ##     
+: cellphone             0x04		#     #    
+                        0x3e		#  #####  >
+                        0x41		# #     # A
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x5d		# # ### # ]
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x3e		#  #####  >
+                        0x04		#     #    
+                        0x3e		#  #####  >
+                        0x41		# #     # A
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x49		# #  #  # I
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x3e		#  #####  >
+                        0x04		#     #    
+                        0x3e		#  #####  >
+                        0x55		# # # # # U
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x49		# #  #  # I
+                        0x55		# # # # # U
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x3e		#  #####  >
+                        0x04		#     #    
+                        0x3e		#  #####  >
+                        0x4b		# #  # ## K
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x5d		# # ### # ]
+                        0x55		# # # # # U
+                        0x55		# # # # # U
+                        0x5d		# # ### # ]
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x3e		#  #####  >
+                        0x04		#     #    
+                        0x3e		#  #####  >
+                        0x4b		# #  # ## K
+                        0x55		# # # # # U
+                        0x41		# #     # A
+                        0x5d		# # ### # ]
+                        0x5d		# # ### # ]
+                        0x5d		# # ### # ]
+                        0x5d		# # ### # ]
+                        0x41		# #     # A
+                        0x41		# #     # A
+                        0x3e		#  #####  >
+: scenesprites          0xaa		## # # #   
+                        0x55		# # # # # U
+                        0xff		#########  
+                        0xff		#########  
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xff		#########  
+                        0xff		#########  
+                        0xff		#########  
+                        0xff		#########  
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x55		# # # # # U
+                        0xaa		## # # #   
+                        0x55		# # # # # U
+                        0xaa		## # # #   
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x1f		#   #####  
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x1c		#   ###    
+                        0x14		#   # #    
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x10		#   #      
+                        0x1f		#   #####  
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x92		##  #  #   
+                        0x54		# # # #   T
+                        0x28		#  # #    (
+                        0x10		#   #      
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xff		#########  
+                        0x80		##         
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xff		#########  
+                        0x01		#       #  
+                        0xb5		## ## # #  
+                        0xa5		## #  # #  
+                        0xb5		## ## # #  
+                        0xa5		## #  # #  
+                        0xa7		## #  ###  
+                        0x80		##         
+                        0xff		#########  
+                        0x00		#          
+                        0x69		# ## #  # i
+                        0x49		# #  #  # I
+                        0x69		# ## #  # i
+                        0x49		# #  #  # I
+                        0x6d		# ## ## # m
+                        0x01		#       #  
+                        0xff		#########  
+                        0x00		#          
+                        0x81		##      #  
+                        0x42		# #    #  B
+                        0x24		#  #  #   $
+                        0x18		#   ##     
+                        0x18		#   ##     
+                        0x24		#  #  #   $
+                        0x42		# #    #  B
+                        0x81		##      #  
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xa2		## #   #   
+                        0xe5		####  # #  
+                        0xfd		####### #  
+                        0x05		#     # #  
+                        0x02		#      #   
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x22		#  #   #  "
+                        0x22		#  #   #  "
+                        0x2a		#  # # #  *
+                        0x2a		#  # # #  *
+                        0x2a		#  # # #  *
+                        0x1f		#   #####  
+                        0x20		#  #       
+                        0x7f		# ####### 
+                        0x79		# ####  # y
+                        0x76		# ### ##  v
+                        0x7f		# ####### 
+                        0x7e		# ######  ~
+                        0x7d		# ##### # }
+                        0xfe		########   
+                        0x06		#     ##   
+                        0xfa		###### #   
+                        0xfa		###### #   
+                        0xfa		###### #   
+                        0x7a		# #### #  z
+                        0xfa		###### #   
+                        0xfa		###### #   
+                        0x7d		# ##### # }
+                        0x7f		# ####### 
+                        0x7d		# ##### # }
+                        0x7f		# ####### 
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0xfa		###### #   
+                        0xfa		###### #   
+                        0xfc		#######    
+                        0xf8		######     
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+                        0x00		#          
+: data0161              0x01	#       #  
+                        0x03	#      ##  
+                        0x03	#      ##  
+                        0x07	#     ###  
+                        0x07	#     ###  
+                        0x07	#     ###  
+                        0x07	#     ###  
+                        0x07	#     ###  
+                        0x00	#          
+                        0x80	##         
+                        0x80	##         
+                        0xc0	###        
+                        0xc0	###        
+                        0xc0	###        
+                        0xc0	###        
+                        0xc0	###        
+                        0x07	#     ###  
+                        0x07	#     ###  
+                        0x06	#     ##   
+                        0x0c	#    ##    
+                        0x0c	#    ##    
+                        0x18	#   ##     
+                        0x18	#   ##     
+                        0x18	#   ##     
+                        0xc0	###        
+                        0xc0	###        
+                        0xc0	###        
+                        0x60	# ##      `
+                        0x70	# ###     p
+                        0x30	#  ##     0
+                        0x30	#  ##     0
+                        0x30	#  ##     0
+: playerSprite          0x06		#     ##   
+                        0x3e		#  #####  >
+                        0x7c		# #####   |
+                        0x34		#  ## #   4
+                        0x3e		#  #####  >
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x6e		# ## ###  n
+                        0x6e		# ## ###  n
+                        0x6e		# ## ###  n
+                        0x76		# ### ##  v
+                        0x3c		#  ####   <
+                        0x18		#   ##     
+                        0x18		#   ##     
+                        0x1c		#   ###    
+                        0x06		#     ##   
+                        0x3e		#  #####  >
+                        0x7c		# #####   |
+                        0x34		#  ## #   4
+                        0x3e		#  #####  >
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xf7		##### ###  
+                        0xfb		###### ##  
+                        0x3c		#  ####   <
+                        0x76		# ### ##  v
+                        0x6e		# ## ###  n
+                        0x77		# ### ### w
+                        0x06		#     ##   
+                        0x3e		#  #####  >
+                        0x7c		# #####   |
+                        0x34		#  ## #   4
+                        0x3e		#  #####  >
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xf7		##### ###  
+                        0xbb		## ### ##  
+                        0x3e		#  #####  >
+                        0x66		# ##  ##  f
+                        0xc7		###   ###  
+                        0xe3		####   ##  
+                        0x06		#     ##   
+                        0x3e		#  #####  >
+                        0x7c		# #####   |
+                        0x34		#  ## #   4
+                        0x3e		#  #####  >
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xf7		##### ###  
+                        0xfb		###### ##  
+                        0x3c		#  ####   <
+                        0x76		# ### ##  v
+                        0x6e		# ## ###  n
+                        0x77		# ### ### w
+                        0x06		#     ##   
+                        0x3e		#  #####  >
+                        0x7c		# #####   |
+                        0x34		#  ## #   4
+                        0x3e		#  #####  >
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x6e		# ## ###  n
+                        0x6e		# ## ###  n
+                        0x6e		# ## ###  n
+                        0x76		# ### ##  v
+                        0x3c		#  ####   <
+                        0x18		#   ##     
+                        0x18		#   ##     
+                        0x1c		#   ###    
+: playerReverseSprite        
+                        0x60		# ##      `
+                        0x7c		# #####   |
+                        0x3e		#  #####  >
+                        0x2c		#  # ##   ,
+                        0x7c		# #####   |
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x76		# ### ##  v
+                        0x76		# ### ##  v
+                        0x76		# ### ##  v
+                        0x6e		# ## ###  n
+                        0x3c		#  ####   <
+                        0x18		#   ##     
+                        0x18		#   ##     
+                        0x38		#  ###    8
+                        0x60		# ##      `
+                        0x7c		# #####   |
+                        0x3e		#  #####  >
+                        0x2c		#  # ##   ,
+                        0x7c		# #####   |
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xef		#### ####  
+                        0xdf		### #####  
+                        0x3c		#  ####   <
+                        0x6e		# ## ###  n
+                        0x76		# ### ##  v
+                        0xee		#### ###   
+                        0x60		# ##      `
+                        0x7c		# #####   |
+                        0x3e		#  #####  >
+                        0x2c		#  # ##   ,
+                        0x7c		# #####   |
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xef		#### ####  
+                        0xdd		### ### #  
+                        0x7c		# #####   |
+                        0x66		# ##  ##  f
+                        0xe3		####   ##  
+                        0xc7		###   ###  
+                        0x60		# ##      `
+                        0x7c		# #####   |
+                        0x3e		#  #####  >
+                        0x2c		#  # ##   ,
+                        0x7c		# #####   |
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x7e		# ######  ~
+                        0x7e		# ######  ~
+                        0xef		#### ####  
+                        0xdf		### #####  
+                        0x3c		#  ####   <
+                        0x6e		# ## ###  n
+                        0x76		# ### ##  v
+                        0xee		#### ###   
+                        0x60		# ##      `
+                        0x7c		# #####   |
+                        0x3e		#  #####  >
+                        0x2c		#  # ##   ,
+                        0x7c		# #####   |
+                        0x18		#   ##     
+                        0x3c		#  ####   <
+                        0x76		# ### ##  v
+                        0x76		# ### ##  v
+                        0x76		# ### ##  v
+                        0x6e		# ## ###  n
+                        0x3c		#  ####   <
+                        0x18		#   ##     
+                        0x18		#   ##     
+                        0x38		#  ###    8
+: level1                0xfe		########   
+                        0x09		#    #  #  
+                        0x0e		#    ###   
+                        0x0f		#    ####  
+                        0xff		#########  
+                        0xfe		########   
+                        0x09		#    #  #  
+                        0x10		#   #      
+                        0x11		#   #   #  
+                        0xff		#########  
+                        0xff		#########  
+                        0xfe		########   
+                        0x0f		#    ####  
+                        0x04		#     #    
+                        0xfe		########   
+                        0x03		#      ##  
+                        0x06		#     ##   
+                        0xfe		########   
+                        0x05		#     # #  
+                        0x06		#     ##   
+                        0xfe		########   
+                        0x05		#     # #  
+                        0x05		#     # #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x00		#          
+                        0x01		#       #  
+                        0x00		#          
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x00		#          
+                        0x01		#       #  
+                        0x00		#          
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0xff		#########  
+                        0xff		#########  
+                        0xff		#########  
+: level1Objects         0x05	#     # #  
+                        0x05	#     # #  
+                        0x00	#          
+                        0x06	#     ##   
+                        0x05	#     # #  
+                        0x00	#          
+                        0x0f	#    ####  
+                        0x05	#     # #  
+                        0x01	#       #  
+                        0x09	#    #  #  
+                        0x03	#      ##  
+                        0x02	#      #   
+                        0x09	#    #  #  
+                        0x05	#     # #  
+                        0x02	#      #   
+                        0x0a	#    # #   
+                        0x03	#      ##  
+                        0x02	#      #   
+                        0x0a	#    # #   
+                        0x05	#     # #  
+                        0x00	#          
+                        0x0b	#    # ##  
+                        0x05	#     # #  
+                        0x00	#          
+                        0xff	#########  
+                        0xff	#########  
+                        0xff	#########  
+: level2Objects         0x00	#          
+                        0x03	#      ##  
+                        0x05	#     # #  
+                        0x01	#       #  
+                        0x03	#      ##  
+                        0x05	#     # #  
+                        0x0e	#    ###   
+                        0x04	#     #    
+                        0x04	#     #    
+                        0x0f	#    ####  
+                        0x04	#     #    
+                        0x04	#     #    
+                        0x09	#    #  #  
+                        0x02	#      #   
+                        0x03	#      ##  
+                        0x09	#    #  #  
+                        0x03	#      ##  
+                        0x03	#      ##  
+                        0x0a	#    # #   
+                        0x02	#      #   
+                        0x03	#      ##  
+                        0x0a	#    # #   
+                        0x03	#      ##  
+                        0x03	#      ##  
+                        0x0f	#    ####  
+                        0x07	#     ###  
+                        0x01	#       #  
+                        0x0f	#    ####  
+                        0x06	#     ##   
+                        0x01	#       #  
+                        0xff	#########  
+                        0xff	#########  
+                        0xff	#########  
+: level3Objects         0x0e	#    ###   
+                        0x06	#     ##   
+                        0x07	#     ###  
+                        0x0e	#    ###   
+                        0x05	#     # #  
+                        0x07	#     ###  
+                        0x0e	#    ###   
+                        0x02	#      #   
+                        0x01	#       #  
+                        0x0f	#    ####  
+                        0x02	#      #   
+                        0x01	#       #  
+                        0xff	#########  
+                        0xff	#########  
+                        0xff	#########  
+: level4Objects         0x0f	#    ####  
+                        0x05	#     # #  
+                        0x01	#       #  
+                        0x0f	#    ####  
+                        0x04	#     #    
+                        0x01	#       #  
+                        0xff	#########  
+                        0xff	#########  
+                        0xff	#########  
+: level2                0x07		#     ###  
+                        0x08		#    #     
+                        0xfe		########   
+                        0x07		#     ###  
+                        0x0c		#    ##    
+                        0xff		#########  
+                        0x09		#    #  #  
+                        0x0a		#    # #   
+                        0xff		#########  
+                        0xff		#########  
+                        0x00		#          
+                        0x00		#          
+                        0x06		#     ##   
+                        0xfe		########   
+                        0x0c		#    ##    
+                        0x0c		#    ##    
+                        0xfd		####### #  
+                        0x04		#     #    
+                        0x01		#       #  
+                        0x03		#      ##  
+                        0x00		#          
+                        0x00		#          
+                        0xfd		####### #  
+                        0x05		#     # #  
+                        0x02		#      #   
+                        0x00		#          
+                        0x00		#          
+                        0x02		#      #   
+                        0x02		#      #   
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0xfe		########   
+                        0x03		#      ##  
+                        0x0b		#    # ##  
+                        0xfe		########   
+                        0x03		#      ##  
+                        0x0b		#    # ##  
+                        0xfe		########   
+                        0x05		#     # #  
+                        0x04		#     #    
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x06		#     ##   
+                        0xfe		########   
+                        0x03		#      ##  
+                        0x05		#     # #  
+                        0xfe		########   
+                        0x0b		#    # ##  
+                        0xfd		####### #  
+                        0x04		#     #    
+                        0x01		#       #  
+                        0x03		#      ##  
+: level3                0xfe		########   
+                        0x0f		#    ####  
+                        0x04		#     #    
+                        0xfe		########   
+                        0x0f		#    ####  
+                        0x05		#     # #  
+                        0xfe		########   
+                        0x0d		#    ## #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x02		#      #   
+                        0x03		#      ##  
+                        0xff		#########  
+                        0x00		#          
+                        0x00		#          
+                        0x01		#       #  
+                        0x02		#      #   
+                        0x03		#      ##  
+                        0xfe		########   
+                        0x09		#    #  #  
+                        0x12		#   #  #   
+                        0x13		#   #  ##  
+                        0xfe		########   
+                        0x04		#     #    
+                        0x02		#      #   
+                        0x02		#      #   
+                        0xfe		########   
+                        0x08		#    #     
+                        0x14		#   # #    
+                        0x15		#   # # #  
+                        0xfe		########   
+                        0x07		#     ###  
+                        0x02		#      #   
+                        0x02		#      #   
+                        0x00		#          
+                        0x00		#          
+                        0xfd		####### #  
+                        0x05		#     # #  
+                        0x01		#       #  
+                        0xff		#########  
+: level4                0xff		#########  
+                        0xff		#########  
+                        0xff		#########  
+                        0xfe		########   
+                        0x0f		#    ####  
+                        0x04		#     #    
+                        0xfe		########   
+                        0x07		#     ###  
+                        0x06		#     ##   
+                        0x06		#     ##   
+                        0xfe		########   
+                        0x06		#     ##   
+                        0x05		#     # #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x00		#          
+                        0x00		#          
+                        0xfd		####### #  
+                        0x06		#     ##   
+                        0x01		#       #  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0x01		#       #  
+                        0xfe		########   
+                        0x0b		#    # ##  
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x00		#          
+                        0xfe		########   
+                        0x0a		#    # #   
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          
+                        0x0b		#    # ##  
+                        0x00		#          

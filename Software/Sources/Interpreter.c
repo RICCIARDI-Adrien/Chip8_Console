@@ -161,6 +161,8 @@ static unsigned char Interpreter_Is_Display_Wrapping_Enabled;
 static unsigned char Interpreter_Is_Memory_Load_Store_Increment_Enabled;
 /** Tell whether the game requires the shift instructions to ignore the Vy register. */
 static unsigned char Interpreter_Is_Shift_Using_Vy_Enabled;
+/** Add some milliseconds of delay to the DRAW instruction. This is active only when the fast rendering mode is enabled. */
+static unsigned char Interpreter_Rendering_Delay;
 
 //-------------------------------------------------------------------------------------------------
 // Private functions
@@ -279,6 +281,15 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Shift
 	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "ShiftUsingVy", &Result) == 0) Interpreter_Is_Shift_Using_Vy_Enabled = Result;
 	else Interpreter_Is_Shift_Using_Vy_Enabled = 0;
+	// Rendering delay (in milliseconds)
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "RenderingDelay", &Result) == 0)
+	{
+		Interpreter_Rendering_Delay = Result;
+
+		// The delay is done in the fast rendering code, so enable this feature
+		Interpreter_Is_Fast_Rendering_Enabled = 1;
+	}
+	else Interpreter_Rendering_Delay = 0;
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -1311,6 +1322,9 @@ Next_Instruction:
 
 			Is_Rendering_Needed = 0;
 			NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
+
+			// Wait the configured delay (if any)
+			for (unsigned char i = 0; i < Interpreter_Rendering_Delay; i++) __delay_ms(1);
 		}
 
 		continue; // Useless here but the compiler does not accept a label followed by no code

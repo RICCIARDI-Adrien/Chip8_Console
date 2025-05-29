@@ -216,7 +216,6 @@ static TKeyboardKey MainDisplayMainMenu(void)
  */
 static unsigned char MainMountSDCard(void)
 {
-	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT], *Pointer_Partitions_Data;
 	unsigned char i, Is_Message_Displayed;
 	TSDCardDetectionStatus Card_Detection_Status;
@@ -255,7 +254,7 @@ Detect_SD_Card:
 	}
 
 	// The first SD card block contains the MBR, get it
-	if (SDCardReadBlock(0, Buffer) != 0)
+	if (SDCardReadBlock(0, Shared_Buffers.Buffer) != 0)
 	{
 		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.");
@@ -265,7 +264,7 @@ Detect_SD_Card:
 	}
 
 	// Find the first valid primary partitions (do not care about the partition type, as it does not reflect the real file system the partition is formatted with)
-	MBRParsePrimaryPartitions(Buffer, Partitions_Data);
+	MBRParsePrimaryPartitions(Shared_Buffers.Buffer, Partitions_Data);
 	for (i = 0; i < MBR_PRIMARY_PARTITIONS_COUNT; i++)
 	{
 		// Cache the partition data access

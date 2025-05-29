@@ -280,7 +280,7 @@ Detect_SD_Card:
 		}
 
 		// Try to mount the file system as the partition is not empty
-		if (FATMount(Pointer_Partitions_Data) != 0)
+		if (FATMount(Pointer_Partitions_Data, Shared_Buffers.Buffer) != 0)
 		{
 			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.", i + 1);
 			continue;

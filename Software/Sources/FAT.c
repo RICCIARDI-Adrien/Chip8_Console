@@ -226,20 +226,19 @@ static void FATConvertFileNameToString(unsigned char *Pointer_Buffer_Name, unsig
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
-unsigned char FATMount(TMBRPartitionData *Pointer_Partition)
+unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Temporary_Buffer)
 {
-	static unsigned char Buffer[SD_CARD_BLOCK_SIZE];
 	TFATBootSector *Pointer_Boot_Sector;
 
 	// Retrieve the boot sector
-	if (SDCardReadBlock(Pointer_Partition->Start_Sector, Buffer) != 0)
+	if (SDCardReadBlock(Pointer_Partition->Start_Sector, Pointer_Temporary_Buffer) != 0)
 	{
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the boot sector (sector LBA address is 0x%08lX).", Pointer_Partition->Start_Sector);
 		return 1;
 	}
 
 	// Make sure this is a valid FAT partition (assume for now this is a FAT32 partition)
-	Pointer_Boot_Sector = (TFATBootSector *) Buffer;
+	Pointer_Boot_Sector = (TFATBootSector *) Pointer_Temporary_Buffer;
 	if (Pointer_Boot_Sector->Signature_Word != 0xAA55)
 	{
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Bad signature word, this is not a FAT partition.");

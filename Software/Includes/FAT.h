@@ -30,10 +30,11 @@ typedef struct
 //-------------------------------------------------------------------------------------------------
 /** Parse the provided partition to find and mount a FAT file system (if any).
  * @param Pointer_Partition The partition to mount.
+ * @param Pointer_Temporary_Buffer The buffer used internally to load sectors. It must have room for SD_CARD_BLOCK_SIZE bytes.
  * @return 0 if the file system was successfully mounted,
  * @return 1 if an error occurred.
  */
-unsigned char FATMount(TMBRPartitionData *Pointer_Partition);
+unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Temporary_Buffer);
 
 /** Configure a file and directories listing operation.
  * @param Pointer_String_Absolute_Path The absolute path of the directory to list. Directories separator character is '/'.

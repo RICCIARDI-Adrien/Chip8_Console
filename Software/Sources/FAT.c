@@ -11,10 +11,12 @@
 // Private constants
 //-------------------------------------------------------------------------------------------------
 /** Set to 1 to enable the log messages, set to 0 to disable them. */
-#define FAT_IS_LOGGING_ENABLED 0
+#define FAT_IS_LOGGING_ENABLED 1
 
 /** How many FAT directories are stored in a sector. The FAT specification tells that a FAT directory can't cross a sector boundary. */
 #define FAT_DIRECTORY_ENTRIES_PER_SECTOR (SD_CARD_BLOCK_SIZE / sizeof(TFATDirectory))
+/** The amount of FAT entries stored into one sector. Only FAT32 is currently supported, so each entry is 4-byte long. */
+#define FAT_ENTRIES_PER_SECTOR (SD_CARD_BLOCK_SIZE / 4)
 
 /** All FAT file attributes. */
 #define FAT_FILE_ATTRIBUTE_READ_ONLY 0x01
@@ -24,6 +26,9 @@
 #define FAT_FILE_ATTRIBUTE_DIRECTORY 0x10
 #define FAT_FILE_ATTRIBUTE_ARCHIVE 0x20
 #define FAT_FILE_ATTRIBUTE_LONG_FILE_NAME (FAT_FILE_ATTRIBUTE_READ_ONLY | FAT_FILE_ATTRIBUTE_HIDDEN | FAT_FILE_ATTRIBUTE_SYSTEM | FAT_FILE_ATTRIBUTE_VOLUME_ID)
+
+/** The end of file seems to not be really standard, it can be anything from 0xXFFFFFF8 to 0xXFFFFFFF. */
+#define FAT_ENTRY_VALUE_END_OF_FILE 0x0FFFFFF8
 
 //-------------------------------------------------------------------------------------------------
 // Private types
@@ -90,10 +95,10 @@ typedef struct
 	unsigned char Cluster_Size_Sectors; // Maximum value told in the spec (BPB_SecPerClus) is 128, leading to 65536 for 512-byte sectors
 	unsigned long Total_Sectors_Count;
 	unsigned long First_FAT_Sector;
+	unsigned long FAT_Sectors_Count; //!< The total amount of sectors for the first FAT area instance.
 	unsigned long First_Cluster_Sector; //!< The LBA sector address of the first cluster of the volume.
 	unsigned long First_Root_Directory_Sector;
 	unsigned long First_Root_Directory_Cluster;
-	unsigned long First_Data_Area_Sector;
 } TFATInformation;
 
 /** A FAT Directory Structure. */
@@ -223,6 +228,50 @@ static void FATConvertFileNameToString(unsigned char *Pointer_Buffer_Name, unsig
 	*Pointer_String = 0;
 }
 
+/** Parse the first FAT area to find the next cluster in the chain.
+ * @param Current_Cluster The cluster to search the next from.
+ * @param Pointer_Temporary_Buffer A buffer that must have room for SD_CARD_BLOCK_SIZE bytes. Its data can be overwritten when the function returns.
+ * @param Pointer_Next_Cluster On output, contain the value of the next cluster in the searched chain.
+ * @return 0 on success,
+ * @return 1 if an error occurred.
+ */
+static unsigned char FATFindNextCluster(unsigned long Current_Cluster, void *Pointer_Temporary_Buffer, unsigned long *Pointer_Next_Cluster)
+{
+	unsigned long Sector_Address, *Pointer_FAT;
+	unsigned short Entry_Index;
+
+	// Make sure that the current cluster is valid (the code checking for the higher boundary comes later)
+	if (Current_Cluster < FAT_Information.First_Root_Directory_Cluster) return 1;
+
+	// Find the sector in FAT containing the current cluster
+	Sector_Address = Current_Cluster / FAT_ENTRIES_PER_SECTOR; // Find the sector in which the FAT entry is stored
+	Entry_Index = Current_Cluster % FAT_ENTRIES_PER_SECTOR; // The destination variable size is big enough to accommodate FAT16 if needed one day
+	Sector_Address += FAT_Information.First_FAT_Sector;
+	SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The current cluster %lu is stored in the sector %lu of the FAT, the entry is at the index %u.", Current_Cluster, Sector_Address, Entry_Index);
+
+	// Make sure that the sector is located in the first FAT area (the potential other FAT copies are not taken into account for now)
+	if (Sector_Address >= (FAT_Information.First_FAT_Sector + FAT_Information.FAT_Sectors_Count))
+	{
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : the sector %lu is outside of the first FAT area.", Sector_Address);
+		return 1;
+	}
+
+	// Retrieve the content of the sector containing the current cluster
+	if (SDCardReadBlock(Sector_Address, Pointer_Temporary_Buffer) != 0)
+	{
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : failed to read the sector %lu.", Sector_Address);
+		return 1;
+	}
+
+	// Find the next cluster
+	Pointer_FAT = Pointer_Temporary_Buffer;
+	// Get the next cluster entry index in the sector (as only the appropriate sector is loaded (to save space) and not the entire cluster, no need to divide by the cluster size, but use the sector size instead)
+	*Pointer_Next_Cluster = Pointer_FAT[Entry_Index];
+	SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Next cluster is %lu (0x%08lX).", *Pointer_Next_Cluster, *Pointer_Next_Cluster);
+
+	return 0;
+}
+
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
@@ -248,6 +297,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Tempo
 	// Cache some relevant values
 	FAT_Information.Cluster_Size_Sectors = Pointer_Boot_Sector->Sectors_Per_Cluster_Count;
 	FAT_Information.First_FAT_Sector = Pointer_Partition->Start_Sector + Pointer_Boot_Sector->Reserved_Sectors_Count; // Start from the beginning of the partition
+	FAT_Information.FAT_Sectors_Count = Pointer_Boot_Sector->Extended_BPB.FAT_32.FAT_Sectors_Count;
 	FAT_Information.First_Cluster_Sector = FAT_Information.First_FAT_Sector + (Pointer_Boot_Sector->Extended_BPB.FAT_32.FAT_Sectors_Count * Pointer_Boot_Sector->FATs_Count); // The first cluster is located after the various copies of the FAT
 	FAT_Information.First_Root_Directory_Sector = FAT_Information.First_Cluster_Sector + ((Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster - 2) * FAT_Information.Cluster_Size_Sectors); // Subtract 2 because the clusters count start at 2
 	FAT_Information.First_Root_Directory_Cluster = Pointer_Boot_Sector->Extended_BPB.FAT_32.Root_Directory_First_Cluster;
@@ -264,7 +314,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Tempo
 		// Bytes per sector count
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Bytes per sector count : %u.", Pointer_Boot_Sector->Bytes_Per_Sector_Count);
 		// Sectors per cluster count
-		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Sectors per cluster count : %u.", Pointer_Boot_Sector->Sectors_Per_Cluster_Count);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Sectors per cluster count : %u (%u bytes).", Pointer_Boot_Sector->Sectors_Per_Cluster_Count, Pointer_Boot_Sector->Sectors_Per_Cluster_Count * Pointer_Boot_Sector->Bytes_Per_Sector_Count);
 		// FATs count
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "FATs count : %u.", Pointer_Boot_Sector->FATs_Count);
 		// Old total sectors count
@@ -300,6 +350,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Tempo
 		// Cached values
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached cluster size in sectors : %u.", FAT_Information.Cluster_Size_Sectors);
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first FAT sector : %lu.", FAT_Information.First_FAT_Sector);
+		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached FAT sectors count : %lu.", FAT_Information.FAT_Sectors_Count);
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first cluster sector : %lu.", FAT_Information.First_Cluster_Sector);
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first root directory sector : %lu.", FAT_Information.First_Root_Directory_Sector);
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Cached first root directory cluster : %lu.", FAT_Information.First_Root_Directory_Cluster);
@@ -329,7 +380,7 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 	static TFATDirectory FAT_Directories[FAT_DIRECTORY_ENTRIES_PER_SECTOR]; // This buffer has the size of a sector
 	static unsigned char Current_Directory_Entry_Index_In_Sector;
 	TFATDirectory *Pointer_FAT_Directory;
-	unsigned char Result;
+	unsigned char Result, *Pointer_Buffer_Sector = (unsigned char *) FAT_Directories; // Recycle the FAT_Directories buffer storage area, both buffers are never used at the same time
 
 	// Parse all directory entries until a valid one is found or the last one is reached
 	while (1)
@@ -351,11 +402,23 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 				}
 				if (Result == 1) // Is the cluster fully read ?
 				{
-					// TEST
-					return 1; // Was this the last cluster in the chain ?
+					// Search for the next directory cluster in the FAT
+					if (FATFindNextCluster(FAT_List_File_Current_Cluster_Number, Pointer_Buffer_Sector, &FAT_List_File_Current_Cluster_Number) != 0)
+					{
+						SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to find the next FAT cluster.");
+						return 2;
+					}
 
-					// TODO search for the next directory cluster in the FAT
+					// Was this the last cluster in the chain ?
+					if ((FAT_List_File_Current_Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE) // The end-of-file marker is a bit tricky, see the FAT_ENTRY_VALUE_END_OF_FILE documentation
+					{
+						SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The last directory entry cluster has been reached, stopping the search.");
+						return 1;
+					}
+
+					// Load the new cluster on next loop
 					FAT_List_File_State = FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER;
+					continue;
 				}
 				// When a sector has been read, its directory entries must be parsed
 				Current_Directory_Entry_Index_In_Sector = 0;

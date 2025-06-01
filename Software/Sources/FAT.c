@@ -124,6 +124,7 @@ typedef enum
 	FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER,
 	FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR,
 	FAT_LIST_FILE_STATE_PARSE_DIRECTORY_ENTRIES,
+	FAT_LIST_FILE_STATE_FIND_NEXT_CLUSTER_NUMBER
 } TFATListFileState;
 
 //-------------------------------------------------------------------------------------------------
@@ -158,23 +159,25 @@ static void FATConfigureClusterReading(unsigned long Cluster_Number)
  * @param Pointer_Buffer On output, will contain the content of the next sector of the cluster to read.
  * @return 0 if the current cluster sector has been read successfully and the cluster contains more sectors to read,
  * @return 1 if the current cluster sector has been read successfully and it was the last sector of the cluster,
- * @return 2 if an error occurred.
+ * @return 2 if the last cluster sector was already read, so no more data has been fetched,
+ * @return 3 if an error occurred.
  */
 static unsigned char FATReadClusterAsSectors(void *Pointer_Buffer)
 {
-	// Stop reading when the full cluster has been read
-	if (FAT_Read_Cluster_Remaining_Sectors_Count == 0) return 1;
+	// Do not read anything if the the full cluster has been already read
+	if (FAT_Read_Cluster_Remaining_Sectors_Count == 0) return 2;
 
 	// Read the next cluster's sector from the SD card
 	if (SDCardReadBlock(FAT_Read_Cluster_Current_Sector_Address, Pointer_Buffer) != 0)
 	{
 		SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
-		return 2;
+		return 3;
 	}
 
 	// Prepare for next call
-	FAT_Read_Cluster_Current_Sector_Address++;
 	FAT_Read_Cluster_Remaining_Sectors_Count--;
+	if (FAT_Read_Cluster_Remaining_Sectors_Count == 0) return 1; // Stop reading when that was the last sector of the cluster
+	FAT_Read_Cluster_Current_Sector_Address++;
 
 	// Cluster reading is not finished yet
 	return 0;
@@ -247,7 +250,7 @@ static unsigned char FATFindNextCluster(unsigned long Current_Cluster, void *Poi
 	Sector_Address = Current_Cluster / FAT_ENTRIES_PER_SECTOR; // Find the sector in which the FAT entry is stored
 	Entry_Index = Current_Cluster % FAT_ENTRIES_PER_SECTOR; // The destination variable size is big enough to accommodate FAT16 if needed one day
 	Sector_Address += FAT_Information.First_FAT_Sector;
-	SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The current cluster %lu is stored in the sector %lu of the FAT, the entry is at the index %u.", Current_Cluster, Sector_Address, Entry_Index);
+	SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The current cluster %lu is stored in the sector %lu of the FAT, the entry is at the index %u of the beginning of the sector.", Current_Cluster, Sector_Address, Entry_Index);
 
 	// Make sure that the sector is located in the first FAT area (the potential other FAT copies are not taken into account for now)
 	if (Sector_Address >= (FAT_Information.First_FAT_Sector + FAT_Information.FAT_Sectors_Count))
@@ -378,7 +381,7 @@ unsigned char FATListStart(char *Pointer_String_Absolute_Path)
 unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 {
 	static TFATDirectory FAT_Directories[FAT_DIRECTORY_ENTRIES_PER_SECTOR]; // This buffer has the size of a sector
-	static unsigned char Current_Directory_Entry_Index_In_Sector;
+	static unsigned char Current_Directory_Entry_Index_In_Sector, Is_Cluster_Fully_Read;
 	TFATDirectory *Pointer_FAT_Directory;
 	unsigned char Result, *Pointer_Buffer_Sector = (unsigned char *) FAT_Directories; // Recycle the FAT_Directories buffer storage area, both buffers are never used at the same time
 
@@ -390,36 +393,19 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 			case FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER:
 				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Entering FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER state.");
 				FATConfigureClusterReading(FAT_List_File_Current_Cluster_Number);
+				Is_Cluster_Fully_Read = 0;
 				// When a cluster has been configured, its first sector must be read
 
 			case FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR:
 				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Entering FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR state.");
 				Result = FATReadClusterAsSectors(FAT_Directories);
-				if (Result == 2) // Did an error occur ?
+				if (Result >= 2) // Did an error occur ?
 				{
 					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : could not read the SD card.");
 					return 2;
 				}
-				if (Result == 1) // Is the cluster fully read ?
-				{
-					// Search for the next directory cluster in the FAT
-					if (FATFindNextCluster(FAT_List_File_Current_Cluster_Number, Pointer_Buffer_Sector, &FAT_List_File_Current_Cluster_Number) != 0)
-					{
-						SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to find the next FAT cluster.");
-						return 2;
-					}
+				if (Result == 1) Is_Cluster_Fully_Read = 1; // Tell the state machine to look for the next cluster after parsing this one
 
-					// Was this the last cluster in the chain ?
-					if ((FAT_List_File_Current_Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE) // The end-of-file marker is a bit tricky, see the FAT_ENTRY_VALUE_END_OF_FILE documentation
-					{
-						SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The last directory entry cluster has been reached, stopping the search.");
-						return 1;
-					}
-
-					// Load the new cluster on next loop
-					FAT_List_File_State = FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER;
-					continue;
-				}
 				// When a sector has been read, its directory entries must be parsed
 				Current_Directory_Entry_Index_In_Sector = 0;
 				FAT_List_File_State = FAT_LIST_FILE_STATE_PARSE_DIRECTORY_ENTRIES;
@@ -431,7 +417,12 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 
 				// Have all directory entries of this sector been read ?
 				Current_Directory_Entry_Index_In_Sector++;
-				if (Current_Directory_Entry_Index_In_Sector == FAT_DIRECTORY_ENTRIES_PER_SECTOR) FAT_List_File_State = FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR;
+				if (Current_Directory_Entry_Index_In_Sector == FAT_DIRECTORY_ENTRIES_PER_SECTOR)
+				{
+					// Switch to the next directory entries cluster if the current one has been fully analyzed
+					if (Is_Cluster_Fully_Read) FAT_List_File_State = FAT_LIST_FILE_STATE_FIND_NEXT_CLUSTER_NUMBER;
+					else FAT_List_File_State = FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR;
+				}
 
 				// Is this a valid file or directory entry ?
 				Result = Pointer_FAT_Directory->Attributes; // Recycle the Result variable to cache the value
@@ -467,6 +458,27 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 				Pointer_File_Information->First_Cluster_Number = ((unsigned long) Pointer_FAT_Directory->First_Cluster_High << 16) | Pointer_FAT_Directory->First_Cluster_Low;
 
 				return 0;
+
+			case FAT_LIST_FILE_STATE_FIND_NEXT_CLUSTER_NUMBER:
+				SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Entering FAT_LIST_FILE_STATE_FIND_NEXT_CLUSTER_NUMBER state.");
+
+				// Search for the next directory cluster in the FAT
+				if (FATFindNextCluster(FAT_List_File_Current_Cluster_Number, Pointer_Buffer_Sector, &FAT_List_File_Current_Cluster_Number) != 0)
+				{
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Failed to find the next FAT cluster.");
+					return 2;
+				}
+
+				// Was this the last cluster in the chain ?
+				if ((FAT_List_File_Current_Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE) // The end-of-file marker is a bit tricky, see the FAT_ENTRY_VALUE_END_OF_FILE documentation
+				{
+					SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The last directory entry cluster has been reached, stopping the search.");
+					return 1;
+				}
+
+				// Load the new cluster on next loop
+				FAT_List_File_State = FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER;
+				continue;
 		}
 	}
 

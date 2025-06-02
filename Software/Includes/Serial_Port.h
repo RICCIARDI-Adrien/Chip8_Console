@@ -38,7 +38,7 @@ unsigned char SerialPortReadByte(void);
 void SerialPortWriteByte(unsigned char Data);
 
 /** Send an ASCIIZ string through the serial port.
- * @param String The string to send.
+ * @param Pointer_String The string to send.
  */
 void SerialPortWriteString(const char *Pointer_String);
 

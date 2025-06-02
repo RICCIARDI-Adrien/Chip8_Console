@@ -22,14 +22,14 @@ void InterpreterInitialize(void);
 
 /** Load a ROM file from the SD card and prepare the Chip-8 virtual machine.
  * @param Pointer_String_Game_INI_Section The configuration file INI section containing the game information.
- * @return 1 if an error occurred,
- * @return 0 on success.
+ * @return 0 on success,
+ * @return 1 if an error occurred.
  */
 unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Section);
 
 /** Run the Chip-8 program until completion or the user presses the Menu key.
- * @return 1 if an error occurred,
- * @return 0 on success.
+ * @return 0 on success,
+ * @return 1 if an error occurred.
  */
 unsigned char InterpreterRunProgram(void);
 

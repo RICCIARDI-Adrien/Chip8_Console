@@ -30,7 +30,7 @@ typedef struct
 //-------------------------------------------------------------------------------------------------
 /** Retrieve the valid primary partitions from the MBR partition table.
  * @param Pointer_MBR_Sector The raw MBR sector, as read from the medium. It must be of MBR_SIZE bytes.
- * @param Pointer_Partitions On output, fill an array of MBR_PRIMARY_PARTITIONS_COUNT partitions with the extracted partitions data.
+ * @param Partitions_Data On output, fill an array of MBR_PRIMARY_PARTITIONS_COUNT partitions with the extracted partitions data.
  */
 void MBRParsePrimaryPartitions(void *Pointer_MBR_Sector, TMBRPartitionData Partitions_Data[MBR_PRIMARY_PARTITIONS_COUNT]);
 

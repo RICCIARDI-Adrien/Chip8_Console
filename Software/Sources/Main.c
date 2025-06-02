@@ -302,8 +302,8 @@ Detect_SD_Card:
 
 /** Retrieve the games configuration file from the SD card.
  * @param Pointer_Size On output, contain the size of the configuration file in bytes.
- * @return 1 if an error occurred,
- * @return 0 when a valid configuration file has been found and loaded.
+ * @return 0 when a valid configuration file has been found and loaded,
+ * @return 1 if an error occurred.
  */
 static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 {

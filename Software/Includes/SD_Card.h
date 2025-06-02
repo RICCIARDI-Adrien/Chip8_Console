@@ -31,16 +31,16 @@ typedef enum
 void SDCardInitialize(void);
 
 /** Switch the SD card to SPI mode and configure it for operation.
- * @return 1 if no SD card was found or if the SD card was not successfully initialized,
- * @return 0 if the SD card is successfully initialized and ready for operations.
+ * @return 0 if the SD card is successfully initialized and ready for operations,
+ * @return 1 if no SD card was found or if the SD card was not successfully initialized.
  */
 unsigned char SDCardProbe(void);
 
 /** Read a 512-byte block from the SD card.
  * @param Block_Address The logical block address.
  * @param Pointer_Buffer On output, contain the read data. Make sure the buffer has room for SD_CARD_BLOCK_SIZE bytes.
- * @return 1 if an error occurred,
- * @return 0 on success.
+ * @return 0 on success,
+ * @return 1 if an error occurred.
  */
 unsigned char SDCardReadBlock(unsigned long Block_Address, unsigned char *Pointer_Buffer);
 

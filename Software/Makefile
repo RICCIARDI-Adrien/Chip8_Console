@@ -54,3 +54,6 @@ flash:
 
 cppcheck:
 	cppcheck -I $(PATH_INCLUDES) --platform=pic8-enhanced --check-level=exhaustive $(PATH_SOURCES)
+
+doxygen:
+	doxygen Doxyfile

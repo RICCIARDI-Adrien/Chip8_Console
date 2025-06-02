@@ -10,10 +10,14 @@
 //-------------------------------------------------------------------------------------------------
 // Constants and macros
 //-------------------------------------------------------------------------------------------------
+/** Assert the chip select line of the display. */
 #define SPI_SELECT_DISPLAY() LATCbits.LATC1 = 0
+/** De-assert the chip select line of the display. */
 #define SPI_DESELECT_DISPLAY() LATCbits.LATC1 = 1
 
+/** Assert the chip select line of the SD card. */
 #define SPI_SELECT_SD_CARD() LATCbits.LATC0 = 0
+/** De-assert the chip select line of the SD card. */
 #define SPI_DESELECT_SD_CARD() LATCbits.LATC0 = 1
 
 //-------------------------------------------------------------------------------------------------

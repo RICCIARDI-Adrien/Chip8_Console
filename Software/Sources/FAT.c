@@ -18,13 +18,20 @@
 /** The amount of FAT entries stored into one sector. Only FAT32 is currently supported, so each entry is 4-byte long. */
 #define FAT_ENTRIES_PER_SECTOR (SD_CARD_BLOCK_SIZE / 4)
 
-/** All FAT file attributes. */
+// All FAT file attributes
+/** The file can't be written. */
 #define FAT_FILE_ATTRIBUTE_READ_ONLY 0x01
+/** The file or directory is not shown by default. */
 #define FAT_FILE_ATTRIBUTE_HIDDEN 0x02
+/** The file or directory is part of the operating system. */
 #define FAT_FILE_ATTRIBUTE_SYSTEM 0x04
+/** A special entry representing the volume label. */
 #define FAT_FILE_ATTRIBUTE_VOLUME_ID 0x08
+/** The entry is a directory and not a file. */
 #define FAT_FILE_ATTRIBUTE_DIRECTORY 0x10
+/** Used by the backup utilities to detect whether a file or directory has been modified since the last time it has been archived. */
 #define FAT_FILE_ATTRIBUTE_ARCHIVE 0x20
+/** The entry stores a piece of the long name of a file or directory. */
 #define FAT_FILE_ATTRIBUTE_LONG_FILE_NAME (FAT_FILE_ATTRIBUTE_READ_ONLY | FAT_FILE_ATTRIBUTE_HIDDEN | FAT_FILE_ATTRIBUTE_SYSTEM | FAT_FILE_ATTRIBUTE_VOLUME_ID)
 
 /** The end of file seems to not be really standard, it can be anything from 0xXFFFFFF8 to 0xXFFFFFFF. */

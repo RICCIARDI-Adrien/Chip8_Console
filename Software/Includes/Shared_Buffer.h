@@ -14,9 +14,13 @@
 /** Reuse the memory space for features that do not require the memory at the same time. */
 typedef union
 {
+	/** The Chip-8 / SuperChip-8 interpreter memory storing the loaded program. */
 	unsigned char Interpreter_Memory[INTERPRETER_MEMORY_SIZE];
+	/** The INI configuration loaded from the SD card. */
 	char Configuration_File[INTERPRETER_MEMORY_SIZE];
+	/** A temporary string with plenty of room. */
 	char String_Temporary[INTERPRETER_MEMORY_SIZE];
+	/** A temporary buffer with plenty of room. */
 	unsigned char Buffer[INTERPRETER_MEMORY_SIZE];
 } TSharedBuffers;
 

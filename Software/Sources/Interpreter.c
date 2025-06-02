@@ -32,10 +32,14 @@
 /** The Chip-8 default program entry point. */
 #define INTERPRETER_PROGRAM_ENTRY_POINT 0x200
 
+/** The width of the display in pixels for the Chip-8 mode. */
 #define INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8 64
+/** The height of the display in pixels for the Chip-8 mode. */
 #define INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8 32
 
+/** The width of the display in pixels for the SuperChip-8 mode. */
 #define INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8 128
+/** The height of the display in pixels for the SuperChip-8 mode. */
 #define INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8 64
 
 /** The total amount of keys supported by Chip-8. */

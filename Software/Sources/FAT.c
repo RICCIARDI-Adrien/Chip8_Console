@@ -494,6 +494,7 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 
 unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size)
 {
+	static unsigned char Buffer_FAT_Sector[SD_CARD_BLOCK_SIZE];
 	unsigned long Cluster_Number;
 	unsigned char *Pointer_Destination_Buffer_Bytes, Result;
 
@@ -515,8 +516,33 @@ unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *P
 			Destination_Buffer_Size -= SD_CARD_BLOCK_SIZE;
 		} while ((Result == 0) && (Destination_Buffer_Size > 0));
 
-		// TODO call function to find the next cluster
-		break; // TEST
+		// Stop if the destination buffer has been fully filled
+		if (Destination_Buffer_Size == 0)
+		{
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The destination buffer is entirely filled, ending reading the file.");
+			break;
+		}
+
+		// Stop here if the destination buffer is not full, but has not enough room for a full sector (reading a new sector would overflow the buffer)
+		if (Destination_Buffer_Size < SD_CARD_BLOCK_SIZE)
+		{
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : the remaining buffer size (%lu) is too small to fit a whole sector (%u).", Destination_Buffer_Size, SD_CARD_BLOCK_SIZE);
+			return 2;
+		}
+
+		// Retrieve the following cluster
+		if (FATFindNextCluster(Cluster_Number, Buffer_FAT_Sector, &Cluster_Number) != 0)
+		{
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "Error : failed to find the next FAT cluster.");
+			return 1;
+		}
+
+		// Was this the last cluster in the chain ?
+		if ((Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE)
+		{
+			SERIAL_PORT_LOG(FAT_IS_LOGGING_ENABLED, "The last cluster of the file has been loaded, ending reading the file.");
+			break;
+		}
 	}
 
 	return 0;

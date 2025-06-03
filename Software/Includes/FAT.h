@@ -55,9 +55,10 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information);
  * @param Pointer_File_Information The file to load.
  * @param Pointer_Destination_Buffer On output, will contain the file content.
  * @param Bytes_Count How may bytes of the file to store in memory. TODO
- * @param Destination_Buffer_Size The size in bytes of the buffer in which to store the read data. It must be a multiple of the size of a cluster (512 bytes).
+ * @param Destination_Buffer_Size The size in bytes of the buffer in which to store the read data. It must be a multiple of the size of a sector (512 bytes).
  * @return 0 on success,
- * @return 1 if an error occurred.
+ * @return 1 if an error occurred,
+ * @return 2 if the destination buffer size is not a multiple of a sector size.
  */
 unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size);
 

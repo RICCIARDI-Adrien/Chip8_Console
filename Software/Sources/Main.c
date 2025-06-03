@@ -55,6 +55,13 @@
 /** How many measures to compute the average on. */
 #define MAIN_BATTERY_SAMPLES_COUNT 8
 
+/** Automatically append the "-DEBUG" prefix to the firmware version displayed into the Information menu if the firmware has been built with the debug mode, otherwise do not alter the firmware version. */
+#ifdef SERIAL_PORT_ENABLE_LOGGING
+	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "-DEBUG"
+#else
+	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX
+#endif
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -685,7 +692,7 @@ void main(void)
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_C)
 		{
-			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nMenu : back.");
+			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nMenu : back.");
 
 			// Wait for the 'back' key to be pressed
 			KeyboardWaitForKeys(KEYBOARD_KEY_MENU);

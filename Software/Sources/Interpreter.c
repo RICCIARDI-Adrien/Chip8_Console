@@ -165,6 +165,8 @@ static unsigned char Interpreter_Is_Display_Wrapping_Enabled;
 static unsigned char Interpreter_Is_Memory_Load_Store_Increment_Enabled;
 /** Tell whether the game requires the shift instructions to ignore the Vy register. */
 static unsigned char Interpreter_Is_Shift_Using_Vy_Enabled;
+/** Tell whether the game requires the VF register being reset when executing the AND, OR and XOR instructions. */
+static unsigned char Interpreter_Is_VF_Reset_Enabled;
 /** Add some milliseconds of delay to the DRAW instruction. This is active only when the fast rendering mode is enabled. */
 static unsigned char Interpreter_Rendering_Delay;
 
@@ -285,6 +287,9 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Shift
 	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "ShiftUsingVy", &Result) == 0) Interpreter_Is_Shift_Using_Vy_Enabled = Result;
 	else Interpreter_Is_Shift_Using_Vy_Enabled = 0;
+	// VF reset
+	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "ResetVF", &Result) == 0) Interpreter_Is_VF_Reset_Enabled = Result;
+	else Interpreter_Is_VF_Reset_Enabled = 0;
 	// Rendering delay (in milliseconds)
 	if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, "RenderingDelay", &Result) == 0)
 	{
@@ -653,6 +658,9 @@ unsigned char InterpreterRunProgram(void)
 
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "OR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] |= Interpreter_Registers_V[Register_Index_2];
+
+						// Apply the reset VF quirk if enabled
+						if (Interpreter_Is_VF_Reset_Enabled) Interpreter_Registers_V[15] = 0;
 						break;
 					}
 
@@ -667,6 +675,9 @@ unsigned char InterpreterRunProgram(void)
 
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "AND V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] &= Interpreter_Registers_V[Register_Index_2];
+
+						// Apply the reset VF quirk if enabled
+						if (Interpreter_Is_VF_Reset_Enabled) Interpreter_Registers_V[15] = 0;
 						break;
 					}
 
@@ -681,6 +692,9 @@ unsigned char InterpreterRunProgram(void)
 
 						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "XOR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] ^= Interpreter_Registers_V[Register_Index_2];
+
+						// Apply the reset VF quirk if enabled
+						if (Interpreter_Is_VF_Reset_Enabled) Interpreter_Registers_V[15] = 0;
 						break;
 					}
 

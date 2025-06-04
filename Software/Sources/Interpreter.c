@@ -434,6 +434,48 @@ unsigned char InterpreterRunProgram(void)
 		{
 			case 0x00:
 			{
+				// SCROLL DOWN
+				if ((Instruction_Low_Byte & 0xF0) == 0xC0)
+				{
+					unsigned char Pixels_Amount, Rows_Count, Columns_Count_Byte, *Pointer_Source_Byte, *Pointer_Destination_Byte;
+					unsigned short Bytes_To_Copy_Count;
+
+					// Extract the operands
+					Pixels_Amount = Instruction_Low_Byte & 0x0F;
+
+					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-DOWN %u.", Pixels_Amount);
+
+					// The value 0 seems to be wasted and does nothing
+					if (Pixels_Amount == 0) break;
+
+					// Compute the source and destination addresses of the framebuffer copy operation
+					Columns_Count_Byte = Display_Columns_Count / 8; // Address the bytes directly
+					// Start writing to the display last byte
+					Pointer_Destination_Byte = Shared_Buffer_Display + (Display_Rows_Count * Columns_Count_Byte) - 1;
+					// Start reading from the last byte of the framebuffer area that needs to be copied
+					Pointer_Source_Byte = Pointer_Destination_Byte - (Pixels_Amount * Columns_Count_Byte);
+
+					// Copy the scrolled picture bytes from the last byte to the first, to avoid adjusting the pointer values between each line
+					Rows_Count = Display_Rows_Count - Pixels_Amount;
+					Bytes_To_Copy_Count = Rows_Count * Columns_Count_Byte;
+					while (Bytes_To_Copy_Count > 0)
+					{
+						*Pointer_Destination_Byte = *Pointer_Source_Byte;
+						Pointer_Destination_Byte--;
+						Pointer_Source_Byte--;
+						Bytes_To_Copy_Count--;
+					}
+
+					// Clear the scrolled part of the picture
+					while (Pointer_Destination_Byte != Shared_Buffer_Display)
+					{
+						*Pointer_Destination_Byte = 0;
+						Pointer_Destination_Byte--;
+					}
+
+					break;
+				}
+
 				switch (Instruction_Low_Byte)
 				{
 					// CLS

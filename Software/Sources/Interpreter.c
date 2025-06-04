@@ -459,6 +459,44 @@ unsigned char InterpreterRunProgram(void)
 						Interpreter_Register_PC = Interpreter_Stack[Interpreter_Register_SP];
 						goto Next_Instruction; // Bypass PC incrementation
 
+					// SCROLL RIGHT
+					case 0xFB:
+					{
+						unsigned char Row, Column, Columns_Count_Byte, *Pointer_Byte, Current_Byte, Previous_Byte;
+
+						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-RIGHT.");
+
+						// Cache some values
+						Columns_Count_Byte = Display_Columns_Count / 8; // Address the bytes directly
+						Pointer_Byte = Shared_Buffer_Display + (Display_Rows_Count * Columns_Count_Byte) - 1; // Use a pointer to avoid computing the byte position in the array every time, go to the last byte of the last row
+						Columns_Count_Byte--; // Remove one because the following loop is addressing the previous and current bytes
+
+						// Shift all rows by 4 bits on the right, starting from the frame buffer end so the display pointer only needs to be decremented (this is a simple implementation that is not optimized)
+						for (Row = 0; Row < Display_Rows_Count; Row++)
+						{
+							for (Column = 0; Column < Columns_Count_Byte; Column++)
+							{
+								Current_Byte = *Pointer_Byte;
+								Previous_Byte = *(Pointer_Byte - 1);
+
+								Current_Byte >>= 4;
+								Previous_Byte <<= 4;
+								Current_Byte |= Previous_Byte;
+
+								*Pointer_Byte = Current_Byte;
+								Pointer_Byte--;
+							}
+
+							// Handle the last row byte, which must be only shifted
+							Current_Byte = *Pointer_Byte;
+							Current_Byte >>= 4;
+							*Pointer_Byte = Current_Byte;
+							Pointer_Byte--;
+						}
+
+						break;
+					}
+
 					// SCROLL LEFT
 					case 0xFC:
 					{

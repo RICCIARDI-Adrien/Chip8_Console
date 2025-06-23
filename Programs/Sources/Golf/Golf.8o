@@ -1,0 +1,720 @@
+### Golf
+# buffi
+# Octojam 6
+# http://johnearnest.github.io/Octo/index.html?key=SVUuu3kJ
+###
+
+# Register usage:
+# v0-v6: Free for all
+:alias DIRECTION v7
+:alias BALLTICKS v8
+:alias BALL_VX v9
+:alias BALL_VY va
+:alias CURRENT_LEVEL vb
+:alias NUM_STROKES vc
+# vd unused
+
+:const TMP_SPACE_10 3200
+:const leveldata 3300
+:const levelvectors 3304
+
+##########################################################################################
+############################## Game loop
+##########################################################################################
+
+: main
+	show_title
+	loop
+		if CURRENT_LEVEL == 18 then
+			jump win_game
+		:call load_level
+		:call init_level
+		:call level_splash_screen
+		:call drawlevel	
+		loop
+			:call drawmarker
+			:call wait_for_shot
+			:call drawmarker
+			:call shoot
+			:call move_ball
+			:call check_won
+			if v0 != 0 then
+		again
+		CURRENT_LEVEL += 1
+	again
+
+: win_game
+	won_screen
+	loop again
+
+##########################################################################################
+############################## Utils
+##########################################################################################
+
+:macro input_then A {
+	v0 := A if v0 key then
+}
+
+:macro input_begin A {
+	v0 := A if v0 key begin
+}
+
+:macro negate V {
+	vf := 0
+	V =- vf
+}
+
+: wait_for_delay
+	loop
+		vf := delay
+		if vf != 0 then
+	again
+	;
+
+: wait
+	:call wait_for_delay
+	v1 := 3
+	if BALLTICKS != 0 begin
+		if BALLTICKS < 40 then v1 := 5
+		if BALLTICKS < 20 then v1 := 7
+		if BALLTICKS < 5 then v1 := 9
+	end
+	delay := v1
+	;
+
+##########################################################################################
+############################## Lookup tables
+##########################################################################################
+
+:macro getVelocities DIR SPEED {
+	:calc X { SPEED * cos ( ( DIR / 24.0 ) * 6.28 ) }
+	:calc Y { - SPEED * sin ( ( DIR / 24.0 ) * 6.28 ) }
+	:byte X
+	:byte Y
+}
+
+: velocities
+getVelocities 0 127
+getVelocities 1 127
+getVelocities 2 127
+getVelocities 3 127
+getVelocities 4 127
+getVelocities 5 127
+getVelocities 6 127
+getVelocities 7 127
+getVelocities 8 127
+getVelocities 9 127
+getVelocities 10 127
+getVelocities 11 127
+getVelocities 12 127
+getVelocities 13 127
+getVelocities 14 127
+getVelocities 15 127
+getVelocities 16 127
+getVelocities 17 127
+getVelocities 18 127
+getVelocities 19 127
+getVelocities 20 127
+getVelocities 21 127
+getVelocities 22 127
+getVelocities 23 127
+
+:macro getMarker {
+	v0 <<= DIRECTION
+	i := marker
+	i += v0
+	load v1
+}
+
+: marker
+ 5  0    4 -1    4 -2    3 -3    2 -4    1 -4
+ 0 -5   -1 -4   -2 -4   -3 -3   -4 -2   -4 -1
+-5  0   -4  1   -4  2   -3  3   -2  4   -1  4
+ 0  5    1  4    2  4    3  3    4  2    4  1
+
+ :macro drawstrokes_topleft {
+ 	v3 := 1
+ 	v4 := 1
+ 	drawstrokes
+ }
+
+ :macro drawstrokes_endscreen {
+ 	v3 := 40
+ 	v4 := 18
+ 	drawstrokes
+ }
+
+##########################################################################################
+############################## Level transition
+##########################################################################################
+
+: init_level
+	i := leveldata
+	load v3
+	i := ballxy
+	save v3  # ball and hole
+	;
+
+:macro draw_font CHAR {
+	i := CHAR
+	sprite v0 v1 5
+	v0 += 5
+}
+: won_screen
+	clear
+	v0 := 12
+	v1 := 6
+	draw_font font_y
+	draw_font font_o
+	draw_font font_u
+	v0 += 5
+	draw_font font_w
+	draw_font font_o
+	draw_font font_n
+
+	v0 := 11
+	v1 := 18
+	draw_font font_s
+	draw_font font_c
+	draw_font font_o
+	draw_font font_r
+	draw_font font_e
+	draw_font font_colon
+
+	drawstrokes_endscreen
+	;
+
+:macro draw_title_sprite SPRITE {
+	i := SPRITE
+	sprite v0 v1 15
+	v0 += 8
+}
+: show_title
+	v0 := 6
+	v1 := 9
+	draw_title_sprite text_g_1
+	draw_title_sprite text_g_2
+	draw_title_sprite ball_1
+	draw_title_sprite ball_2
+	draw_title_sprite text_l_1
+	draw_title_sprite text_l_2
+	v0 += -5
+	draw_title_sprite text_f_1
+	draw_title_sprite text_f_2
+
+	loop
+		input_then OCTO_KEY_W ;
+		input_then OCTO_KEY_A ;
+		input_then OCTO_KEY_D ;
+	again
+
+: level_splash_screen
+	clear
+	v3 := 20
+	v4 := 13
+	i := text_ho
+	sprite v3 v4 5
+	i := text_le
+	v3 += 8
+	sprite v3 v4 5
+	v3 += 10
+	
+	v2 := CURRENT_LEVEL
+	v2 += 1
+	i := TMP_SPACE_10
+	bcd v2
+	load v2
+	if CURRENT_LEVEL > 8 begin
+		i := hex v1
+		sprite v3 v4 5
+		v3 += 5
+	end
+	i := hex v2
+	sprite v3 v4 5
+	
+	v0 := 60
+	delay := v0
+	:call wait_for_delay
+    clear
+    ;
+
+##########################################################################################
+############################## Shot logic
+##########################################################################################
+
+: wait_for_shot
+	loop
+		v4 := 0
+		v5 := 0
+		input_then OCTO_KEY_W ;
+		input_then OCTO_KEY_A v4 := 1
+		input_then OCTO_KEY_D v4 := -1
+		if v4 != 0 begin
+			:call drawmarker
+			DIRECTION += v4
+			if DIRECTION == 24 then DIRECTION := 0
+			if DIRECTION == -1 then DIRECTION := 23
+			:call drawmarker
+		end
+		:call wait
+	again
+	;
+
+: shoot
+	i := velocities
+	i += DIRECTION
+	i += DIRECTION
+	load v1
+	BALL_VX := v0
+	BALL_VY := v1
+	BALLTICKS := 60
+	drawstrokes_topleft
+	NUM_STROKES += 1
+	drawstrokes_topleft
+	;
+
+: move_ball
+	loop
+		i := ballxy_subpixel
+		load v1
+		v0 += BALL_VX
+		v1 += BALL_VY
+		v5 := 0 # dx
+		v6 := 0 # dy
+
+		# X movement
+		v0 <<= v0
+		v5 := vf
+		ve <<= BALL_VX
+		vf &= v5
+		ve <<= vf
+		v5 -= ve
+		v0 >>= v0
+
+		# Y movement
+		v1 <<= v1
+		v6 := vf
+		ve <<= BALL_VY
+		vf &= v6
+		ve <<= vf
+		v6 -= ve
+		v1 >>= v1
+
+		i := ballxy_subpixel
+		save v1
+
+		i := ballxy
+		load v1
+		v0 += v5
+		v1 += v6
+
+		# Screen wrapping.
+		if v0 == -1 then v0 := 63
+		if v0 == 64 then v0 := 0
+		if v1 == -1 then v1 := 31
+		if v1 == 32 then v1 := 0
+
+		# Check this position before moving.
+		i := newballxy
+		save v1
+		
+		:call check_collision
+		if v6 == 0 begin
+			:call drawball
+			i := newballxy
+			load v1
+			i := ballxy
+			save v1
+			:call drawball
+		end
+		
+		BALLTICKS += -1
+		if BALLTICKS == 0 then ;
+
+		:call check_won
+		if v0 == 0 then ;
+		
+		:call wait
+  again
+
+: check_collision
+	v4 := v0
+	v5 := v1
+	v6 := 0
+	v3 := 0
+	i := levelvectors
+	:call check_vert
+	:call check_hori
+	:call check_diagup
+	:call check_diagdown
+	;
+
+:macro mirror_x { negate BALL_VX  }
+:macro mirror_y { negate BALL_VY  }
+:macro mirror_xy {
+	ve := BALL_VX
+	BALL_VX := 0
+	BALL_VX -= BALL_VY
+	BALL_VY := 0
+	BALL_VY -= ve
+}
+:macro mirror_yx {
+	vf := BALL_VX
+	BALL_VX := BALL_VY
+	BALL_VY := vf
+}
+
+:macro check_vector DX DY IS_DIAGONAL MIRRORMACRO {
+	loop
+		load v2
+		if v0 == -1 then ;
+		loop
+			if v4 == v0 begin
+				if v5 == v1 begin
+					MIRRORMACRO
+					v6 := 1
+				end
+				ve := IS_DIAGONAL
+				if ve != 0 begin
+				 	# Diagonal extra check
+				 	v1 += ve
+				 	if v5 == v1 begin
+						MIRRORMACRO
+						v6 := 1
+					end
+					v1 -= ve
+				end
+			end
+			v0 += DX
+			v1 += DY
+			v2 += -1
+			if v2 != 0 then
+		again
+	again
+}
+
+: check_vert check_vector 0 1 0 mirror_x
+: check_hori check_vector 1 0 0 mirror_y
+: check_diagup check_vector 1 -1 -1 mirror_xy
+: check_diagdown check_vector 1 1 1 mirror_yx
+
+# v0 == 0 if won
+: check_won
+	i := ballxy
+	load v1
+	v2 := v0
+	v3 := v1
+	i := holexy
+	load v1
+	v2 -= v0
+	v3 -= v1
+	v0 := 0
+	if v2 > 1 then v0 += 1
+	if v3 > 1 then v0 += 1
+	;
+
+##########################################################################################
+############################## DRAW METHODS
+##########################################################################################
+
+:macro draw_sprite_and_return POS SPRITE HEIGHT {
+	i := POS
+	load v1
+	i := SPRITE
+	sprite v0 v1 HEIGHT
+	;
+}
+
+: drawmarker
+	getMarker
+	v2 := v0
+	v3 := v1
+	v2 += -1
+	v3 += -1
+	i := ballxy
+	load v1
+	v0 += v2
+	v1 += v3
+	i := markersprite
+	sprite v0 v1 3
+	;
+
+: drawstrokes
+	i := TMP_SPACE_10
+	bcd NUM_STROKES
+	load v2
+	i := hex v1
+	sprite v3 v4 5
+	v3 += 5
+	i := hex v2
+	sprite v3 v4 5
+	;
+
+: drawball
+	draw_sprite_and_return ballxy pixel 1
+
+: drawhole
+	draw_sprite_and_return holexy hole 2
+
+# INPUT: (v3,v4) = (dx, dy)
+: draw_vectors_internal
+	loop
+		i := levelvectors
+		i += v5
+		load v2
+		v5 += 3
+		if v0 == -1 then ;
+
+		i := pixel
+		loop
+			v2 += -1
+			sprite v0 v1 1
+			if vf != 0 then
+				sprite v0 v1 1
+			if ve != 0 begin
+				v1 += ve
+				if v2 != 0 begin
+					sprite v0 v1 1
+					if vf != 0 then
+							sprite v0 v1 1
+				end
+				v1 -= ve
+			end
+			v0 += v3
+			v1 += v4
+			if v2 != 0 then
+		again
+	again
+
+:macro draw_vectors DX DY IS_DIAGONAL {
+	v3 := DX
+	v4 := DY
+	ve := IS_DIAGONAL
+	:call draw_vectors_internal
+}
+
+: drawlevel
+	:call drawball
+	:call drawhole
+	drawstrokes_topleft
+	v5 := 0
+	draw_vectors 0 1 0   # Vertical lines
+	draw_vectors 1 0 0   # Horizontal lines
+	draw_vectors 1 -1 -1  # Diagonal lines going up
+	draw_vectors 1 1 1   # Diagonal lines going down
+	;
+	
+##########################################################################################
+############################## MUTABLE DATA
+##########################################################################################
+
+: newballxy        -1 -1
+: ballxy_subpixel   0 0
+: ballxy            0 0
+: holexy            0 0
+
+##########################################################################################
+############################## Sprites
+##########################################################################################
+
+: pixel 0x80 0x80
+: markersprite 0x40 0xA0 0x40
+: hole 0xC0 0xC0 
+: text_ho 0xAE 0xAA 0xEA 0xAA 0xAE 
+: text_le 0x8E 0x88 0x8C 0x88 0xEE
+: ball_1
+0x07 0x18 0x22 0x40 0x55 0x80 0xAA 0x80 0xD5 0xC0 0x6A 0x60 0x35 0x1F 0x07
+: ball_2
+0xC0 0x30 0x88 0x04 0x54 0x02 0xAA 0x02 0x52 0x02 0xAC 0x04 0x58 0xF0 0xC0
+: text_g_1
+0x1F 0x7F 0x78 0xE0 0xE0 0xC0 0xC0 0xC0 0xC1 0xC1 0xE1 0x60 0x70 0x7F 0x1F
+: text_g_2
+0xE0 0xFC 0x3C 0x0C 0x0C 0x04 0x00 0x00 0xFC 0x8C 0x8C 0x06 0x06 0xFC 0xF8
+: text_l_1
+0x70 0xE0 0x60 0x60 0x60 0x60 0x60 0x60 0x60 0x60 0x60 0x61 0x61 0x7F 0xFF
+: text_l_2
+0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 0x80 0x00
+: text_f_1
+0xFF 0x7F 0x60 0x60 0x60 0x60 0x62 0x7E 0x7E 0x62 0x60 0x60 0x60 0x60 0xF0
+: text_f_2
+0x80 0xC0 0xE0 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+
+: font_y
+0x88 0x50 0x70 0x20 0x20
+: font_o
+0x30 0x48 0x48 0x48 0x30
+: font_u
+0x48 0x48 0x48 0x48 0x30
+: font_w
+0x88 0x88 0xA8 0xA8 0x50
+: font_n
+0x49 0x69 0x59 0x48 0x49
+: font_s
+0x0C 0x10 0x1C 0x04 0x18
+: font_c
+0x18 0x20 0x20 0x20 0x18
+: font_r
+0x60 0x50 0x60 0x50 0x50
+: font_e
+0xE0 0x80 0xC0 0x80 0xE0 
+: font_colon
+0x00 0x80 0x00 0x80 0x00
+
+##########################################################################################
+############################## STAGE Loader
+##########################################################################################
+
+: load_level
+	v2 := 0
+	loop
+		:call get_level_data
+		i += v2
+		load v0
+		if v0 == -2 then ;
+		i := leveldata
+		i += v2
+		save v0
+		v2 += 1
+	again
+
+: get_level_data
+	v0 <<= CURRENT_LEVEL
+	v0 <<= v0 
+	jump0 level_table
+
+: level_table
+	i := level_0 ;
+	i := level_1 ;
+	i := level_2 ;
+	i := level_3 ;
+	i := level_4 ;
+	i := level_5 ;
+	i := level_6 ;
+	i := level_7 ;
+	i := level_8 ;
+	i := level_9 ;
+	i := level_10 ;
+	i := level_11 ;
+	i := level_12 ;
+	i := level_13 ;
+	i := level_14 ;
+	i := level_15 ;
+	i := level_16 ;
+	i := level_17 ;
+
+##########################################################################################
+############################## STAGE DATA
+##########################################################################################
+
+:macro END_OF_VECTOR { -1 -1 -1 }
+:macro END_OF_LEVEL { -1 -2 }
+:macro EMPTY_LEVEL { END_OF_VECTOR END_OF_VECTOR END_OF_VECTOR END_OF_LEVEL }
+
+: level_0
+11 19 51 7 # Ball and Hole
+4 18 3 38 10 6 62 7 12 END_OF_VECTOR # VERTICAL
+45 3 14 7 15 32 8 24 49 END_OF_VECTOR # HORIZONTAL
+4 18 4 38 10 8 56 24 7 END_OF_VECTOR # DIAGONAL UP
+4 20 5 58 3 5 END_OF_LEVEL # DIAGONAL DOWN
+: level_1
+8 26 52 3 # Ball and Hole
+2 18 12 25 6 7 26 22 8 45 1 6 60 1 8 END_OF_VECTOR # VERTICAL
+45 1 16 25 6 21 32 16 21 2 18 18 2 29 25 END_OF_VECTOR # HORIZONTAL
+19 18 7 26 22 7 52 16 9 END_OF_VECTOR # DIAGONAL UP
+END_OF_LEVEL # DIAGONAL DOWN
+: level_2
+9 9 46 21 # Ball and Hole
+3 7 14 18 7 13 39 15 9 60 10 11 END_OF_VECTOR # VERTICAL
+27 3 27 3 7 16 45 18 8 21 22 5 37 25 19 11 28 24 END_OF_VECTOR # HORIZONTAL
+18 12 10 25 22 4 34 28 6 55 25 6 END_OF_VECTOR # DIAGONAL UP
+3 20 9 18 19 4 53 3 8 END_OF_LEVEL # DIAGONAL DOWN
+: level_3
+43 23 41 9 # Ball and Hole
+3 7 18 57 8 8 58 20 6 END_OF_VECTOR # VERTICAL
+23 2 29 3 7 16 19 14 9 31 18 24 8 29 47 END_OF_VECTOR # HORIZONTAL
+18 7 6 54 18 4 54 29 5 END_OF_VECTOR # DIAGONAL UP
+3 24 6 27 14 5 55 17 4 51 2 7 END_OF_LEVEL # DIAGONAL DOWN
+: level_4
+46 7 15 22 # Ball and Hole
+1 7 18 20 20 6 51 20 5 59 2 11 END_OF_VECTOR # VERTICAL
+38 2 22 1 7 33 11 20 10 13 25 8 7 30 39 END_OF_VECTOR # HORIZONTAL
+33 7 6 51 20 9 45 30 7 END_OF_VECTOR # DIAGONAL UP
+1 24 7 END_OF_LEVEL # DIAGONAL DOWN
+: level_5
+26 27 27 4 # Ball and Hole
+20 24 7 21 1 9 33 15 7 37 1 5 46 14 17 END_OF_VECTOR # VERTICAL
+21 1 17 21 9 7 20 24 11 20 30 27 END_OF_VECTOR # HORIZONTAL
+30 24 4 END_OF_VECTOR # DIAGONAL UP
+27 9 7 37 5 10 END_OF_LEVEL # DIAGONAL DOWN
+: level_6
+28 26 29 12 # Ball and Hole
+0 23 4 21 7 10 41 8 3 49 16 10 END_OF_VECTOR # VERTICAL
+47 2 17 0 7 22 21 10 21 21 16 43 5 31 39 END_OF_VECTOR # HORIZONTAL
+41 8 7 43 31 7 END_OF_VECTOR # DIAGONAL UP
+0 26 6 END_OF_LEVEL # DIAGONAL DOWN
+: level_7
+13 26 40 7 # Ball and Hole
+1 12 9 7 23 8 28 4 6 53 5 6 53 24 4 END_OF_VECTOR # VERTICAL
+31 1 19 4 9 25 21 15 28 4 23 32 7 30 44 END_OF_VECTOR # HORIZONTAL
+1 12 4 28 4 4 48 15 6 50 30 4 END_OF_VECTOR # DIAGONAL UP
+1 20 4 44 15 10 49 1 5 END_OF_LEVEL # DIAGONAL DOWN
+: level_8
+49 21 45 12 # Ball and Hole
+3 11 4 14 18 7 54 19 5 57 11 4 END_OF_VECTOR # VERTICAL
+7 7 47 7 18 12 24 18 30 18 28 32 END_OF_VECTOR # HORIZONTAL
+3 11 5 53 18 5 49 28 6 END_OF_VECTOR # DIAGONAL UP
+3 14 5 14 24 5 53 7 5 END_OF_LEVEL # DIAGONAL DOWN
+: level_9
+24 16 43 25 # Ball and Hole
+3 17 7 32 13 14 55 12 11 END_OF_VECTOR # VERTICAL
+18 2 28 21 13 12 6 26 27 36 30 17 END_OF_VECTOR # HORIZONTAL
+3 17 16 18 16 4 52 30 6 END_OF_VECTOR # DIAGONAL UP
+3 23 4 32 26 5 55 22 3 45 2 11 END_OF_LEVEL # DIAGONAL DOWN
+: level_10
+8 12 50 19 # Ball and Hole
+1 9 19 16 9 10 16 23 4 29 10 3 33 16 3 45 17 5 58 13 8 END_OF_VECTOR # VERTICAL
+33 6 19 1 9 16 20 12 10 16 23 10 47 23 9 29 27 11 3 29 11 END_OF_VECTOR # HORIZONTAL
+16 16 5 29 10 5 13 29 4 39 27 7 55 23 4 END_OF_VECTOR # DIAGONAL UP
+1 27 3 25 23 5 29 12 5 45 21 3 51 6 8 END_OF_LEVEL # DIAGONAL DOWN
+: level_11
+50 25 54 3 # Ball and Hole
+0 15 17 29 3 13 48 1 3 62 1 5 63 15 7 END_OF_VECTOR # VERTICAL
+48 1 15 29 3 20 0 7 30 49 7 15 0 11 13 29 11 35 0 15 30 29 21 35 0 31 64 END_OF_VECTOR # HORIZONTAL
+47 3 3 60 7 3 END_OF_VECTOR # DIAGONAL UP
+END_OF_LEVEL # DIAGONAL DOWN
+: level_12
+8 21 47 10 # Ball and Hole
+1 13 13 7 16 3 12 24 4 13 9 4 19 9 4 19 24 4 26 16 3 37 13 3 52 13 3 61 7 19 END_OF_VECTOR # VERTICAL
+7 7 55 13 9 7 13 12 7 37 13 16 37 15 16 7 16 20 7 18 20 46 20 6 12 24 8 41 26 5 12 27 8 6 30 51 END_OF_VECTOR # HORIZONTAL
+1 13 7 41 25 6 45 26 7 56 30 6 END_OF_VECTOR # DIAGONAL UP
+1 25 6 END_OF_LEVEL # DIAGONAL DOWN
+: level_13
+50 5 33 28 # Ball and Hole
+2 26 3 61 3 4 63 19 5 END_OF_VECTOR # VERTICAL
+29 0 30 3 8 19 43 9 21 9 19 25 51 19 13 0 21 8 46 27 14 2 28 22 26 31 17 END_OF_VECTOR # HORIZONTAL
+0 11 4 2 26 8 21 8 9 33 19 11 58 9 4 42 31 5 59 27 5 END_OF_VECTOR # DIAGONAL UP
+23 28 4 58 0 4 END_OF_LEVEL # DIAGONAL DOWN
+: level_14
+10 19 49 20 # Ball and Hole
+2 12 12 16 13 13 32 17 7 43 17 7 57 21 8 60 13 6 END_OF_VECTOR # VERTICAL
+5 9 25 47 9 10 33 13 11 32 17 12 32 23 12 29 29 18 9 30 21 46 30 10 END_OF_VECTOR # HORIZONTAL
+2 12 4 43 13 5 57 21 4 55 30 3 END_OF_VECTOR # DIAGONAL UP
+2 23 8 29 9 5 56 9 5 END_OF_LEVEL # DIAGONAL DOWN
+: level_15
+7 28 10 9 # Ball and Hole
+31 12 6 END_OF_VECTOR # VERTICAL
+0 7 64 0 12 41 49 12 15 0 17 12 20 17 44 0 22 41 50 22 14 0 26 26 35 26 29 0 31 64 END_OF_VECTOR # HORIZONTAL
+END_OF_VECTOR # DIAGONAL UP
+END_OF_LEVEL # DIAGONAL DOWN
+: level_16
+30 29 29 17 # Ball and Hole
+0 7 10 0 21 11 18 21 4 25 16 5 35 16 5 45 21 4 63 7 10 63 21 11 END_OF_VECTOR # VERTICAL
+0 7 64 9 10 10 45 10 9 25 12 11 0 16 11 53 16 11 25 20 11 0 21 11 53 21 11 10 27 44 0 31 64 END_OF_VECTOR # HORIZONTAL
+END_OF_VECTOR # DIAGONAL UP
+END_OF_LEVEL # DIAGONAL DOWN
+: level_17
+54 25 61 19 # Ball and Hole
+3 15 5 5 8 5 8 16 3 10 8 5 12 16 3 14 8 5 14 15 5 17 9 4 18 15 3 21 9 4 22 15 5 24 8 5 26 15 3 28 8 5 28 15 5 31 8 5 34 16 4 38 16 4 40 15 3 42 17 3 43 10 3 44 15 3 46 15 5 48 9 3 48 15 5 52 9 3 52 15 5 54 15 5 55 8 4 58 17 3 59 8 4 61 15 3 END_OF_VECTOR # VERTICAL
+3 8 5 18 8 3 49 8 3 10 10 5 17 10 5 31 10 3 49 12 3 56 12 3 3 15 4 9 15 3 14 15 5 22 15 5 35 15 3 54 15 5 3 17 3 14 17 5 22 17 5 34 17 5 40 17 5 56 17 3 9 19 3 28 19 5 54 19 5 END_OF_VECTOR # HORIZONTAL
+33 10 3 43 10 3 42 18 3 END_OF_VECTOR # DIAGONAL UP
+16 17 3 24 8 5 33 10 3 40 16 3 41 8 3 48 15 5 END_OF_LEVEL # DIAGONAL DOWN

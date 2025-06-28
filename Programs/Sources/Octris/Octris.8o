@@ -1,0 +1,509 @@
+# Chip8 is a virtual machine designed in 1977 for programming video games.
+# Octo is a high level assembler, disassembler and simulator for Chip8.
+# Click 'Run' and then press ASWD to move the sprite around the screen.
+# Click the Octo logo for source, documentation and examples.
+
+# Octris
+
+# TODO
+# - Kickback
+# - Nice pieces
+
+# Game constants
+# can use anything -- but best keep v0/vF free
+:alias score v6
+:alias drop_speed v7
+:alias drop_counter v8
+:alias tuck_counter v9
+:alias old_by vA
+:alias old_bx vB
+:alias flags vC
+:alias by vD
+:alias bx vE
+
+:const  F_DID_ROTATE 0b00000001
+:const ~F_DID_ROTATE 0b11111110
+:const  F_DID_JUST_ROTATE 0b00000010
+:const ~F_DID_JUST_ROTATE 0b11111101
+
+# All blocks are defined in a 4x4 grid
+
+# 64 pixels wide and 32 pixels tall
+# 10 col gap for ui at the edge
+
+# x coords should be \"32 - x + rows\"
+# 0 = far right
+:macro sprite_block x y {
+	sprite y x 4
+}
+
+# Create an 8-piece block
+# For now, always a 2x2 block.
+:macro shiftleft {
+	v9 <<= v9
+	vA <<= vA
+	vB <<= vB
+	vC <<= vC
+}
+:macro rotate1 {
+	v9 := v5
+	vA := v6
+	vB := v7
+	vC := v8
+}
+:macro rotate2 target {
+	v9 &= v4
+	vA &= v4
+	vB &= v4
+	vC &= v4
+	
+	vA >>= vA
+	vB >>= vB vB >>= vB
+	vC >>= vC vC >>= vC vC >>= vC
+	
+	target := v9
+	target |= vA
+	target |= vB
+	target |= vC
+}
+
+: save_game_vars
+	i := game_vars
+	save vE
+;
+
+: load_game_vars
+	i := game_vars
+	load vE
+;
+
+# To rotate a block, literally change the data in :currentblock
+: rotateblock
+	save_game_vars
+	# Copy into temp_block
+	# Rotate as we copy back to current_block
+	i := current_block
+	load v3
+	i := temp_block
+	save v3
+	
+	v5 := v0
+	v6 := v1
+	v7 := v2
+	v8 := v3
+	
+	v4 := 0b10000000
+	rotate1 shiftleft shiftleft shiftleft
+	rotate2 v0
+	
+	rotate1 shiftleft shiftleft
+	rotate2 v1
+	
+	rotate1 shiftleft
+	rotate2 v2
+	
+	rotate1
+	rotate2 v3
+	
+	# save v0, which is now the first row
+	i := current_block
+	save v3
+	load_game_vars
+	i := current_block
+;
+
+: draw_grid
+	i := horizontal
+	v0 := 0
+	v1 := 31
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	
+	v0 := 0
+	v1 := 10
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	v0 += 8
+	sprite v0 v1 1
+	
+	i := vertical
+	v0 := 63
+	v1 := 11
+	sprite v0 v1 8
+	v1 += 8
+	sprite v0 v1 8
+	i := lastbit
+	v1 += 8
+	sprite v0 v1 4
+;
+
+: random_block
+	save_game_vars
+	# set current_block to a random one of possible blocks
+	i := possible_blocks
+	v0 := random 0b00001111 # 0 -> 15
+	i += v0
+	i += v0
+	i += v0
+	i += v0
+	load v3
+	i := current_block
+	save v3
+	load_game_vars
+;
+
+: draw_score
+	save_game_vars
+	i := hex score
+	
+	i := digits   # the destination for bcd
+	bcd score     # unpack digits in v0
+
+	i := digits
+	load v2        # load digits into v0-v2
+
+	i := sideways_numbers
+	i += v1 i += v1 i += v1
+	va := 20
+	vb := 6
+	sprite va vb 3
+
+	i := sideways_numbers
+	i += v2 i += v2 i += v2
+	vb := 2
+	sprite va vb 3
+	load_game_vars
+;
+
+: inc_score
+	draw_score
+	score += 1
+	draw_score
+;
+
+: check_line #by
+	v2 := 0
+		
+	# Draw this line:
+	i := vertical
+	v1 := 11
+	sprite v0 v1 8
+	v1 := 19
+	sprite v0 v1 8
+	i := lastbit
+	v1 := 27
+	sprite v0 v1 4
+
+	# Erase this line:
+	i := vertical
+	v1 := 11
+	sprite v0 v1 8
+	v2 |= vF
+	v1 := 19
+	sprite v0 v1 8
+	v2 |= vF
+	i := lastbit
+	v1 := 27
+	sprite v0 v1 4
+	v2 |= vF
+
+	# If v2 is 0, then there was a full line!
+	if v2 == 0 begin
+		# Increment score
+		inc_score
+		# Clear line
+		i := vertical
+		v1 := 11
+		sprite v0 v1 8
+		v1 := 19
+		sprite v0 v1 8
+		i := lastbit
+		v1 := 27
+		sprite v0 v1 4
+		# Shift everything down
+		shift_lines_down
+	end
+;
+
+: check_lines
+	# Check if there are any lines?
+	# Start at bx, and advance 4 lines only
+	
+	# If there are clear them
+	# ... and move everything else down one!
+	# ... and increase score
+	# ... decide/show what the next piece will be ...
+	# Loop
+	v0 := by check_line
+	v0 += 1 if v0 == 63 then ; 
+	check_line
+	v0 += 1 if v0 == 63 then ; 
+	check_line
+	v0 += 1 if v0 == 63 then ; 
+	check_line
+;
+
+: shift_lines_down
+	# Shift everything down by 1 line
+	# Start at by, and work upwards.
+	# If we find a blank line, we can stop.
+	i := pixel
+	v3 := v0
+	v3 -= 1
+	loop
+		v1 := 11
+		v2 := 0 # At least one pixel found!
+		loop
+			sprite v3 v1 1
+			# If this overlapped, there is something here!
+			if vF == 1 begin
+				# Draw it in the spot below
+				v3 += 1
+				sprite v3 v1 1
+				v3 -= 1
+				v2 := 1
+			else
+				# Nothing here, don't mind me
+				sprite v3 v1 1
+			end
+			v1 += 1
+			if v1 != 31 then
+		again
+		if v2 == 0 then jump shift_lines_down_done
+		v3 -= 1
+		if v3 != 0 then
+	again
+	: shift_lines_down_done
+;
+
+: debug_placement
+	# Place some blocks on the floor to begin with
+	i := possible_blocks
+	bx := 27
+  by := 60
+	sprite_block bx by
+	bx := 23
+  by := 60
+	sprite_block bx by
+	bx := 15
+  by := 60
+	sprite_block bx by
+	bx := 11
+  by := 60
+	sprite_block bx by
+;
+
+: main
+	# Draw the borders of the grid...
+	# |_|
+	draw_grid
+	
+	i := logo1
+	v0 := 1
+	v1 := 2
+	sprite v0 v1 8
+	i := logo2
+	v0 := 9
+	v1 := 2
+	sprite v0 v1 8
+	
+	flags := 0
+	drop_speed := 2
+	drop_counter := 0
+	score := 0
+	
+	draw_score
+	
+	: next_piece
+
+	# Make a random block
+	bx := 19
+  by := 0
+  random_block
+
+  sprite_block bx by
+	
+	if vF != 0 begin
+		# GAME OVER!
+		# r to restart?
+		# flash screen?
+		loop
+			v0 := OCTO_KEY_R if v0 key begin
+				clear
+				jump main
+			end
+			loop
+				vf := delay
+				if vf != 0 then
+			again
+			vf := 3
+			delay := vf
+		again
+	end
+	
+  loop
+		drop_counter += 1
+		
+		if drop_counter >= drop_speed begin
+			drop_counter := 0
+			# erase the block, update its position and then redraw:
+			sprite_block bx by
+			# Always dropping
+			by += 1
+			sprite_block bx by
+			if vF == 1 begin
+				# We've hit something! Backtrack, and queue the next piece...
+				sprite_block bx by
+				by -= 1
+				sprite_block bx by
+				# Don't drop!
+				tuck_counter += 1
+			else
+				tuck_counter := 0
+			end
+
+			if tuck_counter >= 3 begin
+				check_lines
+				jump next_piece
+			end
+		end
+		
+		sprite_block bx by
+		
+		# Save old position
+		old_bx := bx
+		old_by := by
+		
+		# s should make it drop faster?
+		v0 := OCTO_KEY_A if v0 key then bx += 1
+		v0 := OCTO_KEY_D if v0 key then bx -= 1
+		v0 := OCTO_KEY_S if v0 key then by += 1
+		
+		# Only allow one rotation per key-press
+		
+		v0 := ~F_DID_JUST_ROTATE
+		flags &= v0
+		
+		v0 := OCTO_KEY_W
+		if v0 key begin
+			v0 := F_DID_ROTATE
+			v0 &= flags
+			if v0 != F_DID_ROTATE begin
+				rotateblock
+				v0 := F_DID_ROTATE
+				flags |= v0
+				v0 := F_DID_JUST_ROTATE
+				flags |= v0
+			end
+		else
+			v0 := ~F_DID_ROTATE
+			flags &= v0
+		end
+
+		# If this overlaps at all, then we need to go back to the previous position (basically ignore input)
+		i := current_block
+    sprite_block bx by
+
+		if vF == 1 begin
+		  # Undraw
+			sprite_block bx by
+			# Undo movement
+			bx := old_bx
+			by := old_by
+			v0 := F_DID_JUST_ROTATE
+			v0 &= flags
+			if v0 == F_DID_JUST_ROTATE begin
+				rotateblock rotateblock rotateblock
+			end
+			# Draw again
+			sprite_block bx by
+		end
+
+    # lock the framerate of this program via the delay timer:
+    loop
+      vf := delay
+      if vf != 0 then
+    again
+    vf := 3
+    delay := vf
+  again
+;
+
+: digits 0 0 0
+: sideways_numbers
+	0xF8 0x88 0xF8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0x08 0xF8 0x88 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xE8 0xA8 0xB8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xF8 0xA8 0xA8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xF8 0x20 0xE0 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xB8 0xA8 0xE8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xB8 0xA8 0xF8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xF8 0x80 0x80 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xF8 0xA8 0xF8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+	0xF8 0xA8 0xE8 #0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+: logo1
+	0x92 0x95 0xF7 0x00 0xE6 0x97 0x76 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+: logo2
+	0xAC 0x2C 0x94 0x00 0x24 0xBC 0x24 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+: possible_blocks
+	0xF0 0x90 0x90 0x00 #0 n
+	0xE0 0xE0 0x40 0x40 #1 hammer
+	0xC0 0xF0 0x30 0x00 #2 s
+	0x30 0xF0 0xC0 0x00 #3 z
+	0x40 0xE0 0xE0 0x40 #4 +
+	0xE0 0xE0 0xA0 0x00 #5 fat n
+	0xE0 0xF0 0x10 0x00 #6 half hat 1
+	0x70 0xF0 0x80 0x00 #7 half hat 2
+	0x80 0x80 0xC0 0xF0 #8 stealth bomber
+	0xF0 0x60 0x60 0x00 #9 fat t
+	0xC0 0x60 0x60 0xC0 #10 }
+	0x60 0x60 0x60 0x60 #11 I
+	0xF0 0xF0 0x00 0x00 #12 _
+  0x30 0xE0 0xE0 0x00 #13 duck
+	0xA0 0xA0 0xE0 0x40 #14 Y
+	0xE0 0xE0 0x80 0x80 #15 P
+	# Can only activate if I make another 16...
+	0xE0 0xE0 0x20 0x20 #15 Q
+	
+: current_block
+  0xE0 0xE0 0x40 0x40
+: temp_block
+	0x00 0x00 0x00 0x00
+: game_vars
+	0x00 0x00 0x00 0x00 # v0, v1, v2, v3,
+	0x00 0x00 0x00 0x00 # v4, v5, v6, v7, 
+	0x00 0x00 0x00 0x00 # v8, v9, vA, vB,
+	0x00 0x00 0x00 0x00 # vC, vD, vE, ??
+# Walls
+: horizontal 0xFF 0xFF 
+: vertical
+0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 : lastbit 0x80 0x80 0x80 0x80
+: pixel
+0x80
+
+:monitor current_block 4
+:monitor temp_block 4

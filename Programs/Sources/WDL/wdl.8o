@@ -130,6 +130,23 @@
 					end
 				end
 			end
+
+			# Quick and dirty patch to use the V key to validate the word,
+			# instead of needing to reach the "enter" location every time
+			v0 := OCTO_KEY_V
+			if v0 key begin
+				debounce v0
+				if guess-col == 3 begin
+					valid-word
+					if vf != 0 begin
+						jump score-word
+					else
+						vf := 30
+						buzzer := vf
+					end
+				end
+			end
+
 			i := nixed
 			i += kb-current
 			load v0

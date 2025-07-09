@@ -93,3 +93,7 @@ Opened hatch :
 
 The console boot logo :
 ![Console boot logo](Resources/Finished_Console_2.jpg)
+
+Improved the PCB supports that were made of several nuts. The nuts did not had the same width, resulting in the PCB not being perfectly flat. The nuts have then been replaced by precise 10mm spacers :
+![PCB supports with nuts](Resources/PCB_Supports_Nuts.jpg)
+![PCB supports with spacers](Resources/PCB_Supports_Spacers.jpg)

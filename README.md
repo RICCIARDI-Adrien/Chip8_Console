@@ -97,3 +97,19 @@ The console boot logo :
 Improved the PCB supports that were made of several nuts. The nuts did not had the same width, resulting in the PCB not being perfectly flat. The nuts have then been replaced by precise 10mm spacers :
 ![PCB supports with nuts](Resources/PCB_Supports_Nuts.jpg)
 ![PCB supports with spacers](Resources/PCB_Supports_Spacers.jpg)
+
+Improved the top plate button holes (using holes of 9.6mm diameter) :
+![Improved top plate](Resources/Improved_Top_Plate.jpg)
+
+The various console menus (as of firmware `V1.1`) :
+![Console main menu](Resources/Console_Menu_Main.jpg)
+![Console settings menu](Resources/Console_Menu_Settings.jpg)
+![Console information menu](Resources/Console_Menu_Information.jpg)
+
+Playing some video games :  
+*3D VIP'r Maze* :
+![Playing 3D VIP'r Maze](Resources/Playing_3D_VIP'r_Maze.jpg)
+*Ant* :
+![Playing Ant](Resources/Playing_Ant.jpg)
+*Glitch Ghost* :
+![Playing Glitch Ghost](Resources/Playing_Glitch_Ghost.jpg)

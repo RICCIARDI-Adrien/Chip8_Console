@@ -15,6 +15,13 @@ A Chip-8/SuperChip-8 console powered by a 8-bit PIC18 microcontroller.
 * 8 keys usable with the Chip-8 interpreter, 1 menu key, 1 power-supply switch
 * Monotone buzzer
 
+## Dimensions
+
+* Length : 175 mm
+* Width : 95 mm
+* Depth : 38 mm (including the adhesive feet)
+* Weight : 1200 g (including the batteries and the SD card)
+
 ## Hardware
 
 Display module :

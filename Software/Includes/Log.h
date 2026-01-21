@@ -21,4 +21,21 @@
 	#define LOG(Is_Enabled, Format, ...) do {} while (0)
 #endif
 
+//-------------------------------------------------------------------------------------------------
+// Functions
+//-------------------------------------------------------------------------------------------------
+/** Initialize the internal delay measurement timer. */
+void LogInitialize(void);
+
+/** Start capturing a delay with one microsecond resolution.
+ * Use LogTimingStop() to end the capture.
+ */
+void LogTimingStart(void);
+
+/** Stop capturing the time and retrieve the measured amount in microseconds.
+ * @return 0 to 65534 on success, corresponding to the elapsed time in microseconds,
+ * @return 0xFFFF if the timer overflowed (the maximum measurable delay is 65535 microseconds).
+ */
+unsigned short LogTimingStop(void);
+
 #endif

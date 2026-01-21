@@ -619,8 +619,9 @@ void main(void)
 	LEDInitialize();
 	LED_SET_ENABLED(1); // Turn the LED on during the microcontroller boot
 	SerialPortInitialize();
+	LogInitialize(); // The log module needs the serial port to be working
 	#if MAIN_IS_LOGGING_ENABLED
-		MainCheckResetReason(); // Right after the serial port is working to display the results, determine if there was an abnormal reset
+		MainCheckResetReason(); // Right after the logs are working to display the results, determine if there was an abnormal reset
 	#endif
 	MainInitializeEEPROM(); // Initialize the EEPROM content if the microcontroller EEPROM area is not yet programmed
 	NCOInitialize(); // This module must be initialized before the sound module

@@ -2,8 +2,9 @@
  * See Serial_Port.h for description.
  * @author Adrien RICCIARDI
  */
+#include <Log.h>
 #include <Serial_Port.h>
-#ifdef SERIAL_PORT_ENABLE_LOGGING
+#ifdef LOG_IS_ENABLED
 	#include <stdarg.h>
 	#include <stdio.h>
 #endif
@@ -36,10 +37,10 @@ void SerialPortInitialize(void)
 	TRISCbits.TRISC7 = 1;
 
 	// Display the following message only if the serial port logging feature is enabled
-	SERIAL_PORT_LOG(1, "Serial port logging is enabled.");
+	LOG(1, "Serial port logging is enabled.");
 }
 
-#ifdef SERIAL_PORT_ENABLE_LOGGING
+#ifdef LOG_IS_ENABLED
 	unsigned char SerialPortReadByte(void)
 	{
 		// Wait for a byte to be received

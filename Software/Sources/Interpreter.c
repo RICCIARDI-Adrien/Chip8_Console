@@ -8,8 +8,8 @@
 #include <INI_Parser.h>
 #include <Interpreter.h>
 #include <Keyboard.h>
+#include <Log.h>
 #include <NCO.h>
-#include <Serial_Port.h>
 #include <Shared_Buffer.h>
 #include <Sound.h>
 #include <string.h>
@@ -205,22 +205,22 @@ static unsigned char InterpreterConfigureKeyBindings(char *Pointer_String_Game_I
 	{
 		// Cache the current binding access
 		Pointer_Key_Binding = &Key_Bindings[i];
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Retrieving key binding for \"%s\".", Pointer_Key_Binding->Pointer_String_INI_Key_Name);
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Retrieving key binding for \"%s\".", Pointer_Key_Binding->Pointer_String_INI_Key_Name);
 
 		// Try to retrieve the corresponding Chip-8 code
 		if (INIParserRead8BitInteger(Pointer_String_Game_INI_Section, Pointer_Key_Binding->Pointer_String_INI_Key_Name, &Key_Index) == 0)
 		{
 			if (Key_Index >= INTERPRETER_KEYS_COUNT_CHIP_8)
 			{
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid Chip-8 key code, it must be in range 0 to 15 (read value is %u).", Key_Index);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid Chip-8 key code, it must be in range 0 to 15 (read value is %u).", Key_Index);
 				DisplayDrawTextMessage(Shared_Buffer_Display, "Chip-8", "Invalid key code for\n%s.\nPress Menu to exit.");
 				while (!KeyboardIsMenuKeyPressed());
 				return 1;
 			}
-			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Chip-8 key binding value is %u.", Key_Index);
+			LOG(INTERPRETER_IS_LOGGING_ENABLED, "Chip-8 key binding value is %u.", Key_Index);
 			Interpreter_Keys_Table_From_Interpreter[Key_Index] = Pointer_Key_Binding->Keyboard_Key_Code;
 		}
-		else SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "No key binding found.");
+		else LOG(INTERPRETER_IS_LOGGING_ENABLED, "No key binding found.");
 	}
 
 	// Generate a reverse look-up table to match a Chip-8 key code with a console key switch
@@ -261,7 +261,7 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Assign the console keys to the Chip-8 values expected by the game (do that before loading the ROM file because the INI data is stored in the same buffer that the one in which the ROM file will be loaded)
 	if (InterpreterConfigureKeyBindings(Pointer_String_Game_INI_Section) != 0)
 	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to configure the key bindings.");
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to configure the key bindings.");
 		return 1;
 	}
 
@@ -269,10 +269,10 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	Pointer_String = INIParserReadString(Pointer_String_Game_INI_Section, "ROMFile");
 	if (Pointer_String == NULL)
 	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to retrieve the game ROM file from the INI configuration.");
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to retrieve the game ROM file from the INI configuration.");
 		return 1;
 	}
-	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
+	LOG(INTERPRETER_IS_LOGGING_ENABLED, "ROM file name : \"%s\".", Pointer_String);
 
 	// If the corresponding key is not found, the variable is set to 0, in order to disable the feature by default
 	// Fast rendering
@@ -303,7 +303,7 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	// Begin listing the files
 	if (FATListStart("/") != 0)
 	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "FATListStart() failed.");
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "FATListStart() failed.");
 		return 1;
 	}
 
@@ -312,7 +312,7 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	{
 		Result = FATListNext(&File_Information);
 		if (Result != 0) break;
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
 			File_Information.String_Short_Name,
 			File_Information.Is_Directory,
 			File_Information.Size,
@@ -321,28 +321,28 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 		// Do not take directories into account
 		if (File_Information.Is_Directory)
 		{
-			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
+			LOG(INTERPRETER_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
 			continue;
 		}
 
 		// Is this the searched file ?
 		if (strcmp((char *) File_Information.String_Short_Name, Pointer_String) == 0)
 		{
-			SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Found the game file, loading it.");
+			LOG(INTERPRETER_IS_LOGGING_ENABLED, "Found the game file, loading it.");
 			break;
 		}
 	}
 	// Was the file found ?
 	if (Result != 0)
 	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : could not find the game file, stopping.");
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : could not find the game file, stopping.");
 		return 1;
 	}
 
 	// Load the file
 	if (FATReadFile(&File_Information, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
 	{
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", File_Information.String_Short_Name);
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", File_Information.String_Short_Name);
 		return 1;
 	}
 
@@ -391,7 +391,7 @@ unsigned char InterpreterRunProgram(void)
 		// Fetch the next instruction
 		Instruction_High_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC];
 		Instruction_Low_Byte = Shared_Buffers.Interpreter_Memory[Interpreter_Register_PC + 1];
-		SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "**** Fetching instruction at address 0x%03X : 0x%02X 0x%02X.", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
+		LOG(INTERPRETER_IS_LOGGING_ENABLED, "**** Fetching instruction at address 0x%03X : 0x%02X 0x%02X.", Interpreter_Register_PC, Instruction_High_Byte, Instruction_Low_Byte);
 
 		#if INTERPRETER_IS_DEBUGGER_ENABLED == 1
 			if (Breakpoint_Address != 0)
@@ -443,7 +443,7 @@ unsigned char InterpreterRunProgram(void)
 					// Extract the operands
 					Pixels_Amount = Instruction_Low_Byte & 0x0F;
 
-					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-DOWN %u.", Pixels_Amount);
+					LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-DOWN %u.", Pixels_Amount);
 
 					// The value 0 seems to be wasted and does nothing
 					if (Pixels_Amount == 0) break;
@@ -482,16 +482,16 @@ unsigned char InterpreterRunProgram(void)
 					case 0xE0:
 						memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
 						DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "CLS.");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "CLS.");
 						break;
 
 					// RET
 					case 0xEE:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "RET (SP = %d).", Interpreter_Register_SP);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "RET (SP = %d).", Interpreter_Register_SP);
 						// Make sure there is a valid address on the stack
 						if (Interpreter_Register_SP == 0)
 						{
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack underflow. Stopping interpreter.");
+							LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack underflow. Stopping interpreter.");
 							memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
 							DisplayDrawTextMessage(Shared_Buffer_Display, "Error", "Virtual stack\nunderflow.\n\n\n\nPress Menu to exit.");
 							while (!KeyboardIsMenuKeyPressed());
@@ -506,7 +506,7 @@ unsigned char InterpreterRunProgram(void)
 					{
 						unsigned char Row, Column, Columns_Count_Byte, *Pointer_Byte, Current_Byte, Previous_Byte;
 
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-RIGHT.");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-RIGHT.");
 
 						// Cache some values
 						Columns_Count_Byte = Display_Columns_Count / 8; // Address the bytes directly
@@ -544,7 +544,7 @@ unsigned char InterpreterRunProgram(void)
 					{
 						unsigned char Row, Column, Columns_Count_Byte, *Pointer_Byte, Current_Byte, Next_Byte;
 
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-LEFT.");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SCROLL-LEFT.");
 
 						// Cache some values
 						Columns_Count_Byte = Display_Columns_Count / 8; // Address the bytes directly
@@ -579,12 +579,12 @@ unsigned char InterpreterRunProgram(void)
 
 					// EXIT
 					case 0xFD:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "EXIT.");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "EXIT.");
 						goto Exit_Success;
 
 					// LOW
 					case 0xFE:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LOW (display resolution is 64x32).");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LOW (display resolution is 64x32).");
 						Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_CHIP_8;
 						Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_CHIP_8;
 						Is_High_Resolution_Enabled = 0;
@@ -592,7 +592,7 @@ unsigned char InterpreterRunProgram(void)
 
 					// HIGH
 					case 0xFF:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "HIGH (display resolution is 128x64).");
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "HIGH (display resolution is 128x64).");
 						Display_Columns_Count = INTERPRETER_DISPLAY_COLUMNS_COUNT_SUPER_CHIP_8;
 						Display_Rows_Count = INTERPRETER_DISPLAY_ROWS_COUNT_SUPER_CHIP_8;
 						Is_High_Resolution_Enabled = 1;
@@ -608,7 +608,7 @@ unsigned char InterpreterRunProgram(void)
 			case 0x10:
 				Interpreter_Register_PC = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Interpreter_Register_PC |= Instruction_Low_Byte;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.", Interpreter_Register_PC);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP 0x%03X.", Interpreter_Register_PC);
 				goto Next_Instruction; // Bypass PC incrementation
 
 			// CALL addr
@@ -619,12 +619,12 @@ unsigned char InterpreterRunProgram(void)
 				// Extract the operands
 				Address = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Address |= Instruction_Low_Byte; // The address will by default be on 12 bits due to the instruction encoding, so no need to check for an overflow
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "CALL 0x%03X (SP = %d).", Address, Interpreter_Register_SP);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "CALL 0x%03X (SP = %d).", Address, Interpreter_Register_SP);
 
 				// Make sure there is still room on the stack
 				if (Interpreter_Register_SP >= INTERPRETER_STACK_SIZE)
 				{
-					SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack overflow. Stopping interpreter.");
+					LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : virtual stack overflow. Stopping interpreter.");
 					memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
 					DisplayDrawTextMessage(Shared_Buffer_Display, "Error", "Virtual stack\noverflow.\n\n\n\nPress Menu to exit.");
 					while (!KeyboardIsMenuKeyPressed());
@@ -648,7 +648,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Skip the next instruction if Vx is equal to the immediate value
 				if (Interpreter_Registers_V[Register_Index] == Instruction_Low_Byte) Interpreter_Register_PC += 2;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SE V%01X (= 0x%02X), 0x%02X.", Register_Index, Interpreter_Registers_V[Register_Index], Instruction_Low_Byte);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "SE V%01X (= 0x%02X), 0x%02X.", Register_Index, Interpreter_Registers_V[Register_Index], Instruction_Low_Byte);
 				break;
 			}
 
@@ -662,7 +662,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Skip the next instruction if Vx is not equal to the immediate value
 				if (Interpreter_Registers_V[Register_Index] != Instruction_Low_Byte) Interpreter_Register_PC += 2;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SNE V%01X (= 0x%02X), 0x%02X.", Register_Index, Interpreter_Registers_V[Register_Index], Instruction_Low_Byte);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "SNE V%01X (= 0x%02X), 0x%02X.", Register_Index, Interpreter_Registers_V[Register_Index], Instruction_Low_Byte);
 				break;
 			}
 
@@ -677,7 +677,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Skip the next instruction if Vx is not equal to Vy
 				if (Interpreter_Registers_V[Register_Index_1] == Interpreter_Registers_V[Register_Index_2]) Interpreter_Register_PC += 2;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SE V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "SE V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 				break;
 			}
 
@@ -691,7 +691,7 @@ unsigned char InterpreterRunProgram(void)
 				Immediate_Value = Instruction_Low_Byte;
 
 				Interpreter_Registers_V[Register_Index] = Immediate_Value;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, 0x%02X.", Register_Index, Immediate_Value);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, 0x%02X.", Register_Index, Immediate_Value);
 				break;
 			}
 
@@ -705,7 +705,7 @@ unsigned char InterpreterRunProgram(void)
 				Immediate_Value = Instruction_Low_Byte;
 
 				Interpreter_Registers_V[Register_Index] += Immediate_Value;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD V%01X, 0x%02X.", Register_Index, Immediate_Value);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD V%01X, 0x%02X.", Register_Index, Immediate_Value);
 				break;
 			}
 
@@ -723,7 +723,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
 						Interpreter_Registers_V[Register_Index_1] = Interpreter_Registers_V[Register_Index_2];
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, V%01X (= 0x%02X).", Register_Index_1, Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, V%01X (= 0x%02X).", Register_Index_1, Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						break;
 					}
 
@@ -736,7 +736,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index_1 = Instruction_High_Byte & 0x0F;
 						Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "OR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "OR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] |= Interpreter_Registers_V[Register_Index_2];
 
 						// Apply the reset VF quirk if enabled
@@ -753,7 +753,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index_1 = Instruction_High_Byte & 0x0F;
 						Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "AND V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "AND V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] &= Interpreter_Registers_V[Register_Index_2];
 
 						// Apply the reset VF quirk if enabled
@@ -770,7 +770,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index_1 = Instruction_High_Byte & 0x0F;
 						Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "XOR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "XOR V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] ^= Interpreter_Registers_V[Register_Index_2];
 
 						// Apply the reset VF quirk if enabled
@@ -789,7 +789,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
 						Sum = Interpreter_Registers_V[Register_Index_1] + Interpreter_Registers_V[Register_Index_2]; // Compute the operation on a 16-bit variable to be able to detect an overflow
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 						Interpreter_Registers_V[Register_Index_1] = (unsigned char) Sum;
 
 						// Set VF register if carry is set
@@ -810,7 +810,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Value_1 = Interpreter_Registers_V[Register_Index_1];
 						Register_Value_2 = Interpreter_Registers_V[Register_Index_2];
 						Interpreter_Registers_V[Register_Index_1] -= Register_Value_2;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUB V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Register_Value_1, Register_Index_2, Register_Value_2);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUB V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Register_Value_1, Register_Index_2, Register_Value_2);
 
 						// Set VF register if borrow is clear
 						if (Register_Value_1 >= Register_Value_2) Interpreter_Registers_V[15] = 1;
@@ -831,13 +831,13 @@ unsigned char InterpreterRunProgram(void)
 						{
 							Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F; // Vy
 							Value = Interpreter_Registers_V[Register_Index_2];
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
+							LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
 						}
 						else
 						{
 							// Retrieve the Vx value
 							Value = Interpreter_Registers_V[Register_Index_1];
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).", Register_Index_1, Value);
+							LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHR V%01X (= 0x%02X).", Register_Index_1, Value);
 						}
 
 						if (Value & 0x01) Is_Bit_Shifted_Out = 1; // Set VF if the Vx least significant bit is set
@@ -862,7 +862,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Value_1 = Interpreter_Registers_V[Register_Index_1];
 						Register_Value_2 = Interpreter_Registers_V[Register_Index_2];
 						Interpreter_Registers_V[Register_Index_1] = Register_Value_2 - Register_Value_1;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUBN V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Register_Value_1, Register_Index_2, Register_Value_2);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SUBN V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Register_Value_1, Register_Index_2, Register_Value_2);
 
 						// Set VF register if borrow is clear
 						if (Register_Value_2 >= Register_Value_1) Interpreter_Registers_V[15] = 1;
@@ -883,13 +883,13 @@ unsigned char InterpreterRunProgram(void)
 						{
 							Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F; // Vy
 							Value = Interpreter_Registers_V[Register_Index_2];
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
+							LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X), V%01X = (0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Value);
 						}
 						else
 						{
 							// Retrieve the Vx value
 							Value = Interpreter_Registers_V[Register_Index_1];
-							SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X).", Register_Index_1, Value);
+							LOG(INTERPRETER_IS_LOGGING_ENABLED, "SHL V%01X (= 0x%02X).", Register_Index_1, Value);
 						}
 
 						if (Value & 0x80) Is_Bit_Shifted_Out = 1; // Set VF if the Vx most significant bit is set
@@ -918,7 +918,7 @@ unsigned char InterpreterRunProgram(void)
 				Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 
 				if (Interpreter_Registers_V[Register_Index_1] != Interpreter_Registers_V[Register_Index_2]) Interpreter_Register_PC += 2;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SNE V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "SNE V%01X (= 0x%02X), V%01X (= 0x%02X).", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2]);
 				break;
 			}
 
@@ -926,7 +926,7 @@ unsigned char InterpreterRunProgram(void)
 			case 0xA0:
 				Interpreter_Register_I = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Interpreter_Register_I |= Instruction_Low_Byte;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD I, 0x%03X.", Interpreter_Register_I);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD I, 0x%03X.", Interpreter_Register_I);
 				break;
 
 			// JP V0, nnn
@@ -938,7 +938,7 @@ unsigned char InterpreterRunProgram(void)
 				Address = (unsigned short) (Instruction_High_Byte & 0x0F) << 8;
 				Address |= Instruction_Low_Byte;
 
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP V0 (= 0x%02X), 0x%03X with PC = 0x%03X.", Interpreter_Registers_V[0], Address, Interpreter_Register_PC);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "JP V0 (= 0x%02X), 0x%03X with PC = 0x%03X.", Interpreter_Registers_V[0], Address, Interpreter_Register_PC);
 				Interpreter_Register_PC = Interpreter_Registers_V[0] + Address;
 				Interpreter_Register_PC &= 0x0FFF; // Make sure the address does not cross the 4KB boundary
 				goto Next_Instruction; // Bypass PC incrementation
@@ -951,7 +951,7 @@ unsigned char InterpreterRunProgram(void)
 
 				// Extract the operands
 				Register_Index = Instruction_High_Byte & 0x0F;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "RND V%01X, 0x%02X.", Register_Index, Instruction_Low_Byte);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "RND V%01X, 0x%02X.", Register_Index, Instruction_Low_Byte);
 
 				// Use a 8-bit Galois LFSR to generate good pseudo-random numbers (see https://en.wikipedia.org/wiki/Linear-feedback_shift_register#Galois_LFSRs)
 				if (Interpreter_Random_Seed & 0x01) Is_Least_Significant_Bit_Set = 1;
@@ -973,7 +973,7 @@ unsigned char InterpreterRunProgram(void)
 				Register_Index_1 = Instruction_High_Byte & 0x0F;
 				Register_Index_2 = (Instruction_Low_Byte >> 4) & 0x0F;
 				Sprite_Size = Instruction_Low_Byte & 0x0F;
-				SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2], Sprite_Size, Interpreter_Register_I);
+				LOG(INTERPRETER_IS_LOGGING_ENABLED, "DRW V%01X (= 0x%02X), V%01X (= 0x%02X), %d with I = 0x%03X.", Register_Index_1, Interpreter_Registers_V[Register_Index_1], Register_Index_2, Interpreter_Registers_V[Register_Index_2], Sprite_Size, Interpreter_Register_I);
 
 				// Retrieve the sprite displaying coordinates
 				Sprite_Column = Interpreter_Registers_V[Register_Index_1];
@@ -1124,13 +1124,13 @@ unsigned char InterpreterRunProgram(void)
 				{
 					// SKP Vx
 					case 0x9E:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
 						if (Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
 
 					// SKNP Vx
 					case 0xA1:
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "SKNP V%01X (= 0x%02X), is key pressed = %u.", Register_Index, Key_Code, Is_Key_Pressed);
 						if (!Is_Key_Pressed) Interpreter_Register_PC += 2;
 						break;
 
@@ -1156,7 +1156,7 @@ unsigned char InterpreterRunProgram(void)
 						if (T6CONbits.ON == 0) Delay = 0; // When the timer has overflowed, the counter register is reset and the ON bit is cleared
 						else Delay = T6PR - T6TMR; // The hardware timer is incrementing while the Chip-8 timer is expected to decrement
 						Interpreter_Registers_V[Register_Index] = Delay;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, DT (= 0x%02X).", Register_Index, Delay);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, DT (= 0x%02X).", Register_Index, Delay);
 						break;
 					}
 
@@ -1167,7 +1167,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, K.", Register_Index);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, K.", Register_Index);
 
 						// Stop the execution until a key is pressed
 						do
@@ -1214,7 +1214,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Retrieve the register value
 						Delay = Interpreter_Registers_V[Register_Index];
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD DT, V%01X (= 0x%02X).", Register_Index, Delay);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD DT, V%01X (= 0x%02X).", Register_Index, Delay);
 
 						// Start the timer
 						T6CONbits.ON = 0; // Stop the timer in case it is already running
@@ -1231,7 +1231,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD ST, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD ST, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
 
 						SoundPlay(Interpreter_Registers_V[Register_Index]);
 						break;
@@ -1246,7 +1246,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index = Instruction_High_Byte & 0x0F;
 
 						// Sum the values
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD I (= 0x%04X), V%01X (= 0x%02X).", Interpreter_Register_I, Register_Index, Interpreter_Registers_V[Register_Index]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "ADD I (= 0x%04X), V%01X (= 0x%02X).", Interpreter_Register_I, Register_Index, Interpreter_Registers_V[Register_Index]);
 						Interpreter_Register_I += Interpreter_Registers_V[Register_Index];
 						break;
 					}
@@ -1258,7 +1258,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD F, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD F, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
 
 						// Retrieve the digit value
 						Digit = Interpreter_Registers_V[Register_Index] & 0x0F; // The allowed digit values are 0 to 0xF
@@ -1275,7 +1275,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD HF, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD HF, V%01X (= 0x%02X).", Register_Index, Interpreter_Registers_V[Register_Index]);
 
 						// Retrieve the digit value
 						Digit = Interpreter_Registers_V[Register_Index] & 0x0F; // The allowed digit values are 0 to 0xF (assume Octo compatibility)
@@ -1294,7 +1294,7 @@ unsigned char InterpreterRunProgram(void)
 						// Extract the operands
 						Register_Index = Instruction_High_Byte & 0x0F;
 						Value = Interpreter_Registers_V[Register_Index];
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD B, V%01X (= 0x%02X).", Register_Index, Value);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD B, V%01X (= 0x%02X).", Register_Index, Value);
 						Register_I = Interpreter_Register_I & 0x0FFF; // The I register value must not be changed at the end of this instruction execution (also make sure to prevent any interpreter memory access overflow)
 
 						// Convert the and store it to the memory
@@ -1327,7 +1327,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Last_Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD [I] (= 0x%03X), V%01X.", Interpreter_Register_I, Last_Register_Index);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD [I] (= 0x%03X), V%01X.", Interpreter_Register_I, Last_Register_Index);
 
 						// Store the requested amount of registers to the address pointed by the I register
 						Temporary_Register_I = Interpreter_Register_I;
@@ -1350,7 +1350,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Extract the operands
 						Last_Register_Index = Instruction_High_Byte & 0x0F;
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, [I] (= 0x%03X).", Last_Register_Index, Interpreter_Register_I);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X, [I] (= 0x%03X).", Last_Register_Index, Interpreter_Register_I);
 
 						// Store the requested amount of registers to the address pointed by the I register
 						Temporary_Register_I = Interpreter_Register_I;
@@ -1374,7 +1374,7 @@ unsigned char InterpreterRunProgram(void)
 						Register_Index = Instruction_High_Byte & 0x0F;
 						if (Register_Index >= INTERPRETER_FLAG_REGISTERS_COUNT) goto Invalid_Instruction; // Only indexes from 0 to 7 are allowed
 						Value = Interpreter_Registers_V[Register_Index];
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD R, V%01X (= 0x%02X).", Register_Index, Value);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD R, V%01X (= 0x%02X).", Register_Index, Value);
 
 						// Store the value
 						EEPROMWriteByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + Register_Index, Value);
@@ -1392,7 +1392,7 @@ unsigned char InterpreterRunProgram(void)
 
 						// Read the value
 						Value = EEPROMReadByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + Register_Index);
-						SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X (= 0x%02X), R.", Register_Index, Value);
+						LOG(INTERPRETER_IS_LOGGING_ENABLED, "LD V%01X (= 0x%02X), R.", Register_Index, Value);
 						Interpreter_Registers_V[Register_Index] = Value;
 						break;
 					}
@@ -1429,7 +1429,7 @@ Next_Instruction:
 	}
 
 Invalid_Instruction:
-	SERIAL_PORT_LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
+	LOG(INTERPRETER_IS_LOGGING_ENABLED, "Invalid instruction 0x%02X%02X at address 0x%03X. Stopping interpreter.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
 	memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
 	snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Invalid instruction\n0x%02X%02X at address\n0x%03X.\n\n\nPress Menu to exit.", Instruction_High_Byte, Instruction_Low_Byte, Interpreter_Register_PC);
 	DisplayDrawTextMessage(Shared_Buffer_Display, "Error", Shared_Buffers.String_Temporary);

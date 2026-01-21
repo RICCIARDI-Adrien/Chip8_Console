@@ -10,6 +10,7 @@
 #include <Interpreter.h>
 #include <Keyboard.h>
 #include <LED.h>
+#include <Log.h>
 #include <MBR.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -56,7 +57,7 @@
 #define MAIN_BATTERY_SAMPLES_COUNT 8
 
 /** Automatically append the "-DEBUG" prefix to the firmware version displayed into the Information menu if the firmware has been built with the debug mode, otherwise do not alter the firmware version. */
-#ifdef SERIAL_PORT_ENABLE_LOGGING
+#ifdef LOG_IS_ENABLED
 	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "-DEBUG"
 #else
 	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX
@@ -145,10 +146,10 @@ static void MainInitializeEEPROM()
 	// Do nothing if the EEPROM contains already data
 	if (EEPROMReadByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED) == 1)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content is already initialized, skipping initialization.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content is already initialized, skipping initialization.");
 		return;
 	}
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization process...");
+	LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM is erased, starting the initialization process...");
 
 	// Set the maximum sound level
 	EEPROMWriteByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE, EEPROM_SOUND_LEVEL_PERCENTAGE_HIGH);
@@ -161,7 +162,7 @@ static void MainInitializeEEPROM()
 
 	// Tell that the EEPROM is initialized
 	EEPROMWriteByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, 1);
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content has been successfully initialized.");
+	LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content has been successfully initialized.");
 }
 
 /** Display the main menu with the battery charge that is automatically updated.
@@ -246,14 +247,14 @@ Detect_SD_Card:
 	// The card has not changed and was already probed, nothing more to do
 	if (Card_Detection_Status == SD_CARD_DETECTION_STATUS_DETECTED_NOT_REMOVED)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "The card has not changed and was already probed.");
 		return 0;
 	}
 
 	// Probe the SD card
 	if (SDCardProbe() != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m");
+		LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
@@ -263,7 +264,7 @@ Detect_SD_Card:
 	// The first SD card block contains the MBR, get it
 	if (SDCardReadBlock(0, Shared_Buffers.Buffer) != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
@@ -276,28 +277,28 @@ Detect_SD_Card:
 	{
 		// Cache the partition data access
 		Pointer_Partitions_Data = &Partitions_Data[i];
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
+		LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d : type=0x%02X, start sector=%lu, sectors count=%lu.", i + 1, Pointer_Partitions_Data->Type, Pointer_Partitions_Data->Start_Sector, Pointer_Partitions_Data->Sectors_Count);
 
 		// Bypass any empty partition
 		if (Pointer_Partitions_Data->Type == 0)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition is empty, trying next one.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Partition is empty, trying next one.");
 			continue;
 		}
 
 		// Try to mount the file system as the partition is not empty
 		if (FATMount(Pointer_Partitions_Data, Shared_Buffers.Buffer) != 0)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.", i + 1);
+			LOG(MAIN_IS_LOGGING_ENABLED, "Failed to mount the partition %d.", i + 1);
 			continue;
 		}
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d was successfully mounted.", i + 1);
+		LOG(MAIN_IS_LOGGING_ENABLED, "Partition %d was successfully mounted.", i + 1);
 		break;
 	}
 	// Were all partitions invalid ?
 	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		goto Detect_SD_Card;
@@ -317,19 +318,19 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 	TFATFileInformation File_Information;
 	unsigned long Size;
 
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file on the SD card...");
+	LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file on the SD card...");
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "FATListStart() failed.");
 		return 1;
 	}
 
 	// Search for the configuration file
 	while (FATListNext(&File_Information) == 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
+		LOG(MAIN_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
 			File_Information.String_Short_Name,
 			File_Information.Is_Directory,
 			File_Information.Size,
@@ -338,19 +339,19 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 		// We are searching for a file, discard any directory
 		if (File_Information.Is_Directory)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "This is a directory, skipping it.");
 			continue;
 		}
 
 		// Is this the searched file ?
 		if (strcmp((char *) File_Information.String_Short_Name, MAIN_CONFIGURATION_FILE_NAME) == 0)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Found the configuration file, loading it.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Found the configuration file, loading it.");
 
 			// Load the file
 			if (FATReadFile(&File_Information, Shared_Buffers.Configuration_File, sizeof(Shared_Buffers.Configuration_File)) != 0) // Keep room for the terminating bytes
 			{
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
+				LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
 				DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\nconfiguration file.\nReplace SD card and\npress Menu.");
 				while (!KeyboardIsMenuKeyPressed());
 				return 1;
@@ -363,7 +364,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 			Shared_Buffers.Configuration_File[Size + 1] = INI_PARSER_END_CHARACTER;
 			*Pointer_Size = (unsigned short) Size; // A 16-bit value is enough to store this size, as there are only 8KB of RAM in total
 
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
 			return 0;
 		}
 	}
@@ -387,7 +388,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 	TKeyboardKey Keys_Mask;
 
 	// Count the available games
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
+	LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
 	Pointer_String_Section = Shared_Buffers.Configuration_File;
 	while (1)
 	{
@@ -396,22 +397,22 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 		if (Pointer_String_Section == NULL) break;
 		Games_Count++;
 	}
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Found games count : %u.", Games_Count);
+	LOG(MAIN_IS_LOGGING_ENABLED, "Found games count : %u.", Games_Count);
 
 	// Do not continue if no game is available
 	if (Games_Count == 0)
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "No game found, stopping.");
+		LOG(MAIN_IS_LOGGING_ENABLED, "No game found, stopping.");
 		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No game found in the\nconfiguration file.\nReplace the SD card\nand press Menu.");
 		while (!KeyboardIsMenuKeyPressed());
 		return NULL;
 	}
 
 	// Display the last played game
-	SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Searching for the last played game index (%u).", Last_Played_Game_Index);
+	LOG(MAIN_IS_LOGGING_ENABLED, "Searching for the last played game index (%u).", Last_Played_Game_Index);
 	if (Last_Played_Game_Index > Games_Count) // Make sure the provided value is not bad
 	{
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last played game index (%u) is greater than the games count (%u).", Last_Played_Game_Index, Games_Count);
+		LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last played game index (%u) is greater than the games count (%u).", Last_Played_Game_Index, Games_Count);
 		return NULL;
 	}
 	// Go through the games list until the index before the last played game is found
@@ -424,7 +425,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
 			if (Pointer_String_Section == NULL)
 			{
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last game has been reached but the last played game index was not found, this issue should not occur (current game index = %u, last played game index = %u).", Current_Game_Index, Last_Played_Game_Index);
+				LOG(MAIN_IS_LOGGING_ENABLED, "Error : the last game has been reached but the last played game index was not found, this issue should not occur (current game index = %u, last played game index = %u).", Current_Game_Index, Last_Played_Game_Index);
 				return NULL;
 			}
 			else Current_Game_Index++;
@@ -440,7 +441,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
 			if (Pointer_String_Section == NULL)
 			{
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Last game reached, looping to the first one.");
+				LOG(MAIN_IS_LOGGING_ENABLED, "Last game reached, looping to the first one.");
 				Current_Game_Index = 1;
 				Pointer_String_Section = Shared_Buffers.Configuration_File;
 				Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section); // Make sure to point to the second section next time
@@ -453,14 +454,14 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section);
 			if (Pointer_String_Section == NULL)
 			{
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "First game reached, looping to the last one.");
+				LOG(MAIN_IS_LOGGING_ENABLED, "First game reached, looping to the last one.");
 				Current_Game_Index = Games_Count;
 				Pointer_String_Section = (char *) (Shared_Buffers.Configuration_File + Configuration_File_Size);
 				Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section); // Make sure to point to the penultimate section next time
 			}
 			else Current_Game_Index--;
 		}
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Current game index : %u.", Current_Game_Index);
+		LOG(MAIN_IS_LOGGING_ENABLED, "Current game index : %u.", Current_Game_Index);
 
 		// Show the game into the display frame buffer
 		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
@@ -473,15 +474,15 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Title");
 		if (Pointer_String_Content == NULL)
 		{
-			SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game title found.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game title found.");
 			Pointer_String_Content = "! NO TITLE PROVIDED !";
 		}
-		SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Game title : \"%s\".", Pointer_String_Content);
+		LOG(MAIN_IS_LOGGING_ENABLED, "Game title : \"%s\".", Pointer_String_Content);
 		DisplaySetTextCursor(0, 2);
 		DisplayWriteString(Shared_Buffer_Display, Pointer_String_Content);
 		// Description
 		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Description");
-		if (Pointer_String_Content == NULL) SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game description found.");
+		if (Pointer_String_Content == NULL) LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game description found.");
 		// Do not display an error message if no description is provided, just display nothing
 		else
 		{
@@ -516,7 +517,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			// Select the current game
 			if (Keys_Mask & KEYBOARD_KEY_C)
 			{
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
+				LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
 				*Pointer_Last_Played_Game_Index = Current_Game_Index;
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release
 				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
@@ -585,15 +586,15 @@ static void MainDisplaySettingsMenu(void)
 	/** Display the various reasons that could lead to a system reset. */
 	static void MainCheckResetReason(void)
 	{
-		if (PCON0bits.STKOVF) SERIAL_PORT_LOG(1, "Detected reset reason : stack overflow.");
-		if (PCON0bits.STKUNF) SERIAL_PORT_LOG(1, "Detected reset reason : stack underflow.");
-		if (!PCON0bits.WDTWV) SERIAL_PORT_LOG(1, "Detected reset reason : watchdog window violation.");
-		if (!PCON0bits.RWDT) SERIAL_PORT_LOG(1, "Detected reset reason : watchdog timer triggered.");
-		if (!PCON0bits.RMCLR) SERIAL_PORT_LOG(1, "Detected reset reason : /MCLR external reset.");
-		if (!PCON0bits.RI) SERIAL_PORT_LOG(1, "Detected reset reason : RESET instruction executed.");
-		if (!PCON0bits.POR) SERIAL_PORT_LOG(1, "Detected reset reason : power-on reset.");
-		if (!PCON0bits.BOR) SERIAL_PORT_LOG(1, "Detected reset reason : brown-out reset.");
-		if (!PCON1bits.MEMV) SERIAL_PORT_LOG(1, "Detected reset reason : memory violation.");
+		if (PCON0bits.STKOVF) LOG(1, "Detected reset reason : stack overflow.");
+		if (PCON0bits.STKUNF) LOG(1, "Detected reset reason : stack underflow.");
+		if (!PCON0bits.WDTWV) LOG(1, "Detected reset reason : watchdog window violation.");
+		if (!PCON0bits.RWDT) LOG(1, "Detected reset reason : watchdog timer triggered.");
+		if (!PCON0bits.RMCLR) LOG(1, "Detected reset reason : /MCLR external reset.");
+		if (!PCON0bits.RI) LOG(1, "Detected reset reason : RESET instruction executed.");
+		if (!PCON0bits.POR) LOG(1, "Detected reset reason : power-on reset.");
+		if (!PCON0bits.BOR) LOG(1, "Detected reset reason : brown-out reset.");
+		if (!PCON1bits.MEMV) LOG(1, "Detected reset reason : memory violation.");
 
 		// Clear the registers to have a fresh status on next reset
 		PCON0 = 0x3F;
@@ -676,12 +677,12 @@ void main(void)
 				// Try to load the game from the SD card
 				if (InterpreterLoadProgramFromFile(Pointer_String_Game_INI_Section) != 0)
 				{
-					SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
+					LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
 					DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\ngame. Replace the SD\ncard and press Menu.");
 					while (!KeyboardIsMenuKeyPressed());
 					continue;
 				}
-				SERIAL_PORT_LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
+				LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
 
 				// TEST
 				InterpreterRunProgram();

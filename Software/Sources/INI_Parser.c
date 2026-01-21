@@ -3,7 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <INI_Parser.h>
-#include <Serial_Port.h>
+#include <Log.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,7 +113,7 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 	Pointer_String = INIParserSearchCharacter(Pointer_String_Section, ']');
 	if (Pointer_String == NULL)
 	{
-		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Error : unterminated section \"%s\".", Pointer_String_Section);
+		LOG(INI_PARSER_IS_LOGGING_ENABLED, "Error : unterminated section \"%s\".", Pointer_String_Section);
 		return NULL;
 	}
 
@@ -122,7 +122,7 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 	Pointer_String = INIParserDiscardWhiteSpace(Pointer_String);
 	if (Pointer_String == NULL)
 	{
-		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Error : no keys present in the section \"%s\".", Pointer_String_Section);
+		LOG(INI_PARSER_IS_LOGGING_ENABLED, "Error : no keys present in the section \"%s\".", Pointer_String_Section);
 		return NULL;
 	}
 
@@ -139,7 +139,7 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 			Character = *Pointer_String;
 			if ((Character == INI_PARSER_END_CHARACTER) || (Character == '\n') || (Character == 0))
 			{
-				SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "No more '=' character found in the keys area of this section.");
+				LOG(INI_PARSER_IS_LOGGING_ENABLED, "No more '=' character found in the keys area of this section.");
 				return NULL;
 			}
 			if (Character == '=') break;
@@ -172,7 +172,7 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 			Character = *Pointer_String;
 			if (Character == INI_PARSER_END_CHARACTER)
 			{
-				SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "This was the last key of the INI file.");
+				LOG(INI_PARSER_IS_LOGGING_ENABLED, "This was the last key of the INI file.");
 				return NULL;
 			}
 			if ((Character == '\n') || (Character == 0)) break;
@@ -183,14 +183,14 @@ char *INIParserReadString(char *Pointer_String_Section, const char *Pointer_Stri
 		Pointer_String = INIParserDiscardWhiteSpace(Pointer_String);
 		if (Pointer_String == NULL)
 		{
-			SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "This was the last key of the INI file.");
+			LOG(INI_PARSER_IS_LOGGING_ENABLED, "This was the last key of the INI file.");
 			return NULL;
 		}
 
 		// Stop if the beginning of another section is found
 		if (*Pointer_String == '[')
 		{
-			SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Found the beginning of the next section, stopping.");
+			LOG(INI_PARSER_IS_LOGGING_ENABLED, "Found the beginning of the next section, stopping.");
 			return NULL;
 		}
 	}
@@ -204,7 +204,7 @@ unsigned char INIParserRead8BitInteger(char *Pointer_String_Section, const char 
 	Pointer_String_Value = INIParserReadString(Pointer_String_Section, Pointer_String_Key_Name);
 	if (Pointer_String_Value == NULL)
 	{
-		SERIAL_PORT_LOG(INI_PARSER_IS_LOGGING_ENABLED, "Could not find the key named \"%s\".", Pointer_String_Key_Name);
+		LOG(INI_PARSER_IS_LOGGING_ENABLED, "Could not find the key named \"%s\".", Pointer_String_Key_Name);
 		return 1;
 	}
 

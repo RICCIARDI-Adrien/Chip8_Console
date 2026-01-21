@@ -4,7 +4,7 @@
  */
 #include <Display.h>
 #include <EEPROM.h>
-#include <Serial_Port.h>
+#include <Log.h>
 #include <Shared_Buffer.h>
 #include <SPI.h>
 #include <string.h>
@@ -174,7 +174,7 @@ void DisplayInitialize(void)
 
 	// Adjust the brightness according to the configuration
 	Brightness = EEPROMReadByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS);
-	SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "Brightness value loaded from the configuration : %u.", Brightness);
+	LOG(DISPLAY_IS_LOGGING_ENABLED, "Brightness value loaded from the configuration : %u.", Brightness);
 	DisplaySetBrightness(Brightness);
 
 	// Leave the display in data mode by default
@@ -349,7 +349,7 @@ void DisplayDrawTextMessage(void *Pointer_Buffer, const char *Pointer_String_Tit
 	}
 	else
 	{
-		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The title string \"%s\" is too long to fit on a single display row.", Pointer_String_Title);
+		LOG(DISPLAY_IS_LOGGING_ENABLED, "The title string \"%s\" is too long to fit on a single display row.", Pointer_String_Title);
 		Title_X = 0;
 	}
 	DisplaySetTextCursor(Title_X, 0);
@@ -367,7 +367,7 @@ void DisplaySetBrightness(unsigned char Brightness)
 	// The default brightness at display reset is 0x7F, so avoid higher values in case they could harm the OLED pixels
 	if (Brightness > 0x7F)
 	{
-		SERIAL_PORT_LOG(DISPLAY_IS_LOGGING_ENABLED, "The specified brightness 0x%08X is too high, capping it to 0x7F.\n", Brightness);
+		LOG(DISPLAY_IS_LOGGING_ENABLED, "The specified brightness 0x%08X is too high, capping it to 0x7F.\n", Brightness);
 		Brightness = 0x7F;
 	}
 

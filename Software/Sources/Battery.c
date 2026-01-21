@@ -3,7 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <Battery.h>
-#include <Serial_Port.h>
+#include <Log.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ unsigned char BatteryGetCurrentChargePercentage(void)
 
 	// Retrieve the conversion result
 	Raw_Value = ((unsigned short) (ADFLTRH << 8)) | ADFLTRL;
-	SERIAL_PORT_LOG(BATTERY_IS_LOGGING_ENABLED, "Raw ADC conversion value : %u.", Raw_Value);
+	LOG(BATTERY_IS_LOGGING_ENABLED, "Raw ADC conversion value : %u.", Raw_Value);
 
 	// Convert to a charge percentage : 0% if the voltage is lesser or equal to BATTERY_LOW_CHARGE_RAW_ADC_VALUE, 100% if the voltage is higher or equal to BATTERY_FULL_CHARGE_RAW_ADC_VALUE
 	if (Raw_Value <= BATTERY_LOW_CHARGE_RAW_ADC_VALUE) Percentage = 0;
@@ -105,6 +105,6 @@ unsigned char BatteryGetCurrentChargePercentage(void)
 		Percentage = 100UL * Raw_Value / ((unsigned long) (BATTERY_FULL_CHARGE_RAW_ADC_VALUE - BATTERY_LOW_CHARGE_RAW_ADC_VALUE)); // The percentage value is in range ]BATTERY_LOW_CHARGE_RAW_ADC_VALUE; BATTERY_FULL_CHARGE_RAW_ADC_VALUE[
 	}
 
-	SERIAL_PORT_LOG(BATTERY_IS_LOGGING_ENABLED, "Percentage : %u%%.", Percentage);
+	LOG(BATTERY_IS_LOGGING_ENABLED, "Percentage : %u%%.", Percentage);
 	return Percentage;
 }

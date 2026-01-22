@@ -225,7 +225,7 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 
 void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 {
-	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[8], Pixel_Mask;
+	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[8], Pixel_Mask, *Pointer_Frame_Buffer_Chunk;
 
 	SPI_SELECT_DISPLAY();
 
@@ -235,7 +235,15 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 		for (Column = 0; Column < DISPLAY_COLUMNS_COUNT / 8; Column++) // There are 8 horizontal pixels per byte in the local frame buffer
 		{
 			// Load the 8 frame buffer horizontal bytes needed to create 8 vertical display buffer bytes
-			for (i = 0; i < 8; i++) Frame_Buffer_Chunk[i] = Pointer_Buffer_Bytes[(Row + i) * (DISPLAY_COLUMNS_COUNT / 8) + Column];
+			Pointer_Frame_Buffer_Chunk = Pointer_Buffer_Bytes;
+			for (i = 0; i < 8; i++)
+			{
+				Frame_Buffer_Chunk[i] = *Pointer_Frame_Buffer_Chunk;
+				Pointer_Frame_Buffer_Chunk += DISPLAY_COLUMNS_COUNT / 8; // Go to the next bytes row
+			}
+			// When the end of the row is reached, go to the next 8-byte chunk
+			if (Column == (DISPLAY_COLUMNS_COUNT / 8) - 1) Pointer_Buffer_Bytes += (7 * (DISPLAY_COLUMNS_COUNT / 8)) + 1; // Add 1 to terminate the row, then add 7 more rows to finally reach the 8 next rows
+			else Pointer_Buffer_Bytes++;
 
 			// Convert the frame buffer horizontal pixels to display controller expected vertical ones
 			for (j = 0; j < 8; j++)
@@ -260,6 +268,7 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 
 	SPI_DESELECT_DISPLAY();
 }
+
 void DisplaySetTextCursor(unsigned char X, unsigned char Y)
 {
 	// Make sure the character will be entirely displayed on the screen

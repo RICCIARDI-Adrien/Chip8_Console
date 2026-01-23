@@ -261,7 +261,7 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 				}
 
 				// The horizontal 8 pixels are ready to be displayed
-				SPITransferByte(Display_Byte);
+				SPIWriteByte(Display_Byte);
 			}
 		}
 	}

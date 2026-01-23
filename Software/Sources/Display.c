@@ -225,7 +225,7 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 
 void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 {
-	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[8], Pixel_Mask, *Pointer_Frame_Buffer_Chunk;
+	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[8], *Pointer_Frame_Buffer_Chunk;
 
 	SPI_SELECT_DISPLAY();
 
@@ -251,9 +251,7 @@ void DisplayDrawFullSizeBuffer(void *Pointer_Buffer)
 				Display_Byte = 0;
 				for (i = 0; i < 8; i++)
 				{
-					if (Frame_Buffer_Chunk[i] & 0x80) Pixel_Mask = 0x80; // The most significant bit of the display buffer is displayed starting from the display bottom
-					else Pixel_Mask = 0;
-					Display_Byte |= Pixel_Mask;
+					if (Frame_Buffer_Chunk[i] & 0x80) Display_Byte |= 0x80; // The most significant bit of the display buffer is displayed starting from the display bottom
 					if (i < 7) Display_Byte >>= 1; // Append each pixel the to most significant bit of the byte, and do not shift the last time or the initial bit would be lost
 
 					// Put the next pixel bit to check to the most significant location

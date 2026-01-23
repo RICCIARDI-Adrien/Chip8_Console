@@ -39,6 +39,9 @@ void SPIInitialize(void)
 
 unsigned char SPITransferByte(unsigned char Byte)
 {
+	// Wait for the previous transfer to terminate (if any), in case SPIWriteByte() was used just before
+	while (SPI1CON2bits.BUSY); // Wait for the transfer to terminate
+
 	// The /SS pin is active while SPI1TCNT is greater than 0
 	SPI1TCNTH = 0;
 	SPI1TCNTL = 1;
@@ -49,4 +52,18 @@ unsigned char SPITransferByte(unsigned char Byte)
 	while (SPI1CON2bits.BUSY); // Wait for the transfer to terminate
 
 	return SPI1RXB;
+}
+
+void SPIWriteByte(unsigned char Byte)
+{
+	volatile unsigned char Received_Byte;
+
+	// Wait for the previous transfer to terminate (if any)
+	while (SPI1CON2bits.BUSY); // Wait for the transfer to terminate
+
+	// Drain the reception FIFO even if it is empty (this would just set the RXRE bit), in order to not block the future transmissions
+	Received_Byte = SPI1RXB;
+
+	// Transfer a byte (no need to set the SPIxTCNLy registers, they are impacting only the reception that we are not using here)
+	SPI1TXB = Byte;
 }

@@ -15,6 +15,9 @@
 void SerialPortInitialize(void)
 {
 	#ifdef LOG_IS_ENABLED
+		// Enable the peripheral module
+		PMD5bits.U1MD = 0;
+
 		// Configure baud rate generation, computed with following formula : SPBRGH:SPBRG = (Fosc / (4 * Baud_Rate)) - 1
 		U1BRGH = 0;
 		U1BRGL = 16; // With this value we get 941176.47 bit/s, which is a (941176.47 - 921600) / 921600 = 0.021% error

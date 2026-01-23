@@ -8,6 +8,12 @@
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
+void EEPROMInitialize(void)
+{
+	// Enable the peripheral module
+	PMD0bits.NVMMD = 0;
+}
+
 unsigned char EEPROMReadByte(unsigned short Address)
 {
 	// Do nothing if the provided address is invalid

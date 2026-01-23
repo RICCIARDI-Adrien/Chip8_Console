@@ -139,7 +139,7 @@ const unsigned char Main_Splash_Screen[] =
 // Private functions
 //-------------------------------------------------------------------------------------------------
 /** Program the EEPROM relevant locations with the default values. */
-static void MainInitializeEEPROM()
+static void MainInitializeEEPROM(void)
 {
 	unsigned char i;
 
@@ -615,6 +615,16 @@ void main(void)
 	// Wait for the internal oscillator to stabilize
 	while (!OSCSTATbits.HFOR);
 
+	// Gate all peripheral clocks to save some power, each used peripheral will then be selectively re-enabled
+	PMD0 = 0x7F; // Keep the system clock network enabled
+	PMD1 = 0xFF;
+	PMD2 = 0xFF;
+	PMD3 = 0xFF;
+	PMD4 = 0xFF;
+	PMD5 = 0xFF;
+	PMD6 = 0xFF;
+	PMD7 = 0xFF;
+
 	// Initialize all needed modules
 	LEDInitialize();
 	LED_SET_ENABLED(1); // Turn the LED on during the microcontroller boot
@@ -623,6 +633,7 @@ void main(void)
 	#if MAIN_IS_LOGGING_ENABLED
 		MainCheckResetReason(); // Right after the logs are working to display the results, determine if there was an abnormal reset
 	#endif
+	EEPROMInitialize();
 	MainInitializeEEPROM(); // Initialize the EEPROM content if the microcontroller EEPROM area is not yet programmed
 	NCOInitialize(); // This module must be initialized before the sound module
 	SoundInitialize();

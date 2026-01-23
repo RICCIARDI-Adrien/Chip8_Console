@@ -38,6 +38,10 @@
 //-------------------------------------------------------------------------------------------------
 void BatteryInitialize(void)
 {
+	// Enable the peripheral modules
+	PMD0bits.FVRMD = 0;
+	PMD2bits.ADCMD = 0;
+
 	// Configure the fixed voltage reference to generate a 2.048V voltage
 	FVRCON = 0x02; // Do not enable the temperature indicator, enable only the buffer 1 that is connected to the ADC reference voltage multiplexer, select a 2x gain
 	FVRCONbits.EN = 1; // Enable the module

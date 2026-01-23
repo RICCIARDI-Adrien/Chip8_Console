@@ -246,6 +246,9 @@ static unsigned char InterpreterConfigureKeyBindings(char *Pointer_String_Game_I
 //-------------------------------------------------------------------------------------------------
 void InterpreterInitialize(void)
 {
+	// Enable the peripheral module
+	PMD1bits.TMR6MD = 0;
+
 	// Use timer 6 as the Chip-8 delay timer
 	T6CLK = 0x09; // Clock the timer by the NCO module
 	T6HLT = 0xA8; // Prescaler output is synchronized with Fosc/4, also synchronize the ON bit with the timer clock input, select the one-shot mode with one-shot operation and software start

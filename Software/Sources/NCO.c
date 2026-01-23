@@ -19,6 +19,9 @@
 //-------------------------------------------------------------------------------------------------
 void NCOInitialize(void)
 {
+	// Enable the peripheral module
+	PMD1bits.NCO1MD = 0;
+
 	NCO1CLK = 0x04; // Use MFINTOSC/4 (32KHz) to clock the module
 
 	// Set the increment value

@@ -10,6 +10,9 @@
 //-------------------------------------------------------------------------------------------------
 void SPIInitialize(void)
 {
+	// Enable the peripheral module
+	PMD5bits.SPI1MD = 0;
+
 	// Configure the baud rate
 	SPI1CLK = 0; // Clock the SPI module from Fosc (64MHz)
 	SPI1BAUD = 15; // SPIxBAUD = Fcsel / (2 * Fbaud) - 1, with Fcsel = HFINTOSC = 64MHz and Fbaud = 2MHz

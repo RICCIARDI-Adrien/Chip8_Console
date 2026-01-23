@@ -11,6 +11,9 @@
 void LogInitialize(void)
 {
 	#ifdef LOG_IS_ENABLED
+		// Enable the peripheral module
+		PMD1bits.TMR0MD = 0;
+
 		// Initialize the timer 0 to count at a 1us period
 		T0CON0 = 0x10; // Do not enable the timer yet, select the 16-bit mode, do not use a postscaler
 		T0CON1 = 0x44; // Use Fosc/4 as clock source, synchronize to Fosc/4, use a 1:16 prescaler

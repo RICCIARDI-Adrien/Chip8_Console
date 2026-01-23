@@ -40,6 +40,11 @@ void SoundInitialize(void)
 {
 	unsigned char Percentage;
 
+	// Enable the peripheral modules
+	PMD3bits.PWM5MD = 0;
+	PMD1bits.TMR2MD = 0;
+	PMD1bits.TMR4MD = 0;
+
 	// Configure the PWM module
 	CCPTMRS1 = (CCPTMRS1 & 0xFC) | 0x01; // Select TMR2 clock for PWM5
 	PWM5CON = 0; // Do not enable the PWM for now, do not invert the output signal

@@ -25,6 +25,15 @@ typedef struct
 	unsigned long First_Cluster_Number;
 } TFATFileInformation;
 
+/** Allow to split a cluster access into its internal blocks (because a cluster size can easily excess the available RAM).
+ * @note This structure is not meant for a direct usage.
+ */
+typedef struct
+{
+	unsigned long Sector_Address; //!< The sector LBA address into the FAT.
+	unsigned char Remaining_Sectors_Count; //!< How many sectors into the cluster have not been processed yet.
+} TFATClusterAccessInformation;
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------

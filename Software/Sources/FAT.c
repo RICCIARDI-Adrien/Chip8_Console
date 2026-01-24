@@ -140,11 +140,6 @@ typedef enum
 /** Keep the mounted file system relevant information. */
 static TFATInformation FAT_Information;
 
-/** The cluster reading function internal sector LBA address. */
-static unsigned long FAT_Read_Cluster_Current_Sector_Address;
-/** The cluster reading function internal count of remaining sectors to read. */
-static unsigned char FAT_Read_Cluster_Remaining_Sectors_Count;
-
 /** The files listing function internal state machine state. */
 static TFATListFileState FAT_List_File_State;
 /** The files listing function internal cluster number. */
@@ -156,10 +151,10 @@ static unsigned long FAT_List_File_Current_Cluster_Number;
 /** Prepare the cluster reading function to read a specific cluster content.
  * @param Cluster_Number The number of the cluster to read.
  */
-static void FATConfigureClusterReading(unsigned long Cluster_Number)
+static void FATConfigureClusterReading(unsigned long Cluster_Number, TFATClusterAccessInformation *Pointer_Cluster_Access_Information)
 {
-	FAT_Read_Cluster_Current_Sector_Address = FAT_Information.First_Cluster_Sector + ((Cluster_Number - 2) * FAT_Information.Cluster_Size_Sectors); // TODO validity check
-	FAT_Read_Cluster_Remaining_Sectors_Count = FAT_Information.Cluster_Size_Sectors;
+	Pointer_Cluster_Access_Information->Sector_Address = FAT_Information.First_Cluster_Sector + ((Cluster_Number - 2) * FAT_Information.Cluster_Size_Sectors); // TODO validity check
+	Pointer_Cluster_Access_Information->Remaining_Sectors_Count = FAT_Information.Cluster_Size_Sectors;
 }
 
 /** Allow to read a full cluster sector per sector to minimize the amount of needed RAM. Call this function repeatedly until it returns a result different from 0 to read all the sectors of a given cluster.
@@ -169,22 +164,22 @@ static void FATConfigureClusterReading(unsigned long Cluster_Number)
  * @return 2 if the last cluster sector was already read, so no more data has been fetched,
  * @return 3 if an error occurred.
  */
-static unsigned char FATReadClusterAsSectors(void *Pointer_Buffer)
+static unsigned char FATReadClusterAsSectors(TFATClusterAccessInformation *Pointer_Cluster_Access_Information, void *Pointer_Buffer)
 {
 	// Do not read anything if the the full cluster has been already read
-	if (FAT_Read_Cluster_Remaining_Sectors_Count == 0) return 2;
+	if (Pointer_Cluster_Access_Information->Remaining_Sectors_Count == 0) return 2;
 
 	// Read the next cluster's sector from the SD card
-	if (SDCardReadBlock(FAT_Read_Cluster_Current_Sector_Address, Pointer_Buffer) != 0)
+	if (SDCardReadBlock(Pointer_Cluster_Access_Information->Sector_Address, Pointer_Buffer) != 0)
 	{
-		LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).", FAT_Information.Cluster_Size_Sectors - FAT_Read_Cluster_Remaining_Sectors_Count, FAT_Read_Cluster_Current_Sector_Address);
+		LOG(FAT_IS_LOGGING_ENABLED, "Failed to read the sector %u of the corresponding cluster (sector LBA address is 0x%08lX).", FAT_Information.Cluster_Size_Sectors - Pointer_Cluster_Access_Information->Remaining_Sectors_Count, Pointer_Cluster_Access_Information->Sector_Address);
 		return 3;
 	}
 
 	// Prepare for next call
-	FAT_Read_Cluster_Remaining_Sectors_Count--;
-	if (FAT_Read_Cluster_Remaining_Sectors_Count == 0) return 1; // Stop reading when that was the last sector of the cluster
-	FAT_Read_Cluster_Current_Sector_Address++;
+	Pointer_Cluster_Access_Information->Remaining_Sectors_Count--;
+	if (Pointer_Cluster_Access_Information->Remaining_Sectors_Count == 0) return 1; // Stop reading when that was the last sector of the cluster
+	Pointer_Cluster_Access_Information->Sector_Address++;
 
 	// Cluster reading is not finished yet
 	return 0;
@@ -389,6 +384,7 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 {
 	static TFATDirectory FAT_Directories[FAT_DIRECTORY_ENTRIES_PER_SECTOR]; // This buffer has the size of a sector
 	static unsigned char Current_Directory_Entry_Index_In_Sector, Is_Cluster_Fully_Read;
+	static TFATClusterAccessInformation Cluster_Access_Information;
 	TFATDirectory *Pointer_FAT_Directory;
 	unsigned char Result, *Pointer_Buffer_Sector = (unsigned char *) FAT_Directories; // Recycle the FAT_Directories buffer storage area, both buffers are never used at the same time
 
@@ -399,13 +395,13 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 		{
 			case FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER:
 				LOG(FAT_IS_LOGGING_ENABLED, "Entering FAT_LIST_FILE_STATE_CONFIGURE_CLUSTER_NUMBER state.");
-				FATConfigureClusterReading(FAT_List_File_Current_Cluster_Number);
+				FATConfigureClusterReading(FAT_List_File_Current_Cluster_Number, &Cluster_Access_Information);
 				Is_Cluster_Fully_Read = 0;
 				// When a cluster has been configured, its first sector must be read
 
 			case FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR:
 				LOG(FAT_IS_LOGGING_ENABLED, "Entering FAT_LIST_FILE_STATE_READ_CLUSTER_SECTOR state.");
-				Result = FATReadClusterAsSectors(FAT_Directories);
+				Result = FATReadClusterAsSectors(&Cluster_Access_Information, FAT_Directories);
 				if (Result >= 2) // Did an error occur ?
 				{
 					LOG(FAT_IS_LOGGING_ENABLED, "Error : could not read the SD card.");
@@ -495,6 +491,7 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size)
 {
 	static unsigned char Buffer_FAT_Sector[SD_CARD_BLOCK_SIZE];
+	TFATClusterAccessInformation Cluster_Access_Information;
 	unsigned long Cluster_Number;
 	unsigned char *Pointer_Destination_Buffer_Bytes, Result;
 
@@ -505,10 +502,10 @@ unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *P
 	while (Destination_Buffer_Size > 0)
 	{
 		// Read the next cluster content
-		FATConfigureClusterReading(Cluster_Number);
+		FATConfigureClusterReading(Cluster_Number, &Cluster_Access_Information);
 		do
 		{
-			Result = FATReadClusterAsSectors(Pointer_Destination_Buffer_Bytes);
+			Result = FATReadClusterAsSectors(&Cluster_Access_Information, Pointer_Destination_Buffer_Bytes);
 			if (Result == 2) return 1; // Did something bad happened ?
 
 			// Prepare for next cluster sector read

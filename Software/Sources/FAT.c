@@ -492,63 +492,6 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information)
 	return 0;
 }
 
-unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size)
-{
-	static unsigned char Buffer_FAT_Sector[SD_CARD_BLOCK_SIZE];
-	TFATClusterAccessInformation Cluster_Access_Information;
-	unsigned long Cluster_Number;
-	unsigned char *Pointer_Destination_Buffer_Bytes, Result;
-
-	Cluster_Number = Pointer_File_Information->First_Cluster_Number;
-	Pointer_Destination_Buffer_Bytes = Pointer_Destination_Buffer;
-
-	// Read bytes until the destination buffer is filled
-	while (Destination_Buffer_Size > 0)
-	{
-		// Read the next cluster content
-		FATConfigureClusterReading(Cluster_Number, &Cluster_Access_Information);
-		do
-		{
-			Result = FATReadClusterAsSectors(&Cluster_Access_Information, Pointer_Destination_Buffer_Bytes);
-			if (Result == 2) return 1; // Did something bad happened ?
-
-			// Prepare for next cluster sector read
-			Pointer_Destination_Buffer_Bytes += SD_CARD_BLOCK_SIZE;
-			Destination_Buffer_Size -= SD_CARD_BLOCK_SIZE;
-		} while ((Result == 0) && (Destination_Buffer_Size > 0));
-
-		// Stop if the destination buffer has been fully filled
-		if (Destination_Buffer_Size == 0)
-		{
-			LOG(FAT_IS_LOGGING_ENABLED, "The destination buffer is entirely filled, ending reading the file.");
-			break;
-		}
-
-		// Stop here if the destination buffer is not full, but has not enough room for a full sector (reading a new sector would overflow the buffer)
-		if (Destination_Buffer_Size < SD_CARD_BLOCK_SIZE)
-		{
-			LOG(FAT_IS_LOGGING_ENABLED, "Error : the remaining buffer size (%lu) is too small to fit a whole sector (%u).", Destination_Buffer_Size, SD_CARD_BLOCK_SIZE);
-			return 2;
-		}
-
-		// Retrieve the following cluster
-		if (FATFindNextCluster(Cluster_Number, Buffer_FAT_Sector, &Cluster_Number) != 0)
-		{
-			LOG(FAT_IS_LOGGING_ENABLED, "Error : failed to find the next FAT cluster.");
-			return 1;
-		}
-
-		// Was this the last cluster in the chain ?
-		if ((Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE)
-		{
-			LOG(FAT_IS_LOGGING_ENABLED, "The last cluster of the file has been loaded, ending reading the file.");
-			break;
-		}
-	}
-
-	return 0;
-}
-
 void FATReadSectorsStart(TFATFileInformation *Pointer_File_Information, TFATFileDescriptor *Pointer_File_Descriptor)
 {
 	unsigned long Clusters_Count, File_Size, First_Cluster_Number, Cluster_Size_Bytes;

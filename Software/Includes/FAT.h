@@ -69,17 +69,6 @@ unsigned char FATListStart(char *Pointer_String_Absolute_Path);
  */
 unsigned char FATListNext(TFATFileInformation *Pointer_File_Information);
 
-/** Load a file from the file system and store it in memory.
- * @param Pointer_File_Information The file to load.
- * @param Pointer_Destination_Buffer On output, will contain the file content.
- * @param Bytes_Count How may bytes of the file to store in memory. TODO
- * @param Destination_Buffer_Size The size in bytes of the buffer in which to store the read data. It must be a multiple of the size of a sector (512 bytes).
- * @return 0 on success,
- * @return 1 if an error occurred,
- * @return 2 if the destination buffer size is not a multiple of a sector size.
- */
-unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size);
-
 /** Configure a file reading operation.
  * @param Pointer_File_Information Provide the details about the file to read.
  * @param Pointer_File_Descriptor On output, initialize the file descriptor to start reading the file from the beginning.

@@ -594,6 +594,13 @@ unsigned char FATReadSectorsNext(TFATFileDescriptor *Pointer_File_Descriptor, un
 			Pointer_File_Descriptor->Size_Clusters--;
 			LOG(FAT_IS_LOGGING_ENABLED, "The current cluster %lu has been entirely read. Remaining clusters in the file : %lu.", Pointer_File_Descriptor->Current_Cluster_Number, Pointer_File_Descriptor->Size_Clusters);
 
+			// Exit if the file has been fully read
+			if (Pointer_File_Descriptor->Size_Clusters == 0)
+			{
+				LOG(FAT_IS_LOGGING_ENABLED, "The file has been fully read, ending reading the file.");\
+				return 1;
+			}
+
 			// Get the next one
 			if (FATFindNextCluster(Pointer_File_Descriptor->Current_Cluster_Number, Buffer_FAT_Sector, &Next_Cluster_Number) != 0)
 			{

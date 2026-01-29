@@ -246,7 +246,11 @@ static unsigned char FATFindNextCluster(unsigned long Current_Cluster, void *Poi
 	unsigned short Entry_Index;
 
 	// Make sure that the current cluster is valid (the code checking for the higher boundary comes later)
-	if (Current_Cluster < FAT_Information.First_Root_Directory_Cluster) return 1;
+	if (Current_Cluster < FAT_Information.First_Root_Directory_Cluster)
+	{
+		LOG(FAT_IS_LOGGING_ENABLED, "Error : the provided cluster %lu is not located into the FAT root directory (which starts at cluster %lu).", Current_Cluster, FAT_Information.First_Root_Directory_Cluster);
+		return 1;
+	}
 
 	// Find the sector in FAT containing the current cluster
 	Sector_Address = Current_Cluster / FAT_ENTRIES_PER_SECTOR; // Find the sector in which the FAT entry is stored
@@ -540,6 +544,79 @@ unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *P
 			LOG(FAT_IS_LOGGING_ENABLED, "The last cluster of the file has been loaded, ending reading the file.");
 			break;
 		}
+	}
+
+	return 0;
+}
+
+void FATReadSectorsStart(TFATFileInformation *Pointer_File_Information, TFATFileDescriptor *Pointer_File_Descriptor)
+{
+	unsigned long Clusters_Count, File_Size, First_Cluster_Number, Cluster_Size_Bytes;
+
+	// Point to the first cluster to read from
+	First_Cluster_Number = Pointer_File_Information->First_Cluster_Number;
+	Pointer_File_Descriptor->Current_Cluster_Number = First_Cluster_Number;
+	FATConfigureClusterReading(First_Cluster_Number, &Pointer_File_Descriptor->Current_Cluster_Information);
+
+	// Cache the file size in clusters
+	File_Size = Pointer_File_Information->Size;
+	Cluster_Size_Bytes = FAT_Information.Cluster_Size_Sectors * SD_CARD_BLOCK_SIZE;
+	Clusters_Count = File_Size / Cluster_Size_Bytes;
+	if (Clusters_Count * Cluster_Size_Bytes < File_Size) Clusters_Count++; // Add one cluster more if the file size is not a multiple of the cluster size
+	Pointer_File_Descriptor->Size_Clusters = Clusters_Count;
+
+	LOG(FAT_IS_LOGGING_ENABLED, "The file named \"%s\" size is %lu bytes, corresponding to %lu clusters.", Pointer_File_Information->String_Short_Name, File_Size, Clusters_Count);
+}
+
+unsigned char FATReadSectorsNext(TFATFileDescriptor *Pointer_File_Descriptor, unsigned char Sectors_Count, void *Pointer_Destination_Buffer)
+{
+	static unsigned char Buffer_FAT_Sector[SD_CARD_BLOCK_SIZE];
+	unsigned char Result, *Pointer_Destination_Buffer_Bytes = Pointer_Destination_Buffer;
+	unsigned long Next_Cluster_Number;
+
+	LOG(FAT_IS_LOGGING_ENABLED, "Asked to read %u sectors from the cluster %lu.", Sectors_Count, Pointer_File_Descriptor->Current_Cluster_Number);
+
+	// Do nothing if the file is empty
+	if (Pointer_File_Descriptor->Size_Clusters == 0) return 1;
+
+	// Read blocks until the destination buffer is filled
+	while (Sectors_Count > 0)
+	{
+		LOG(FAT_IS_LOGGING_ENABLED, "Reading the next sector.");
+		Result = FATReadClusterAsSectors(&Pointer_File_Descriptor->Current_Cluster_Information, Pointer_Destination_Buffer_Bytes);
+		if (Result == 2) return 1; // The end of the file is reached
+		if (Result == 3) return 2; // Did something bad happened ?
+
+		// The last sector of the cluster was read, prepare for the next one
+		if (Result == 1)
+		{
+			// A full cluster has been read
+			Pointer_File_Descriptor->Size_Clusters--;
+			LOG(FAT_IS_LOGGING_ENABLED, "The current cluster %lu has been entirely read. Remaining clusters in the file : %lu.", Pointer_File_Descriptor->Current_Cluster_Number, Pointer_File_Descriptor->Size_Clusters);
+
+			// Get the next one
+			if (FATFindNextCluster(Pointer_File_Descriptor->Current_Cluster_Number, Buffer_FAT_Sector, &Next_Cluster_Number) != 0)
+			{
+				LOG(FAT_IS_LOGGING_ENABLED, "Error : failed to determine the next cluster.");
+				return 2;
+			}
+			LOG(FAT_IS_LOGGING_ENABLED, "The next cluster is %lu.", Next_Cluster_Number);
+
+			// Was this the last cluster in the chain ?
+			if ((Next_Cluster_Number & FAT_ENTRY_VALUE_END_OF_FILE) == FAT_ENTRY_VALUE_END_OF_FILE)
+			{
+				LOG(FAT_IS_LOGGING_ENABLED, "The last cluster of the file has been loaded, ending reading the file.");
+				return 1;
+			}
+
+			// Configure the new cluster reading
+			Pointer_File_Descriptor->Current_Cluster_Number = Next_Cluster_Number;
+			FATConfigureClusterReading(Next_Cluster_Number, &Pointer_File_Descriptor->Current_Cluster_Information);
+		}
+
+		// Prepare for the next cluster sector read
+		Pointer_Destination_Buffer_Bytes += SD_CARD_BLOCK_SIZE;
+		Sectors_Count--;
 	}
 
 	return 0;

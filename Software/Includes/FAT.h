@@ -34,6 +34,14 @@ typedef struct
 	unsigned char Remaining_Sectors_Count; //!< How many sectors into the cluster have not been processed yet.
 } TFATClusterAccessInformation;
 
+/** Keep the processing state of a file during a read operation. */
+typedef struct
+{
+	unsigned long Current_Cluster_Number; //!< The number of the file cluster currently being processed.
+	unsigned long Size_Clusters; //!< The file size converted in cluster units. This value is updated by the file reading operation.
+	TFATClusterAccessInformation Current_Cluster_Information; //!< Track the processing state of the current cluster.
+} TFATFileDescriptor;
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
@@ -52,6 +60,7 @@ unsigned char FATMount(TMBRPartitionData *Pointer_Partition, void *Pointer_Tempo
  * @return 1 if an error occurred.
  */
 unsigned char FATListStart(char *Pointer_String_Absolute_Path);
+
 /** Find the next file or directory present in the root directory provided to FATListStart(). Call this function repeatedly until it returns a result different from 0 to list all files and directories present in the root directory.
  * @param Pointer_File_Information On output, contain the found file information.
  * @return 0 when a valid file or directory has been found and more are present in the root directory,
@@ -70,5 +79,21 @@ unsigned char FATListNext(TFATFileInformation *Pointer_File_Information);
  * @return 2 if the destination buffer size is not a multiple of a sector size.
  */
 unsigned char FATReadFile(TFATFileInformation *Pointer_File_Information, void *Pointer_Destination_Buffer, unsigned long Destination_Buffer_Size);
+
+/** Configure a file reading operation.
+ * @param Pointer_File_Information Provide the details about the file to read.
+ * @param Pointer_File_Descriptor On output, initialize the file descriptor to start reading the file from the beginning.
+ */
+void FATReadSectorsStart(TFATFileInformation *Pointer_File_Information, TFATFileDescriptor *Pointer_File_Descriptor);
+
+/** Read the file content sequentially, with the granularity of one sector.
+ * @param Pointer_File_Descriptor The file descriptor must have been initialized before the first call to this function with FATReadSectorsStart(). Then, the same file descriptor can be provided to this function with no change until the end of the file is reached.
+ * @param Sectors_Count How many file sectors to read.
+ * @param Pointer_Destination_Buffer On output, store the read data to this buffer.
+ * @return 0 on success,
+ * @return 1 if the file end has been reached,
+ * @return 2 if an error occurred.
+ */
+unsigned char FATReadSectorsNext(TFATFileDescriptor *Pointer_File_Descriptor, unsigned char Sectors_Count, void *Pointer_Destination_Buffer);
 
 #endif

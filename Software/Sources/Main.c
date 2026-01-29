@@ -316,6 +316,7 @@ Detect_SD_Card:
 static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 {
 	TFATFileInformation File_Information;
+	TFATFileDescriptor File_Descriptor;
 	unsigned long Size;
 
 	LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file on the SD card...");
@@ -349,7 +350,8 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 			LOG(MAIN_IS_LOGGING_ENABLED, "Found the configuration file, loading it.");
 
 			// Load the file
-			if (FATReadFile(&File_Information, Shared_Buffers.Configuration_File, sizeof(Shared_Buffers.Configuration_File)) != 0) // Keep room for the terminating bytes
+			FATReadSectorsStart(&File_Information, &File_Descriptor);
+			if (FATReadSectorsNext(&File_Descriptor, sizeof(Shared_Buffers.Configuration_File) / SD_CARD_BLOCK_SIZE, Shared_Buffers.Configuration_File) > 1) // Keep room for the terminating bytes
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
 				DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\nconfiguration file.\nReplace SD card and\npress Menu.");

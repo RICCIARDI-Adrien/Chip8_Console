@@ -10,6 +10,7 @@
 #include <Keyboard.h>
 #include <Log.h>
 #include <NCO.h>
+#include <SD_Card.h>
 #include <Shared_Buffer.h>
 #include <Sound.h>
 #include <string.h>
@@ -260,6 +261,7 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	unsigned char Result;
 	char *Pointer_String;
 	TFATFileInformation File_Information;
+	TFATFileDescriptor File_Descriptor;
 
 	// Assign the console keys to the Chip-8 values expected by the game (do that before loading the ROM file because the INI data is stored in the same buffer that the one in which the ROM file will be loaded)
 	if (InterpreterConfigureKeyBindings(Pointer_String_Game_INI_Section) != 0)
@@ -343,7 +345,8 @@ unsigned char InterpreterLoadProgramFromFile(char *Pointer_String_Game_INI_Secti
 	}
 
 	// Load the file
-	if (FATReadFile(&File_Information, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT], INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) != 0)
+	FATReadSectorsStart(&File_Information, &File_Descriptor);
+	if (FATReadSectorsNext(&File_Descriptor, (INTERPRETER_MEMORY_SIZE - INTERPRETER_PROGRAM_ENTRY_POINT) / SD_CARD_BLOCK_SIZE, &Shared_Buffers.Interpreter_Memory[INTERPRETER_PROGRAM_ENTRY_POINT]) > 1) // The resulting sectors count value is correct because the INTERPRETER_MEMORY_SIZE and INTERPRETER_PROGRAM_ENTRY_POINT values are aligned on a sector size
 	{
 		LOG(INTERPRETER_IS_LOGGING_ENABLED, "Error : failed to load the program from the file named \"%s\".", File_Information.String_Short_Name);
 		return 1;

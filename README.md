@@ -7,10 +7,10 @@ A Chip-8/SuperChip-8 console powered by a 8-bit PIC18 microcontroller.
 ## Specifications
 
 * Microchip PIC18F27K42 8-bit microcontroller
-* 64 MHz
-* 8 KB RAM
+* 64 MHz, giving a processing speed of up to 16 MIPS
+* 8 KB of on-chip static RAM
 * 128x64 pixels monochrome OLED display (Waveshare 2.42inch OLED Display Module)
-* SD card interface to store games
+* SD card interface to store games and files
 * Powered by 2x AA batteries
 * 8 keys usable with the Chip-8 interpreter, 1 menu key, 1 power-supply switch
 * Monotone buzzer

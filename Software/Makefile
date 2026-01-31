@@ -24,7 +24,8 @@ SOURCES = \
 	$(PATH_SOURCES)/Serial_Port.c \
 	$(PATH_SOURCES)/Shared_Buffer.c \
 	$(PATH_SOURCES)/Sound.c \
-	$(PATH_SOURCES)/SPI.c
+	$(PATH_SOURCES)/SPI.c \
+	$(PATH_SOURCES)/Video_Player.c
 
 CC = xc8-cc
 # The -Wa,-a argument tells the assembler to generate a listing file

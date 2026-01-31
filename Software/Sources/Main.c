@@ -20,6 +20,7 @@
 #include <SPI.h>
 #include <stdio.h>
 #include <string.h>
+#include <Video_Player.h>
 #include <xc.h>
 
 //-------------------------------------------------------------------------------------------------
@@ -204,13 +205,13 @@ static TKeyboardKey MainDisplayMainMenu(void)
 			for (i = 0; i < MAIN_BATTERY_SAMPLES_COUNT; i++) Mean += Battery_Charge_Samples[i];
 			Mean /= MAIN_BATTERY_SAMPLES_COUNT;
 
-			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "A. Games\nB. Settings\nC. Information\n\n\nBattery charge : %u%%", Mean);
+			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "A. Games\nB. Video player\nC. Settings\nD. Information\n\nBattery charge : %u%%", Mean);
 			DisplayDrawTextMessage(Shared_Buffer_Display, "- Main menu -", Shared_Buffers.String_Temporary);
 			Ticks_Counter_Show_Menu = 0;
 		}
 
 		Keys_Mask = KeyboardReadKeysMask();
-	} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C)) == 0);
+	} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C | KEYBOARD_KEY_D)) == 0);
 
 	// Wait for all the keys to be released
 	while (KeyboardReadKeysMask() != 0);
@@ -702,10 +703,17 @@ void main(void)
 				InterpreterRunProgram();
 			}
 		}
+		// Video player
+		else if (Keys_Mask & KEYBOARD_KEY_B)
+		{
+			// TODO
+			MainMountSDCard();
+			VideoPlayer();
+		}
 		// Settings
-		else if (Keys_Mask & KEYBOARD_KEY_B) MainDisplaySettingsMenu();
+		else if (Keys_Mask & KEYBOARD_KEY_C) MainDisplaySettingsMenu();
 		// Information
-		else if (Keys_Mask & KEYBOARD_KEY_C)
+		else if (Keys_Mask & KEYBOARD_KEY_D)
 		{
 			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nMenu : back.");
 

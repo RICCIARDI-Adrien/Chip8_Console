@@ -714,7 +714,14 @@ void main(void)
 		{
 			// TODO
 			MainMountSDCard();
+
+			// Generate a 25Hz tick for the frames rendering
+			NCOConfigure(NCO_TICK_FREQUENCY_25HZ);
+
 			VideoPlayer();
+
+			// Generate a 60Hz tick for the main menu
+			NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
 		}
 		// Settings
 		else if (Keys_Mask & KEYBOARD_KEY_C) MainDisplaySettingsMenu();

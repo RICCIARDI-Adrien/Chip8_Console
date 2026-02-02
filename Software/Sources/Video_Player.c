@@ -6,6 +6,8 @@
 #include <FAT.h>
 #include <Keyboard.h>
 #include <Log.h>
+#include <NCO.h>
+#include <SD_Card.h>
 #include <Shared_Buffer.h>
 #include <string.h>
 #include <Video_Player.h>
@@ -67,7 +69,6 @@ static inline unsigned char VideoPlayerFindFile(char *Pointer_String_File_Name, 
 void VideoPlayer(void)
 {
 	TFATFileDescriptor File_Descriptor;
-	unsigned long w = 0;
 
 	// Retrieve the movie file to play
 	if (VideoPlayerFindFile("VIDEO.BIN", &File_Descriptor) != 0)
@@ -78,8 +79,12 @@ void VideoPlayer(void)
 		return;
 	}
 
-	// TEST
-	while (FATReadSectorsNext(&File_Descriptor, 2, Shared_Buffers.Buffer) == 0)
+	// Wait for tick start to synchronize the first frame rendering
+	NCO_CLEAR_TICK_INTERRUPT_FLAG();
+	while (!NCO_IS_TICK_ELAPSED());
+
+	// Read the whole file until the end if reached or the user exited
+	while (FATReadSectorsNext(&File_Descriptor, sizeof(Shared_Buffer_Display) / SD_CARD_BLOCK_SIZE, Shared_Buffers.Buffer) == 0) // Read a full frame at a time, its size is a power of the block size so no rounding error can happen
 	{
 		// Check on each frame if the user wants to exit
 		if (KeyboardIsMenuKeyPressed())
@@ -88,8 +93,11 @@ void VideoPlayer(void)
 			return;
 		}
 
+		// Display the next frame
 		DisplayDrawFullSizeBuffer(Shared_Buffers.Buffer);
-		// TODO
-		__delay_ms(20);
+
+		// Wait for the next tick to keep the frame rate stable
+		while (!NCO_IS_TICK_ELAPSED());
+		NCO_CLEAR_TICK_INTERRUPT_FLAG();
 	}
 }

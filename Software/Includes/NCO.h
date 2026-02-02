@@ -11,6 +11,8 @@
 //-------------------------------------------------------------------------------------------------
 // Constants and macros
 //-------------------------------------------------------------------------------------------------
+/** The internal counter value to achieve a 25Hz tick frequency. */
+#define NCO_TICK_FREQUENCY_25HZ 1638 // Theoretical effective value is 24.994Hz
 /** The internal counter value to achieve a 60Hz tick frequency. */
 #define NCO_TICK_FREQUENCY_60HZ 3932 // Theoretical effective value is 59.998Hz
 

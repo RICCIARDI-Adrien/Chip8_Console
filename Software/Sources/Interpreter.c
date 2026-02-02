@@ -1182,7 +1182,7 @@ unsigned char InterpreterRunProgram(void)
 							if (KeyboardIsMenuKeyPressed()) goto Exit_Success;
 
 							// Also run the rendering loop in case a DRW instruction was issued just before calling this instruction, and the tick was not present (so the frame buffer could not be transferred to the display before blocking in this instruction)
-							if (Is_Rendering_Needed && NCO_60HZ_TICK())
+							if (Is_Rendering_Needed && NCO_IS_TICK_ELAPSED())
 							{
 								// Display the picture according to the emulation mode display
 								if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
@@ -1418,7 +1418,7 @@ unsigned char InterpreterRunProgram(void)
 
 Next_Instruction:
 		// Transfer the frame buffer to the display only when it has changed and not faster than 60 times per second
-		if (Is_Rendering_Needed && NCO_60HZ_TICK())
+		if (Is_Rendering_Needed && NCO_IS_TICK_ELAPSED())
 		{
 			// Display the picture according to the emulation mode display
 			if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);

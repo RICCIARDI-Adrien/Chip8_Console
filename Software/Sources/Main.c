@@ -182,7 +182,7 @@ static TKeyboardKey MainDisplayMainMenu(void)
 	do
 	{
 		// Increment the ticks counters (no need for a real time accuracy here)
-		if (NCO_60HZ_TICK())
+		if (NCO_IS_TICK_ELAPSED())
 		{
 			Ticks_Counter_Samples++;
 			Ticks_Counter_Show_Menu++;
@@ -638,7 +638,7 @@ void main(void)
 	#endif
 	EEPROMInitialize();
 	MainInitializeEEPROM(); // Initialize the EEPROM content if the microcontroller EEPROM area is not yet programmed
-	NCOInitialize(); // This module must be initialized before the sound module
+	NCOInitialize();
 	SoundInitialize();
 	KeyboardInitialize();
 	InterpreterInitialize();
@@ -647,6 +647,9 @@ void main(void)
 	DisplayInitialize();
 	SDCardInitialize();
 	BatteryInitialize();
+
+	// Generate a 60Hz tick for the main menu
+	NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
 
 	// Show the splash screen
 	memcpy(Shared_Buffer_Display, Main_Splash_Screen, sizeof(Shared_Buffer_Display));
@@ -699,7 +702,10 @@ void main(void)
 				}
 				LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
 
-				// TEST
+				// Generate a 60Hz frequency for the sound module and the frame rate rendering
+				NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
+
+				// Execute the program, when exiting the NCO is still configured at 60Hz
 				InterpreterRunProgram();
 			}
 		}

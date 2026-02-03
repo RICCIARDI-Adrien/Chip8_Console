@@ -11,12 +11,12 @@
 //-------------------------------------------------------------------------------------------------
 // Constants and macros
 //-------------------------------------------------------------------------------------------------
-/** The internal counter value to achieve a 25Hz tick frequency. */
-#define NCO_TICK_FREQUENCY_25HZ 1638 // Theoretical effective value is 24.994Hz
-/** The internal counter value to achieve a 60Hz tick frequency. */
-#define NCO_TICK_FREQUENCY_60HZ 3932 // Theoretical effective value is 59.998Hz
+/** The internal counter value to achieve a 12.5Hz frequency (a tick lasting 1/25). */
+#define NCO_TICK_FREQUENCY_VIDEO_PLAYER 839 // Theoretical effective value is 39.995ms before generating the NCO interrupt, as we want the tick to last 1/25Hz at 25 frames per second
+/** The internal counter value to achieve a 60Hz frequency. */
+#define NCO_TICK_FREQUENCY_INTERPRETER 4027
 
-/** The NCO module is configured to generate a specific frequency. Its interrupt flag is then toggling at this frequency too. Use it as a rendering tick here. */
+/** The NCO module is configured to generate a specific frequency. Its interrupt flag is then toggling twice faster at this frequency too. Use it as a rendering tick here. */
 #define NCO_IS_TICK_ELAPSED() (PIR4bits.NCO1IF == 1)
 
 /** Clear the interrupt flag at an appropriate moment chosen by the user (the interrupt flag must be manually cleared). */

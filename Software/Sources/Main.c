@@ -649,7 +649,7 @@ void main(void)
 	BatteryInitialize();
 
 	// Generate a 60Hz tick for the main menu
-	NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
+	NCOConfigure(NCO_TICK_FREQUENCY_INTERPRETER);
 
 	// Show the splash screen
 	memcpy(Shared_Buffer_Display, Main_Splash_Screen, sizeof(Shared_Buffer_Display));
@@ -703,7 +703,7 @@ void main(void)
 				LOG(MAIN_IS_LOGGING_ENABLED, "The game was successfully loaded.");
 
 				// Generate a 60Hz frequency for the sound module and the frame rate rendering
-				NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
+				NCOConfigure(NCO_TICK_FREQUENCY_INTERPRETER);
 
 				// Execute the program, when exiting the NCO is still configured at 60Hz
 				InterpreterRunProgram();
@@ -716,12 +716,12 @@ void main(void)
 			MainMountSDCard();
 
 			// Generate a 25Hz tick for the frames rendering
-			NCOConfigure(NCO_TICK_FREQUENCY_25HZ);
+			NCOConfigure(NCO_TICK_FREQUENCY_VIDEO_PLAYER);
 
 			VideoPlayer();
 
 			// Generate a 60Hz tick for the main menu
-			NCOConfigure(NCO_TICK_FREQUENCY_60HZ);
+			NCOConfigure(NCO_TICK_FREQUENCY_INTERPRETER);
 		}
 		// Settings
 		else if (Keys_Mask & KEYBOARD_KEY_C) MainDisplaySettingsMenu();

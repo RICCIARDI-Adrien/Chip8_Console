@@ -185,7 +185,7 @@ void DisplayInitialize(void)
 
 void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 {
-	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[4], Pixel_Mask;
+	unsigned char Row, Column, *Pointer_Buffer_Bytes = Pointer_Buffer, Display_Byte, i, j, Frame_Buffer_Chunk[4], *Pointer_Frame_Buffer_Chunk;
 
 	SPI_SELECT_DISPLAY();
 
@@ -195,7 +195,15 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 		for (Column = 0; Column < (DISPLAY_COLUMNS_COUNT / 2) / 8; Column++) // There are 8 horizontal pixels per byte in the local frame buffer
 		{
 			// Load the 8 frame buffer horizontal bytes needed to create 16 vertical display buffer bytes (pixels are doubled)
-			for (i = 0; i < 4; i++) Frame_Buffer_Chunk[i] = Pointer_Buffer_Bytes[(Row + i) * ((DISPLAY_COLUMNS_COUNT / 2) / 8) + Column];
+			Pointer_Frame_Buffer_Chunk = Pointer_Buffer_Bytes;
+			for (i = 0; i < 4; i++)
+			{
+				Frame_Buffer_Chunk[i] = *Pointer_Frame_Buffer_Chunk;
+				Pointer_Frame_Buffer_Chunk += (DISPLAY_COLUMNS_COUNT / 2) / 8; // Go to the next bytes row
+			}
+			// When the end of the row is reached, go to the next 8-byte chunk
+			if (Column == ((DISPLAY_COLUMNS_COUNT / 2) / 8) - 1) Pointer_Buffer_Bytes += (3 * ((DISPLAY_COLUMNS_COUNT / 2) / 8)) + 1; // Add 1 to terminate the row, then add 3 more rows to finally reach the 4 next rows
+			else Pointer_Buffer_Bytes++;
 
 			// Convert the frame buffer horizontal pixels to display controller expected vertical ones, also double the output pixels by a simple 2x scaling
 			for (j = 0; j < 8; j++)
@@ -204,9 +212,7 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 				for (i = 0; i < 4; i++)
 				{
 					// The most significant bit of the display buffer is displayed starting from the display bottom
-					if (Frame_Buffer_Chunk[i] & 0x80) Pixel_Mask = 0xC0; // Double the pixel vertically if the pixel is lit
-					else Pixel_Mask = 0;
-					Display_Byte |= Pixel_Mask;
+					if (Frame_Buffer_Chunk[i] & 0x80) Display_Byte |= 0xC0; // Double the pixel vertically if the pixel is lit
 					if (i < 3) Display_Byte >>= 2; // Append each pixel the to most significant bit of the byte, and do not shift the last time or the initial bit would be lost
 
 					// Put the next buffer pixel bit to check to the most significant location
@@ -214,8 +220,8 @@ void DisplayDrawHalfSizeBuffer(void *Pointer_Buffer)
 				}
 
 				// The horizontal 8 pixels are ready to be displayed, write the byte twice to double the pixels horizontally
-				SPITransferByte(Display_Byte);
-				SPITransferByte(Display_Byte);
+				SPIWriteByte(Display_Byte);
+				SPIWriteByte(Display_Byte); // Save time by not waiting for this transfer to terminate
 			}
 		}
 	}

@@ -3,51 +3,64 @@
 : main
 	vE := 0x05
 	v5 := 0x00
+
+	# Display the lines of blocks
 	vB := 0x06
+: Draw_Blocks_Line
 	vA := 0x00
-	i := 0x030C
+: Draw_Block
+	i := Sprite_Block
 	sprite vA vB 0x01
 	vA += 0x04
-	if vA != 0x40 then
-	jump 0x0208
+	if vA != 0x40 then jump Draw_Block
 	vB += 0x02
-	if vB != 0x12 then
-	jump 0x0206
+	if vB != 0x12 then jump Draw_Blocks_Line
+
+	# Display the paddle
 	vC := 0x20
 	vD := 0x1F
-	i := 0x0310
+	i := Sprite_Paddle
 	sprite vC vD 0x01
-	:call 0x02F6
+
+	:call Display_Score
+
+	# Display the remaining amount of lifes
 	v0 := 0x00
 	v1 := 0x00
-	i := 0x0312
+	i := Sprite_Initial_Life_Dots
 	sprite v0 v1 0x01
 	v0 += 0x08
-	i := 0x030E
+	i := Sprite_Dot
 	sprite v0 v1 0x01
+
+	# Wait a bit for the player to prepare before throwing the ball
+: Wait_Before_Throw
 	v0 := 0x40
 	delay := v0
+: Loop_Wait_Before_Throw
 	v0 := delay
-	if v0 != 0x00 then
-	jump 0x0234
+	if v0 != 0x00 then jump Loop_Wait_Before_Throw
+
+	# Throw the ball
 	v6 := random 0b00001111
 	v7 := 0x1E
 	v8 := 0x01
 	v9 := 0xFF
-	i := 0x030E
+
+	i := Sprite_Dot
 	sprite v6 v7 0x01
-	i := 0x0310
+: Main_Loop
+	i := Sprite_Paddle
 	sprite vC vD 0x01
+
 	v0 := 0x04
-	if v0 key then
-	vC += 0xFE
+	if v0 key then vC += 0xFE
 	v0 := 0x06
-	if v0 key then
-	vC += 0x02
+	if v0 key then vC += 0x02
 	v0 := 0x3F
 	vC &= v0
 	sprite vC vD 0x01
-	i := 0x030E
+	i := Sprite_Dot
 	sprite v6 v7 0x01
 	v6 += v8
 	v7 += v9
@@ -55,76 +68,80 @@
 	v6 &= v0
 	v1 := 0x1F
 	v7 &= v1
-	if v7 == 0x1F then
-	jump 0x02AC
-	if v6 == 0x00 then
-	v8 := 0x01
-	if v6 == 0x3F then
-	v8 := 0xFF
-	if v7 == 0x00 then
-	v9 := 0x01
+	if v7 == 0x1F then jump TODO1
+
+: TODO4
+	if v6 == 0x00 then v8 := 0x01
+	if v6 == 0x3F then v8 := 0xFF
+	if v7 == 0x00 then v9 := 0x01
 	sprite v6 v7 0x01
-	if vF != 0x01 then
-	jump 0x02AA
-	if v7 == 0x1F then
-	jump 0x02AA
+	if vF != 0x01 then jump TODO2
+	if v7 == 0x1F then jump TODO2
 	v0 := 0x05
 	v0 -= v7
-	if vF != 0x00 then
-	jump 0x02AA
+	if vF != 0x00 then jump TODO2
 	v0 := 0x01
 	buzzer := v0
 	v0 := v6
 	v1 := 0xFC
 	v0 &= v1
-	i := 0x030C
+	i := Sprite_Block
 	sprite v0 v7 0x01
 	v0 := 0xFE
 	v9 ^= v0
-	:call 0x02F6
+	:call Display_Score
 	v5 += 0x01
-	:call 0x02F6
-	if v5 == 0x60 then
-	jump 0x02DE
-	jump 0x0246
+	:call Display_Score
+	if v5 == 0x60 then jump Infinite_Loop
+
+: TODO2
+	jump Main_Loop
+
+: TODO1
 	v9 := 0xFF
 	v0 := v6
 	v0 -= vC
-	if vF != 0x01 then
-	jump 0x02CA
+	if vF != 0x01 then jump Play_Sound_Long
 	v1 := 0x02
 	v0 -= v1
-	if vF != 0x01 then
-	jump 0x02E0
+	if vF != 0x01 then jump TODO3
 	v0 -= v1
-	if vF != 0x01 then
-	jump 0x02EE
+	if vF != 0x01 then jump Play_Sound_Short
 	v0 -= v1
-	if vF != 0x01 then
-	jump 0x02E8
+	if vF != 0x01 then jump TODO5
+
+: Play_Sound_Long
 	v0 := 0x20
 	buzzer := v0
-	i := 0x030E
+
+	i := Sprite_Dot
 	vE += 0xFF
 	v0 := vE
 	v0 += v0
 	v1 := 0x00
 	sprite v0 v1 0x01
-	if vE != 0x00 then
-	jump 0x0230
-	jump 0x02DE
+	if vE != 0x00 then jump Wait_Before_Throw
+
+: Infinite_Loop
+	jump Infinite_Loop
+
+: TODO3
 	v8 += 0xFF
-	if v8 == 0xFE then
-	v8 := 0xFF
-	jump 0x02EE
+	if v8 == 0xFE then v8 := 0xFF
+	jump Play_Sound_Short
+
+: TODO5
 	v8 += 0x01
-	if v8 == 0x02 then
-	v8 := 0x01
+	if v8 == 0x02 then v8 := 0x01
+
+: Play_Sound_Short
 	v0 := 0x04
 	buzzer := v0
 	v9 := 0xFF
-	jump 0x0270
-	i := 0x0314
+	jump TODO4
+
+: Display_Score
+	i := Var_Score
 	bcd v5
 	load v2
 	i := hex v1
@@ -135,10 +152,19 @@
 	i := hex v2
 	sprite v3 v4 0x05
 	return
-	
+
+: Sprite_Block
 	0xE0 0x00
+
+: Sprite_Dot
 	0x80 0x00
+
+: Sprite_Paddle
 	0xFC 0x00
+
+: Sprite_Initial_Life_Dots
 	0xAA 0x00
+
+: Var_Score
 	0x00 0x00
 	0x00 0x00

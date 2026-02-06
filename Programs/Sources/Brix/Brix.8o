@@ -50,6 +50,10 @@
 	i := Sprite_Dot
 	sprite v6 v7 0x01
 : Main_Loop
+	# AR : use the timer to tick the main loop
+	v0 := 4
+	delay := v0
+
 	i := Sprite_Paddle
 	sprite vC vD 0x01
 
@@ -95,6 +99,12 @@
 	if v5 == 0x60 then jump Infinite_Loop
 
 : TODO2
+
+	# AR : wait for the tick to complete
+: Delay_Main_Loop
+	v0 := delay
+	if v0 != 0x00 then jump Delay_Main_Loop
+
 	jump Main_Loop
 
 : TODO1

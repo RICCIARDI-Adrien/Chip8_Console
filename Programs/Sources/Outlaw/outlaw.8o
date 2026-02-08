@@ -283,6 +283,10 @@
 
 	# main game loop
 	loop
+		# AR : use the timer to tick the main loop
+		v0 := 4
+		delay := v0
+
 		move-left-player
 		if vf != 0 then jump leftdead
 		move-right-player
@@ -292,4 +296,10 @@
 		if leftfire  != 0 then move-left-bullet
 		if leftfire  == 0 then fire-left-bullet
 		if rightfire != 0 then move-right-bullet
+
+		# AR : wait for the tick to complete
+: main-loop-tick
+		v0 := delay
+		if v0 != 0 then jump main-loop-tick
+
 	again

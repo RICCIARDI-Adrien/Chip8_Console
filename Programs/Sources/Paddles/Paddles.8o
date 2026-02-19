@@ -31,6 +31,10 @@
 	:call Draw_Ball
 
 : Main_Loop
+	# AR : use the timer to tick the main loop
+	v1 := 4
+	delay := v1
+
 	:call Draw_Ball
 	:call Draw_Paddles
 	if vE == 0x01 then :call TODO7
@@ -45,6 +49,13 @@
 	if vF == 0x01 then jump TODO15
 	if vD == 0x00 then jump TODO16
 	if vD == 0x1F then jump TODO17
+
+
+	# AR : wait for the tick to complete
+: Main_Loop_Wait_Tick
+	v1 := delay
+	if v1 != 0 then jump Main_Loop_Wait_Tick
+
 	jump Main_Loop
 
 : TODO16
@@ -59,7 +70,7 @@
 	vD := 0x02
 	vE := 0x02
 	:call Draw_Ball
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO17
 	:call Draw_Ball
@@ -73,7 +84,7 @@
 	vD := 0x1C
 	vE := 0x01
 	:call Draw_Ball
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO13
 	v0 := 0x04
@@ -138,35 +149,35 @@
 	if vE == 0x02 then jump TODO29
 	if vE == 0x03 then jump TODO30
 	if vE == 0x04 then jump TODO31
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO28
 	vE := 0x02
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO29
 	vE := 0x01
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO30
 	vE := 0x04
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO31
 	vE := 0x03
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO25
 	v0 := random 0b00000001
 	vE := 0x02
 	if v0 == 0x01 then vE := 0x03
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO26
 	v0 := random 0b00000001
 	vE := 0x01
 	if v0 == 0x01 then vE := 0x04
-	jump Main_Loop
+	jump Main_Loop_Wait_Tick
 
 : TODO7
 	vC += 0x01

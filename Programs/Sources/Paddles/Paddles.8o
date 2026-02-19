@@ -9,29 +9,30 @@
 	vC := 0x09
 	vD := 0x03
 	vE := 0x03
-	:call TODO1
-	:call TODO2
-	:call TODO3
-	:call TODO4
+	:call Draw_HUD_Lines
+	:call Draw_Terrain_Obstacles
+	:call Draw_Paddles
+	:call Draw_Scores
 	v7 := 0x00
 
-: TODO5
+	# Select a two-player or a single player game (with the opponent handled by the computer)
+: Select_Game_Type
 	v0 := 0x0F
 	if v0 key then v7 := 0x01
 	v0 := 0x0E
 	if v0 key then v7 := 0x02
-	if v7 == 0x00 then jump TODO5
+	if v7 == 0x00 then jump Select_Game_Type
 
 	clear
-	:call TODO1
-	:call TODO2
-	:call TODO3
-	:call TODO4
-	:call TODO6
+	:call Draw_HUD_Lines
+	:call Draw_Terrain_Obstacles
+	:call Draw_Paddles
+	:call Draw_Scores
+	:call Draw_Ball
 
-: TODO18
-	:call TODO6
-	:call TODO3
+: Main_Loop
+	:call Draw_Ball
+	:call Draw_Paddles
 	if vE == 0x01 then :call TODO7
 	if vE == 0x02 then :call TODO8
 	if vE == 0x03 then :call TODO9
@@ -39,40 +40,40 @@
 	:call TODO12
 	if v7 == 0x01 then :call TODO13
 	if v7 == 0x02 then :call TODO14
-	:call TODO3
-	:call TODO6
+	:call Draw_Paddles
+	:call Draw_Ball
 	if vF == 0x01 then jump TODO15
 	if vD == 0x00 then jump TODO16
 	if vD == 0x1F then jump TODO17
-	jump TODO18
+	jump Main_Loop
 
 : TODO16
-	:call TODO6
-	:call TODO4
+	:call Draw_Ball
+	:call Draw_Scores
 	v9 += 0x01
-	:call TODO4
+	:call Draw_Scores
 	v0 := 0x0F
 	buzzer := v0
 	if v9 == 0x09 then jump Infinite_Loop
 	vC := 0x09
 	vD := 0x02
 	vE := 0x02
-	:call TODO6
-	jump TODO18
+	:call Draw_Ball
+	jump Main_Loop
 
 : TODO17
-	:call TODO6
-	:call TODO4
+	:call Draw_Ball
+	:call Draw_Scores
 	v8 += 0x01
-	:call TODO4
+	:call Draw_Scores
 	v0 := 0x0F
 	buzzer := v0
 	if v8 == 0x09 then jump Infinite_Loop
 	vC := 0x09
 	vD := 0x1C
 	vE := 0x01
-	:call TODO6
-	jump TODO18
+	:call Draw_Ball
+	jump Main_Loop
 
 : TODO13
 	v0 := 0x04
@@ -137,35 +138,35 @@
 	if vE == 0x02 then jump TODO29
 	if vE == 0x03 then jump TODO30
 	if vE == 0x04 then jump TODO31
-	jump TODO18
+	jump Main_Loop
 
 : TODO28
 	vE := 0x02
-	jump TODO18
+	jump Main_Loop
 
 : TODO29
 	vE := 0x01
-	jump TODO18
+	jump Main_Loop
 
 : TODO30
 	vE := 0x04
-	jump TODO18
+	jump Main_Loop
 
 : TODO31
 	vE := 0x03
-	jump TODO18
+	jump Main_Loop
 
 : TODO25
 	v0 := random 0b00000001
 	vE := 0x02
 	if v0 == 0x01 then vE := 0x03
-	jump TODO18
+	jump Main_Loop
 
 : TODO26
 	v0 := random 0b00000001
 	vE := 0x01
 	if v0 == 0x01 then vE := 0x04
-	jump TODO18
+	jump Main_Loop
 
 : TODO7
 	vC += 0x01
@@ -218,64 +219,64 @@
 	vE := 0x01
 	return
 
-: TODO1
+: Draw_HUD_Lines
 	v3 := 0x00
 	v4 := 0x0F
-	i := Sprite_2
+	i := Sprite_HUD_Horizontal_Line
 	sprite v3 v4 0x02
-	i := Sprite_1
+	i := Sprite_HUD_Vertical_Line
 	v4 := 0x00
 	v3 := 0x07
-: TODO11
+: Draw_HUD_Vertical_Line
 	sprite v3 v4 0x08
 	v4 += 0x08
 	if v4 == 0x20 then return
-	jump TODO11
+	jump Draw_HUD_Vertical_Line
 	return
 
-: TODO3
-	i := Sprite_3
+: Draw_Paddles
+	i := Sprite_Paddle
 	v3 := 0x01
 	sprite vA v3 0x01
 	v3 := 0x1E
 	sprite vB v3 0x01
 	return
 
-: TODO6
-	i := Sprite_4
+: Draw_Ball
+	i := Sprite_Ball
 	sprite vC vD 0x01
 	return
 
-: TODO2
+: Draw_Terrain_Obstacles
 	v5 := random 0b00000010
 	v3 := 0x08
 	v4 := 0x10
-	i := Sprite_3
-	if v5 == 0x00 then :call TODO38
-	if v5 == 0x01 then :call TODO39
-	if v5 == 0x02 then :call TODO40
+	i := Sprite_Paddle
+	if v5 == 0x00 then :call Draw_Terrain_Obstacles_Pattern_1
+	if v5 == 0x01 then :call Draw_Terrain_Obstacles_Pattern_2
+	if v5 == 0x02 then :call Draw_Terrain_Obstacles_Pattern_3
 	return
 
-: TODO38
+: Draw_Terrain_Obstacles_Pattern_1
 	sprite v3 v4 0x01
 	v3 := 0x38
 	sprite v3 v4 0x01
 	return
 
-: TODO39
+: Draw_Terrain_Obstacles_Pattern_2
 	sprite v3 v4 0x01
 	v3 += 0x08
 	sprite v3 v4 0x01
 	return
 
-: TODO40
+: Draw_Terrain_Obstacles_Pattern_3
 	v3 := 0x38
 	sprite v3 v4 0x01
 	v3 += 0xF8
 	sprite v3 v4 0x01
 	return
 
-: TODO4
+: Draw_Scores
 	v3 := 0x01
 	v4 := 0x01
 	i := hex v8
@@ -283,21 +284,21 @@
 	v4 += 0x19
 	i := hex v9
 	sprite v3 v4 0x05
-	if v7 == 0x01 then :call TODO41
-	if v7 == 0x02 then :call TODO42
+	if v7 == 0x01 then :call Draw_HUD_Single_Player
+	if v7 == 0x02 then :call Draw_HUD_Two_Players
 	return
 
-: TODO41
+: Draw_HUD_Single_Player
 	v4 := 0x09
 	v0 := 0x0C
 	i := hex v0
 	sprite v3 v4 0x05
 	v4 := 0x12
-	i := Sprite_5
+	i := Sprite_Letter_A
 	sprite v3 v4 0x05
 	return
 
-: TODO42
+: Draw_HUD_Two_Players
 	v4 := 0x09
 	v0 := 0x0A
 	i := hex v0
@@ -311,22 +312,23 @@
 : Infinite_Loop
 	jump Infinite_Loop
 
-: Sprite_1
+: Sprite_HUD_Vertical_Line
 	0x80 0x80
 	0x80 0x80
 	0x80 0x80
 	0x80 0x80
 
-: Sprite_3
+	# Also used for the terrain obstacles
+: Sprite_Paddle
 	0xFF
 
-: Sprite_4
+: Sprite_Ball
 	0x80
 
-: Sprite_5
+: Sprite_Letter_A
 	0xF0 0x90
 	0xF0 0x90
 	0x90 0x00
 
-: Sprite_2
+: Sprite_HUD_Horizontal_Line
 	0xFE 0xFE

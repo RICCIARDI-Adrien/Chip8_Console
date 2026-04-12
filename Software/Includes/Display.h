@@ -23,6 +23,14 @@
 /** How many characters can be displayed vertically. */
 #define DISPLAY_TEXT_MODE_HEIGHT (DISPLAY_ROWS_COUNT / DISPLAY_TEXT_CHARACTER_HEIGHT)
 
+// Special characters, note that they are not proper C characters so they can be used directly in strings
+/** The 'ç' letter. */
+#define DISPLAY_CHARACTER_C_CEDILLA "\035"
+/** The 'è' letter. */
+#define DISPLAY_CHARACTER_E_GRAVE "\036"
+/** The 'é' letter. */
+#define DISPLAY_CHARACTER_E_ACUTE "\037"
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------

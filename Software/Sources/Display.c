@@ -26,6 +26,9 @@
 /** The D/C pin value to send a data byte to the display controller. */
 #define DISPLAY_DC_MODE_DATA 1
 
+/** The non-standard special characters are stored before the standard ASCII "space" character with code 32. This offset tells where to find the first special character. */
+#define DISPLAY_FONT_SPRITES_STARTING_OFFSET 29
+
 //-------------------------------------------------------------------------------------------------
 // Private variables
 //-------------------------------------------------------------------------------------------------
@@ -37,6 +40,9 @@ static unsigned char Display_Text_Cursor_Y = 0;
 /** First 128 ASCII characters sprites. */
 static const unsigned char Display_Font_Sprites[][DISPLAY_TEXT_CHARACTER_WIDTH] =
 {
+	{ 0x38, 0x44, 0x44, 0xC4, 0x44, 0x00 }, // Lowercase 'C' with cedilla
+	{ 0x38, 0x54, 0x55, 0x56, 0x18, 0x00 }, // Lowercase 'E' with grave accent
+	{ 0x38, 0x54, 0x56, 0x55, 0x18, 0x00 }, // Lowercase 'E' with acute accent
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // Space
 	{ 0x00, 0x00, 0x4F, 0x00, 0x00, 0x00 }, // Punctuation '!'
 	{ 0x00, 0x07, 0x00, 0x07, 0x00, 0x00 }, // Punctuation '"'
@@ -294,8 +300,8 @@ void DisplayWriteCharacter(void *Pointer_Buffer, unsigned char Character)
 	Index = (Display_Text_Cursor_Y * DISPLAY_COLUMNS_COUNT * DISPLAY_TEXT_CHARACTER_HEIGHT / 8) + (Display_Text_Cursor_X * DISPLAY_TEXT_CHARACTER_WIDTH);
 
 	// Select a default sprite if this character has no sprite
-	if ((Character < 32) || (Character > 127)) Character = 127;
-	Character -= 32; // The characters sprites array does not contain the non-printable ASCII characters
+	if ((Character < DISPLAY_FONT_SPRITES_STARTING_OFFSET) || (Character > 127)) Character = 127;
+	Character -= DISPLAY_FONT_SPRITES_STARTING_OFFSET; // The characters sprites array does not contain all the non-printable ASCII characters
 
 	memcpy(Pointer_Buffer_Bytes + Index, Display_Font_Sprites[Character], DISPLAY_TEXT_CHARACTER_WIDTH);
 }
@@ -309,8 +315,8 @@ void DisplayWriteString(void *Pointer_Buffer, const char *Pointer_String)
 		Character = *Pointer_String;
 		Pointer_String++;
 
-		// Display only drawable characters
-		if (Character >= 32)
+		// Display only the drawable characters
+		if (Character >= DISPLAY_FONT_SPRITES_STARTING_OFFSET)
 		{
 			DisplayWriteCharacter(Pointer_Buffer, Character);
 			Display_Text_Cursor_X++;

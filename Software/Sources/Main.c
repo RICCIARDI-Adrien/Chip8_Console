@@ -689,8 +689,6 @@ void main(void)
 			// Load the games configuration from the SD card
 			while (1)
 			{
-				DisplayDrawTextMessage(Shared_Buffer_Display, "- Games -", "Loading console\nconfiguration...");
-
 				// Block until an SD card with a valid FAT file system is inserted
 				Is_SD_Card_Removed = MainMountSDCard();
 

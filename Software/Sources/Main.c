@@ -220,6 +220,9 @@ static TKeyboardKey MainDisplayMainMenu(void)
 	// Wait for all the keys to be released
 	while (KeyboardReadKeysMask() != 0);
 
+	// Clear the menu key press event to avoid the following menus to detect a spurious event
+	KeyboardIsMenuKeyPressed();
+
 	return Keys_Mask;
 }
 

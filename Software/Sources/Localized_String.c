@@ -30,6 +30,37 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	{
 		"A. Games\nB. Video player\nC. Settings\nD. Information\n\nBattery charge : %u%%",
 		"A. Jeux\nB. Lecteur video\nC. Parametres\nD. Informations\n\nBatterie : %u%%"
+	},
+
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_TITLE
+	{
+		"- Settings -",
+		"- Parametres -"
+	},
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_CONTENT
+	{
+		"Sound (A) : %s\nBrightness (B) : %sLanguage (C): English\n\nMenu : back.",
+		"Son (A) : %s\nLuminosite (B) : %sLangue (C) : Francais\n\nMenu : retour."
+	},
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_DISABLED
+	{
+		"disabled",
+		"coupe"
+	},
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_LOW
+	{
+		"low",
+		"bas"
+	},
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_MEDIUM
+	{
+		"medium",
+		"moyen"
+	},
+	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_HIGH
+	{
+		"high",
+		"fort"
 	}
 };
 
@@ -58,4 +89,15 @@ const char *LocalizedStringGet(TLocalizedStringID ID)
 	if (ID >= LOCALIZED_STRING_IDS_COUNT) LOG(LOCALIZED_STRING_IS_LOGGING_ENABLED, "Error : invalid localized string ID %u.", ID);
 
 	return Localized_String_Pointer_Strings[ID][Localized_String_Current_Language_ID];
+}
+
+void LocalizedStringSelectNextLanguage(void)
+{
+	Localized_String_Current_Language_ID++;
+
+	// Go back to the first language when the last has been reached
+	if (Localized_String_Current_Language_ID >= LOCALIZED_STRING_LANGUAGE_IDS_COUNT) Localized_String_Current_Language_ID = LOCALIZED_STRING_LANGUAGE_ID_ENGLISH;
+
+	// Update the configuration
+	EEPROMWriteByte(EEPROM_ADDRESS_SYSTEM_LANGUAGE, Localized_String_Current_Language_ID);
 }

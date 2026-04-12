@@ -542,19 +542,20 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 /** Display the settings menu and interact with the user. */
 static void MainDisplaySettingsMenu(void)
 {
-	const char *Pointer_String_Sound, *Pointer_String_Brightness;
+	const char *Pointer_String_Brightness;
 	unsigned char Sound_Level_Percentage, Brightness;
 	TKeyboardKey Keys_Mask;
+	TLocalizedStringID Localized_String_ID_Sound;
 
 	while (1)
 	{
 		// Retrieve the settings value
 		// Sound level
 		Sound_Level_Percentage = EEPROMReadByte(EEPROM_ADDRESS_SOUND_LEVEL_PERCENTAGE);
-		if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Pointer_String_Sound = "disabled";
-		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_LOW) Pointer_String_Sound = "low";
-		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_MEDIUM) Pointer_String_Sound = "medium";
-		else Pointer_String_Sound = "high";
+		if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Localized_String_ID_Sound = LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_DISABLED;
+		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_LOW) Localized_String_ID_Sound = LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_LOW;
+		else if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_MEDIUM) Localized_String_ID_Sound = LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_MEDIUM;
+		else Localized_String_ID_Sound = LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_HIGH;
 		// Display brightness
 		Brightness = EEPROMReadByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS);
 		if (Brightness == EEPROM_DISPLAY_BRIGHTNESS_LOW) Pointer_String_Brightness = "25%\n";
@@ -562,11 +563,11 @@ static void MainDisplaySettingsMenu(void)
 		else Pointer_String_Brightness = "100%";
 
 		// Display the menu content
-		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "Sound (A) : %s\nBrightness (B) : %s\n\n\nMenu : back.", Pointer_String_Sound, Pointer_String_Brightness);
-		DisplayDrawTextMessage(Shared_Buffer_Display, "- Settings -", Shared_Buffers.String_Temporary);
+		snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_CONTENT), LocalizedStringGet(Localized_String_ID_Sound), Pointer_String_Brightness);
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_TITLE), Shared_Buffers.String_Temporary);
 
 		// Wait for a key to be pressed
-		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_MENU);
+		Keys_Mask = KeyboardWaitForKeys(KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C | KEYBOARD_KEY_MENU);
 		if (Keys_Mask & KEYBOARD_KEY_A)
 		{
 			if (Sound_Level_Percentage == EEPROM_SOUND_LEVEL_PERCENTAGE_OFF) Sound_Level_Percentage = EEPROM_SOUND_LEVEL_PERCENTAGE_LOW;
@@ -585,6 +586,7 @@ static void MainDisplaySettingsMenu(void)
 			DisplaySetBrightness(Brightness);
 			EEPROMWriteByte(EEPROM_ADDRESS_DISPLAY_BRIGHTNESS, Brightness);
 		}
+		else if (Keys_Mask & KEYBOARD_KEY_C) LocalizedStringSelectNextLanguage();
 		else if (Keys_Mask & KEYBOARD_KEY_MENU) break;
 	}
 }

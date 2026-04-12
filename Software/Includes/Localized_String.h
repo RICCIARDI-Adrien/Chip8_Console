@@ -21,6 +21,13 @@ typedef enum
 {
 	LOCALIZED_STRING_ID_MAIN_MENU_VIEW_TITLE,
 	LOCALIZED_STRING_ID_MAIN_MENU_VIEW_CONTENT,
+
+	LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_TITLE,
+	LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_CONTENT,
+	LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_DISABLED,
+	LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_LOW,
+	LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_MEDIUM,
+	LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_HIGH,
 	LOCALIZED_STRING_IDS_COUNT
 } TLocalizedStringID;
 
@@ -35,5 +42,8 @@ void LocalizedStringInitialize(void);
  * @return A pointer to a string, located in code memory.
  */
 const char *LocalizedStringGet(TLocalizedStringID ID);
+
+/** Cycle to the next available language, going back to the first one when the last one has been reached. */
+void LocalizedStringSelectNextLanguage(void);
 
 #endif

@@ -62,7 +62,7 @@
 #ifdef LOG_IS_ENABLED
 	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "-DEBUG"
 #else
-	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX
+	#define MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "\n"
 #endif
 
 //-------------------------------------------------------------------------------------------------
@@ -735,7 +735,8 @@ void main(void)
 		// Information
 		else if (Keys_Mask & KEYBOARD_KEY_D)
 		{
-			DisplayDrawTextMessage(Shared_Buffer_Display, "- Information -", "Firmware : V" MAKEFILE_FIRMWARE_VERSION MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX "\nDate : " __DATE__ "\nTime : " __TIME__ "\n\n\nMenu : back.");
+			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_INFORMATION_MENU_VIEW_CONTENT), MAKEFILE_FIRMWARE_VERSION MAIN_FIRMWARE_VERSION_DEBUG_FLAG_SUFFIX, __DATE__, __TIME__);
+			DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_INFORMATION_MENU_VIEW_TITLE), Shared_Buffers.String_Temporary);
 
 			// Wait for the 'back' key to be pressed
 			KeyboardWaitForKeys(KEYBOARD_KEY_MENU);

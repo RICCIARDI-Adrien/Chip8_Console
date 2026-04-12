@@ -61,6 +61,17 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	{
 		"high",
 		"fort"
+	},
+
+	// LOCALIZED_STRING_ID_INFORMATION_MENU_VIEW_TITLE
+	{
+		"- Information -",
+		"- Informations -"
+	},
+	// LOCALIZED_STRING_ID_INFORMATION_MENU_VIEW_CONTENT
+	{
+		"Firmware : V%sDate : %s\nTime : %s\n\n\nMenu : back.",
+		"Logiciel : V%sDate : %s\nHeure : %s\n\n\nMenu : retour."
 	}
 };
 

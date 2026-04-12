@@ -2,6 +2,7 @@
  * See Localized_String.h
  * @author Adrien RICCIARDI
  */
+#include <Display.h>
 #include <EEPROM.h>
 #include <Localized_String.h>
 #include <Log.h>
@@ -29,23 +30,23 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	// LOCALIZED_STRING_ID_MAIN_MENU_VIEW_CONTENT
 	{
 		"A. Games\nB. Video player\nC. Settings\nD. Information\n\nBattery charge : %u%%",
-		"A. Jeux\nB. Lecteur video\nC. Parametres\nD. Informations\n\nBatterie : %u%%"
+		"A. Jeux\nB. Lecteur vid" DISPLAY_CHARACTER_E_ACUTE "o\nC. Param" DISPLAY_CHARACTER_E_GRAVE "tres\nD. Informations\n\nBatterie : %u%%"
 	},
 
 	// LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_TITLE
 	{
 		"- Settings -",
-		"- Parametres -"
+		"- Param" DISPLAY_CHARACTER_E_GRAVE "tres -"
 	},
 	// LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_CONTENT
 	{
 		"Sound (A) : %s\nBrightness (B) : %sLanguage (C): English\n\nMenu : back.",
-		"Son (A) : %s\nLuminosite (B) : %sLangue (C) : Francais\n\nMenu : retour."
+		"Son (A) : %s\nLuminosit" DISPLAY_CHARACTER_E_ACUTE " (B) : %sLangue (C) : Fran" DISPLAY_CHARACTER_C_CEDILLA "ais\n\nMenu : retour."
 	},
 	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_DISABLED
 	{
 		"disabled",
-		"coupe"
+		"coup" DISPLAY_CHARACTER_E_ACUTE
 	},
 	// LOCALIZED_STRING_ID_SETTINGS_MENU_SOUND_LOW
 	{
@@ -82,12 +83,12 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_PROBE_ERROR_CONTENT
 	{
 		"Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.",
-		"Erreur de detection\nde la carte SD.\nRemplacez-la puis\nappuyez sur Menu."
+		"Erreur de d" DISPLAY_CHARACTER_E_ACUTE "tection\nde la carte SD.\nRemplacez-la puis\nappuyez sur Menu."
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_INSERT_SD_CARD_CONTENT
 	{
 		"Please insert a SD\ncard.",
-		"Veuillez inserer\nune carte SD."
+		"Veuillez ins" DISPLAY_CHARACTER_E_ACUTE "rer\nune carte SD."
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_MBR_READ_ERROR_CONTENT
 	{
@@ -97,7 +98,7 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VALID_PARTITION_ERROR_CONTENT
 	{
 		"No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.",
-		"Aucune partition\nvalide detectee.\nRemplacez la carte\nSD puis appuyez sur\nMenu."
+		"Aucune partition\nvalide d" DISPLAY_CHARACTER_E_ACUTE "tect" DISPLAY_CHARACTER_E_ACUTE "e.\nRemplacez la carte\nSD puis appuyez sur\nMenu."
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_LOADING_ERROR_CONTENT
 	{
@@ -122,7 +123,7 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VIDEO_FILE_FOUND_ERROR_CONTENT
 	{
 		"No video file found.\nReplace the SDcard\nand press Menu.",
-		"Fichier video non\ntrouve. Remplacez la\ncarte SD puis appuyezsur Menu."
+		"Fichier vid" DISPLAY_CHARACTER_E_ACUTE "o non\ntrouv" DISPLAY_CHARACTER_E_ACUTE ". Remplacez la\ncarte SD puis appuyezsur Menu."
 	}
 };
 

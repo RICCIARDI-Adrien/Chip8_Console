@@ -16,10 +16,24 @@ typedef enum : unsigned char
 	LOCALIZED_STRING_LANGUAGE_IDS_COUNT
 } TLocalizedStringLanguageID;
 
+/** All localized strings. */
+typedef enum
+{
+	LOCALIZED_STRING_ID_MAIN_MENU_VIEW_TITLE,
+	LOCALIZED_STRING_ID_MAIN_MENU_VIEW_CONTENT,
+	LOCALIZED_STRING_IDS_COUNT
+} TLocalizedStringID;
+
 //-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
 /** Load the language configuration from the configuration. */
 void LocalizedStringInitialize(void);
+
+/** Retrieve the string corresponding to the specified ID according to the selected language.
+ * @param ID The string identifier.
+ * @return A pointer to a string, located in code memory.
+ */
+const char *LocalizedStringGet(TLocalizedStringID ID);
 
 #endif

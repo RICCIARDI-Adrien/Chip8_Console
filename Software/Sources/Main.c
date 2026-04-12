@@ -209,8 +209,8 @@ static TKeyboardKey MainDisplayMainMenu(void)
 			for (i = 0; i < MAIN_BATTERY_SAMPLES_COUNT; i++) Mean += Battery_Charge_Samples[i];
 			Mean /= MAIN_BATTERY_SAMPLES_COUNT;
 
-			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), "A. Games\nB. Video player\nC. Settings\nD. Information\n\nBattery charge : %u%%", Mean);
-			DisplayDrawTextMessage(Shared_Buffer_Display, "- Main menu -", Shared_Buffers.String_Temporary);
+			snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_MAIN_MENU_VIEW_CONTENT), Mean);
+			DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_MAIN_MENU_VIEW_TITLE), Shared_Buffers.String_Temporary);
 			Ticks_Counter_Show_Menu = 0;
 		}
 

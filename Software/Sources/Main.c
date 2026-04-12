@@ -10,6 +10,7 @@
 #include <Interpreter.h>
 #include <Keyboard.h>
 #include <LED.h>
+#include <Localized_String.h>
 #include <Log.h>
 #include <MBR.h>
 #include <NCO.h>
@@ -144,7 +145,7 @@ static void MainInitializeEEPROM(void)
 {
 	unsigned char i;
 
-	// Do nothing if the EEPROM contains already data
+	// Do nothing if the EEPROM already contains data
 	if (EEPROMReadByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED) == 1)
 	{
 		LOG(MAIN_IS_LOGGING_ENABLED, "EEPROM content is already initialized, skipping initialization.");
@@ -160,6 +161,9 @@ static void MainInitializeEEPROM(void)
 
 	// Clear all non-volatile storage registers of the Super-Chip 8 interpreter
 	for (i = 0; i < INTERPRETER_FLAG_REGISTERS_COUNT; i++) EEPROMWriteByte(EEPROM_ADDRESS_INTERPRETER_FLAG_REGISTER_0 + i, 0);
+
+	// Set the default language to English
+	EEPROMWriteByte(EEPROM_ADDRESS_SYSTEM_LANGUAGE, LOCALIZED_STRING_LANGUAGE_ID_ENGLISH);
 
 	// Tell that the EEPROM is initialized
 	EEPROMWriteByte(EEPROM_ADDRESS_IS_MEMORY_CONTENT_INITIALIZED, 1);
@@ -638,6 +642,7 @@ void main(void)
 	#endif
 	EEPROMInitialize();
 	MainInitializeEEPROM(); // Initialize the EEPROM content if the microcontroller EEPROM area is not yet programmed
+	LocalizedStringInitialize(); // Initialize the localized strings as soon as the EEPROM is ready, so any following module that encounter an error can display a localized message
 	NCOInitialize();
 	SoundInitialize();
 	KeyboardInitialize();

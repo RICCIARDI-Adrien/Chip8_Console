@@ -17,6 +17,7 @@ SOURCES = \
 	$(PATH_SOURCES)/LED.c \
 	$(PATH_SOURCES)/Log.c \
 	$(PATH_SOURCES)/Keyboard.c \
+	$(PATH_SOURCES)/Localized_String.c \
 	$(PATH_SOURCES)/Main.c \
 	$(PATH_SOURCES)/MBR.c \
 	$(PATH_SOURCES)/NCO.c \

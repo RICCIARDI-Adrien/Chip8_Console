@@ -247,7 +247,7 @@ Detect_SD_Card:
 		// Avoid redrawing the message at each loop
 		if (!Is_Message_Displayed)
 		{
-			DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Please insert a SD\ncard.");
+			DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_INSERT_SD_CARD_CONTENT));
 			Is_Message_Displayed = 1;
 		}
 	}
@@ -263,7 +263,7 @@ Detect_SD_Card:
 	if (SDCardProbe() != 0)
 	{
 		LOG(MAIN_IS_LOGGING_ENABLED, "\033[31mFailed to probe the SD card.\033[0m");
-		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_PROBE_ERROR_CONTENT));
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
 		goto Detect_SD_Card;
@@ -273,7 +273,7 @@ Detect_SD_Card:
 	if (SDCardReadBlock(0, Shared_Buffers.Buffer) != 0)
 	{
 		LOG(MAIN_IS_LOGGING_ENABLED, "Failed to read the SD card MBR block.");
-		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_MBR_READ_ERROR_CONTENT));
 		while (!KeyboardIsMenuKeyPressed());
 		__delay_ms(1000); // Give some time to the SD card to wake up
 		goto Detect_SD_Card;
@@ -307,7 +307,7 @@ Detect_SD_Card:
 	if (i == MBR_PRIMARY_PARTITIONS_COUNT)
 	{
 		LOG(MAIN_IS_LOGGING_ENABLED, "No valid partition could be found.");
-		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VALID_PARTITION_ERROR_CONTENT));
 		while (!KeyboardIsMenuKeyPressed());
 		goto Detect_SD_Card;
 	}
@@ -362,7 +362,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 			if (FATReadSectorsNext(&File_Descriptor, sizeof(Shared_Buffers.Configuration_File) / SD_CARD_BLOCK_SIZE, Shared_Buffers.Configuration_File) > 1) // Keep room for the terminating bytes
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
-				DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\nconfiguration file.\nReplace SD card and\npress Menu.");
+				DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_LOADING_ERROR_CONTENT));
 				while (!KeyboardIsMenuKeyPressed());
 				return 1;
 			}
@@ -380,7 +380,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 	}
 
 	// No configuration file found, tell the user to provide an updated SD card
-	DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No configuration filefound. Replace the SDcard and press Menu.");
+	DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_CONFIGURATION_FILE_FOUND_CONTENT));
 	while (!KeyboardIsMenuKeyPressed());
 	return 1;
 }
@@ -413,7 +413,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 	if (Games_Count == 0)
 	{
 		LOG(MAIN_IS_LOGGING_ENABLED, "No game found, stopping.");
-		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No game found in the\nconfiguration file.\nReplace the SD card\nand press Menu.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_GAME_FOUND_IN_CONFIGURATION_ERROR_CONTENT));
 		while (!KeyboardIsMenuKeyPressed());
 		return NULL;
 	}
@@ -706,7 +706,7 @@ void main(void)
 				if (InterpreterLoadProgramFromFile(Pointer_String_Game_INI_Section) != 0)
 				{
 					LOG(MAIN_IS_LOGGING_ENABLED, "Could not load the selected game.");
-					DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "Failed to load the\ngame. Replace the SD\ncard and press Menu.");
+					DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GAME_LOADING_ERROR_CONTENT));
 					while (!KeyboardIsMenuKeyPressed());
 					continue;
 				}

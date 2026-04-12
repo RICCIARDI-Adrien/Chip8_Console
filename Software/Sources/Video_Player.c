@@ -5,6 +5,7 @@
 #include <Display.h>
 #include <FAT.h>
 #include <Keyboard.h>
+#include <Localized_String.h>
 #include <Log.h>
 #include <NCO.h>
 #include <SD_Card.h>
@@ -74,7 +75,7 @@ void VideoPlayer(void)
 	if (VideoPlayerFindFile("VIDEO.BIN", &File_Descriptor) != 0)
 	{
 		LOG(VIDEO_PLAYER_IS_LOGGING_ENABLED, "No video file found.");
-		DisplayDrawTextMessage(Shared_Buffer_Display, "SD card", "No video file found.\nReplace the SDcard\nand press Menu.");
+		DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VIDEO_FILE_FOUND_ERROR_CONTENT));
 		while (!KeyboardIsMenuKeyPressed());
 		return;
 	}

@@ -72,6 +72,57 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	{
 		"Firmware : V%sDate : %s\nTime : %s\n\n\nMenu : back.",
 		"Logiciel : V%sDate : %s\nHeure : %s\n\n\nMenu : retour."
+	},
+
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE
+	{
+		"SD card",
+		"Carte SD"
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_PROBE_ERROR_CONTENT
+	{
+		"Failed to probe the\nSD card.\nInsert another SD\ncard and press Menu.",
+		"Erreur de detection\nde la carte SD.\nRemplacez-la puis\nappuyez sur Menu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_INSERT_SD_CARD_CONTENT
+	{
+		"Please insert a SD\ncard.",
+		"Veuillez inserer\nune carte SD."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_MBR_READ_ERROR_CONTENT
+	{
+		"Failed to read the SDcard MBR block.\nInsert another SD\ncard and press Menu.",
+		"Erreur de lecture du\nMBR de la carte SD.\nRemplacez-la puis\nappuyez sur Menu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VALID_PARTITION_ERROR_CONTENT
+	{
+		"No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.",
+		"Aucune partition\nvalide detectee.\nRemplacez la carte\nSD puis appuyez sur\nMenu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_LOADING_ERROR_CONTENT
+	{
+		"Failed to load the\nconfiguration file.\nReplace SD card and\npress Menu.",
+		"Erreur de chargement\ndu fichier de\nconfiguration.\nRemplacez la carte SDpuis appuyez sur\nMenu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_CONFIGURATION_FILE_FOUND_CONTENT
+	{
+		"No configuration filefound. Replace the SDcard and press Menu.",
+		"Fichier de configu-\nration introuvable.\nRemplacez la carte SDpuis appuyez sur\nMenu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GAME_LOADING_ERROR_CONTENT
+	{
+		"Failed to load the\ngame. Replace the SD\ncard and press Menu.",
+		"Erreur lors du\nchargement du jeu.\nRemplacez la carte SDpuis appuyez sur\nMenu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_GAME_FOUND_IN_CONFIGURATION_ERROR_CONTENT
+	{
+		"No game found in the\nconfiguration file.\nReplace the SD card\nand press Menu.",
+		"Jeu introuvable dans\nle fichier de\nconfiguration.\nRemplacez la carte SDpuis appuyez sur\nMenu."
+	},
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_VIDEO_FILE_FOUND_ERROR_CONTENT
+	{
+		"No video file found.\nReplace the SDcard\nand press Menu.",
+		"Fichier video non\ntrouve. Remplacez la\ncarte SD puis appuyezsur Menu."
 	}
 };
 

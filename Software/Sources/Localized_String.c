@@ -33,6 +33,17 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 		"A. Jeux\nB. Lecteur vid" DISPLAY_CHARACTER_E_ACUTE "o\nC. Param" DISPLAY_CHARACTER_E_GRAVE "tres\nD. Informations\n\nBatterie : %u%%"
 	},
 
+	// LOCALIZED_STRING_ID_GAME_MENU_VIEW_TITLE
+	{
+		"- Game %u/%u -",
+		"- Jeu %u/%u -"
+	},
+	// LOCALIZED_STRING_ID_GAME_MENU_VIEW_KEYS_INFORMATION
+	{
+		"C : start, M : back.",
+		"C: lancer, M: retour.",
+	},
+
 	// LOCALIZED_STRING_ID_SETTINGS_MENU_VIEW_TITLE
 	{
 		"- Settings -",

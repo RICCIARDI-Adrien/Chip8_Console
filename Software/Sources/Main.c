@@ -475,7 +475,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 
 		// Show the game into the display frame buffer
 		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
-		sprintf(String_Line, "- Game %u/%u -", Current_Game_Index, Games_Count);
+		sprintf(String_Line, LocalizedStringGet(LOCALIZED_STRING_ID_GAME_MENU_VIEW_TITLE), Current_Game_Index, Games_Count);
 		DisplaySetTextCursor((DISPLAY_TEXT_MODE_WIDTH - (unsigned char) strlen(String_Line)) / 2, 0); // Center the text
 		DisplayWriteString(Shared_Buffer_Display, String_Line);
 
@@ -502,7 +502,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 
 		// Display instructions
 		DisplaySetTextCursor(0, DISPLAY_TEXT_MODE_HEIGHT - 1);
-		DisplayWriteString(Shared_Buffer_Display, "C : start, M : back.");
+		DisplayWriteString(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_GAME_MENU_VIEW_KEYS_INFORMATION));
 		DisplayDrawTextBuffer(Shared_Buffer_Display);
 
 		// Wait for a key press

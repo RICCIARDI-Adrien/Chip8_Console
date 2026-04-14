@@ -10,6 +10,9 @@ all: $(BINARIES)
 Test_Collisions.CH8: Test_Collisions.asm
 	$(AS) $(ASFLAGS) $< -o $@
 
+Test_Invalid_Instruction.CH8: Test_Invalid_Instruction.asm
+	$(AS) $(ASFLAGS) $< -o $@
+
 Test_Sprites.CH8: Test_Sprites.asm
 	$(AS) $(ASFLAGS) $< -o $@
 

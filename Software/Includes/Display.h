@@ -24,6 +24,8 @@
 #define DISPLAY_TEXT_MODE_HEIGHT (DISPLAY_ROWS_COUNT / DISPLAY_TEXT_CHARACTER_HEIGHT)
 
 // Special characters, note that they are not proper C characters so they can be used directly in strings
+/** The 'à' letter. */
+#define DISPLAY_CHARACTER_A_GRAVE "\034"
 /** The 'ç' letter. */
 #define DISPLAY_CHARACTER_C_CEDILLA "\035"
 /** The 'è' letter. */

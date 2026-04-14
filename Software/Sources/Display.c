@@ -27,7 +27,7 @@
 #define DISPLAY_DC_MODE_DATA 1
 
 /** The non-standard special characters are stored before the standard ASCII "space" character with code 32. This offset tells where to find the first special character. */
-#define DISPLAY_FONT_SPRITES_STARTING_OFFSET 29
+#define DISPLAY_FONT_SPRITES_STARTING_OFFSET 28
 
 //-------------------------------------------------------------------------------------------------
 // Private variables
@@ -40,6 +40,7 @@ static unsigned char Display_Text_Cursor_Y = 0;
 /** First 128 ASCII characters sprites. */
 static const unsigned char Display_Font_Sprites[][DISPLAY_TEXT_CHARACTER_WIDTH] =
 {
+	{ 0x20, 0x55, 0x56, 0x54, 0x78, 0x00 }, // Lowercase 'A' with grave accent
 	{ 0x38, 0x44, 0x44, 0xC4, 0x44, 0x00 }, // Lowercase 'C' with cedilla
 	{ 0x38, 0x54, 0x55, 0x56, 0x18, 0x00 }, // Lowercase 'E' with grave accent
 	{ 0x38, 0x54, 0x56, 0x55, 0x18, 0x00 }, // Lowercase 'E' with acute accent

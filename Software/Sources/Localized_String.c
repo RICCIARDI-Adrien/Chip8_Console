@@ -135,6 +135,32 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	{
 		"No video file found.\nReplace the SDcard\nand press Menu.",
 		"Fichier vid" DISPLAY_CHARACTER_E_ACUTE "o non\ntrouv" DISPLAY_CHARACTER_E_ACUTE ". Remplacez la\ncarte SD puis appuyezsur Menu."
+	},
+
+	// LOCALIZED_STRING_ID_INTERPRETER_MESSAGE_ERROR_TITLE
+	{
+		"Chip-8 error",
+		"Erreur Chip-8"
+	},
+	// LOCALIZED_STRING_ID_INTERPRETER_MESSAGE_INVALID_KEY_CODE_CONTENT
+	{
+		"Invalid key code for\n\"%s\".\n\n\n\nPress Menu to exit.",
+		"Code touche invalide\n\"%s\".\n\n\nAppuyez sur Menu\npour quitter."
+	},
+	// LOCALIZED_STRING_ID_INTERPRETER_MESSAGE_VIRTUAL_STACK_UNDERFLOW_CONTENT
+	{
+		"Virtual stack\nunderflow.\n\n\n\nPress Menu to exit.",
+		"Soupassement de la\npile virtuelle.\n\n\nAppuyez sur Menu\npour quitter."
+	},
+	// LOCALIZED_STRING_ID_INTERPRETER_MESSAGE_VIRTUAL_STACK_OVERFLOW_CONTENT
+	{
+		"Virtual stack\noverflow.\n\n\n\nPress Menu to exit.",
+		"D" DISPLAY_CHARACTER_E_ACUTE "passement de la\npile virtuelle.\n\n\nAppuyez sur Menu\npour quitter."
+	},
+	// LOCALIZED_STRING_ID_INTERPRETER_MESSAGE_INVALID_INSTRUCTION_CONTENT
+	{
+		"Invalid instruction\n0x%02X%02X at address\n0x%03X.\n\n\nPress Menu to exit.",
+		"Instruction invalide\n0x%02X%02X " DISPLAY_CHARACTER_A_GRAVE " l'adresse\n0x%03X.\n\nAppuyez sur Menu\npour quitter."
 	}
 };
 

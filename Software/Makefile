@@ -4,7 +4,7 @@ PATH_MICROCHIP_SDK ?= "/opt/microchip"
 PATH_OBJECTS = $(shell realpath .)/Objects
 PATH_SOURCES = $(shell realpath .)/Sources
 
-FIRMWARE_VERSION=1.1
+FIRMWARE_VERSION=1.2
 
 BINARY_NAME = Chip8_Console_Firmware.hex
 SOURCES = \

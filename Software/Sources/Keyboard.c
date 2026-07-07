@@ -66,6 +66,12 @@ TKeyboardKey KeyboardWaitForKeys(TKeyboardKey Keys_Mask)
 	unsigned char Read_Keys_Mask;
 	TKeyboardKey Return_Value = 0;
 
+	// Wait for all the keys to be released
+	while ((KeyboardReadKeysMask() != 0) || KeyboardIsMenuKeyPressed());
+
+	// Add a little debounce timer
+	__delay_ms(20);
+
 	// Wait for at least one key to be pressed
 	while (1)
 	{
@@ -79,12 +85,6 @@ TKeyboardKey KeyboardWaitForKeys(TKeyboardKey Keys_Mask)
 		// Exit if at least one key is pressed
 		if (Return_Value != 0) break;
 	}
-
-	// Wait for all the keys to be released
-	while ((KeyboardReadKeysMask() != 0) || KeyboardIsMenuKeyPressed());
-
-	// Add a little debounce timer
-	__delay_ms(20);
 
 	return Return_Value;
 }

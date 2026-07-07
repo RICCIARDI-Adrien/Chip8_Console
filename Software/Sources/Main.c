@@ -217,9 +217,6 @@ static TKeyboardKey MainDisplayMainMenu(void)
 		Keys_Mask = KeyboardReadKeysMask();
 	} while ((Keys_Mask & (KEYBOARD_KEY_A | KEYBOARD_KEY_B | KEYBOARD_KEY_C | KEYBOARD_KEY_D)) == 0);
 
-	// Wait for all the keys to be released
-	while (KeyboardReadKeysMask() != 0);
-
 	// Clear the menu key press event to avoid the following menus to detect a spurious event
 	KeyboardIsMenuKeyPressed();
 
@@ -514,14 +511,12 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			if (Keys_Mask & KEYBOARD_KEY_LEFT)
 			{
 				Is_Games_List_Incrementing = 0;
-				while (KeyboardReadKeysMask() & KEYBOARD_KEY_LEFT); // Wait for key release
 				break;
 			}
 			// Show the next game
 			if (Keys_Mask & KEYBOARD_KEY_RIGHT)
 			{
 				Is_Games_List_Incrementing = 1;
-				while (KeyboardReadKeysMask() & KEYBOARD_KEY_RIGHT); // Wait for key release
 				break;
 			}
 			// Select the current game
@@ -529,15 +524,11 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
 				*Pointer_Last_Played_Game_Index = Current_Game_Index;
-				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release
+				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release, otherwise a key press could occur in the game if it was started immediately
 				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
 			}
 			// Return to main menu
-			if (Keys_Mask & KEYBOARD_KEY_MENU)
-			{
-				while (KeyboardReadKeysMask() & KEYBOARD_KEY_D); // Wait for key release
-				return NULL;
-			}
+			if (Keys_Mask & KEYBOARD_KEY_MENU) return NULL;
 		}
 	}
 }

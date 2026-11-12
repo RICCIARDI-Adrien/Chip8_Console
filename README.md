@@ -43,14 +43,14 @@ Assembled PCB with the display module screwed and connected :
 ## Casing
 
 The casing is made of two laser-cut metal plates. They are both 4 mm thick and made of stainless 304 steel.  
-The metal spacers are 20 mm high. The reference used here is `970200471` from Würth Elektronik.  
+The metal spacers are M4x20 mm high. The reference used here is `970200471` from Würth Elektronik.  
 
 Casing plates :
 ![Casing top plate](Resources/Casing_Top_Plate.jpg)
 ![Casing bottom plate](Resources/Casing_Bottom_Plate.jpg)
 
-Bottom plate with screws :
-![Casing bottom plate with screws](Resources/Casing_Bottom_Plate_With_Screws.jpg)
+Bottom plate with M4x10 mm PCB spacers (the reference is `970100471` from Würth Elektronik) :
+![PCB supports with spacers](Resources/PCB_Supports_Spacers.jpg)
 
 Bottom plate with screwed PCB :
 ![Casing bottom plate with PCB](Resources/Casing_Bottom_Plate_With_PCB.jpg)
@@ -100,10 +100,6 @@ Opened hatch :
 
 The console boot logo :
 ![Console boot logo](Resources/Finished_Console_2.jpg)
-
-Improved the PCB supports that were made of several nuts. The nuts did not had the same width, resulting in the PCB not being perfectly flat. The nuts have then been replaced by precise 10mm spacers :
-![PCB supports with nuts](Resources/PCB_Supports_Nuts.jpg)
-![PCB supports with spacers](Resources/PCB_Supports_Spacers.jpg)
 
 Improved the top plate button holes (using holes of 9.6mm diameter) :
 ![Improved top plate](Resources/Improved_Top_Plate.jpg)

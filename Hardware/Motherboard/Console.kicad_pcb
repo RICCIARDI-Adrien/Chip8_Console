@@ -9,8 +9,8 @@
 	(paper "A4")
 	(title_block
 		(title "Chip-8 Console")
-		(date "2024-05-26")
-		(rev "1.0")
+		(date "2026-11-13")
+		(rev "1.1")
 		(company "(C) Adrien RICCIARDI")
 	)
 	(layers
@@ -18374,8 +18374,8 @@
 		(layer "User.4")
 		(uuid "68cb3001-06cf-4ea7-b83b-8bbd4a568da7")
 	)
-	(gr_text "Chip-8 Console\nV1.0\n11/06/2024"
-		(at 79.5 120 -0)
+	(gr_text "Chip-8 Console\nV1.1\n13/11/2026"
+		(at 79.5 120 0)
 		(layer "B.Mask")
 		(uuid "3a8727b2-9811-4e2b-881d-9ccbc277b2b8")
 		(effects

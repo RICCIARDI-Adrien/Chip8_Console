@@ -3789,7 +3789,7 @@
 				)
 			)
 		)
-		(property "Value" "JTAG"
+		(property "Value" "ICSP"
 			(at 68.58 54.61 0)
 			(show_name no)
 			(do_not_autoplace no)

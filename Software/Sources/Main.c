@@ -352,9 +352,20 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 		// Is this the searched file ?
 		if (strcmp((char *) File_Information.String_Short_Name, MAIN_CONFIGURATION_FILE_NAME) == 0)
 		{
-			LOG(MAIN_IS_LOGGING_ENABLED, "Found the configuration file, loading it.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Found the global configuration file.");
+
+			// Make sure that the file can fit in memory
+			if (File_Information.Size > SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE)
+			{
+				LOG(MAIN_IS_LOGGING_ENABLED, "The global configuration file is too big (file size : %lu, available memory : %u).", File_Information.Size, SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE);
+				snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GLOBAL_CONFIGURATION_FILE_TOO_BIG_CONTENT), SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE);
+				DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), Shared_Buffers.String_Temporary);
+				while (!KeyboardIsMenuKeyPressed());
+				return 1;
+			}
 
 			// Load the file
+			LOG(MAIN_IS_LOGGING_ENABLED, "Loading the global configuration file.");
 			FATReadSectorsStart(&File_Information, &File_Descriptor);
 			if (FATReadSectorsNext(&File_Descriptor, sizeof(Shared_Buffers.Configuration_File) / SD_CARD_BLOCK_SIZE, Shared_Buffers.Configuration_File) > 1) // Keep room for the terminating bytes
 			{

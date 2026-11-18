@@ -111,10 +111,10 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 		"No valid partition\ncould be found.\nInsert another SD\ncard and press Menu.",
 		"Aucune partition\nvalide d" DISPLAY_CHARACTER_E_ACUTE "tect" DISPLAY_CHARACTER_E_ACUTE "e.\nRemplacez la carte\nSD puis appuyez sur\nMenu."
 	},
-	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GLOBAL_CONFIGURATION_FILE_TOO_BIG_CONTENT
+	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_TOO_BIG_CONTENT
 	{
-		"The global configu-\nration file is too\nbig (maximum size is\n%u bytes).\nFix and press menu.",
-		"Le fichier de confi-\nguration globale est\ntrop gros (taille\nmaximum %u octets).Corrigez puis appuyezsur Menu.",
+		"The config. file\n%s is too\nbig (maximum size is\n%lu bytes).\nFix and press menu.",
+		"Le fichier de config.%s est\ntrop gros (taille\nmaximum %lu octets).Corrigez puis appuyezsur Menu.",
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_LOADING_ERROR_CONTENT
 	{

@@ -313,18 +313,21 @@ Detect_SD_Card:
 	return 1;
 }
 
-/** Retrieve the games configuration file from the SD card.
+/** Retrieve an INI configuration file from the SD card.
+ * @param Pointer_File_Name The name of the configuration file to load.
+ * @param Pointer_Memory_Buffer The location in memory where to store the file content.
+ * @param Maximum_Size The total size of the destination buffer in bytes.
  * @param Pointer_Size On output, contain the size of the configuration file in bytes.
  * @return 0 when a valid configuration file has been found and loaded,
  * @return 1 if an error occurred.
  */
-static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
+static unsigned char MainLoadConfigurationFile(char *Pointer_File_Name, char *Pointer_Memory_Buffer, unsigned long Maximum_Size, unsigned short *Pointer_Size)
 {
 	TFATFileInformation File_Information;
 	TFATFileDescriptor File_Descriptor;
 	unsigned long Size;
 
-	LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file on the SD card...");
+	LOG(MAIN_IS_LOGGING_ENABLED, "Finding the configuration file \"%s\" on the SD card...", Pointer_File_Name);
 
 	// Begin listing the files
 	if (FATListStart("/") != 0)
@@ -336,7 +339,7 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 	// Search for the configuration file
 	while (FATListNext(&File_Information) == 0)
 	{
-		LOG(MAIN_IS_LOGGING_ENABLED, "File found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
+		LOG(MAIN_IS_LOGGING_ENABLED, "File entry found : name=\"%s\", is directory=%u, size=%lu, first cluster=%lu.",
 			File_Information.String_Short_Name,
 			File_Information.Is_Directory,
 			File_Information.Size,
@@ -350,24 +353,27 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 		}
 
 		// Is this the searched file ?
-		if (strcmp((char *) File_Information.String_Short_Name, MAIN_CONFIGURATION_FILE_NAME) == 0)
+		if (strcmp((char *) File_Information.String_Short_Name, Pointer_File_Name) == 0)
 		{
-			LOG(MAIN_IS_LOGGING_ENABLED, "Found the global configuration file.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Found the requested file \"%s\".", Pointer_File_Name);
 
-			// Make sure that the file can fit in memory
-			if (File_Information.Size > SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE)
+			// Make sure that the file can fit in memory (taking into account the INI terminating bytes)
+			if (File_Information.Size > (Maximum_Size - 2))
 			{
-				LOG(MAIN_IS_LOGGING_ENABLED, "The global configuration file is too big (file size : %lu, available memory : %u).", File_Information.Size, SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE);
-				snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GLOBAL_CONFIGURATION_FILE_TOO_BIG_CONTENT), SHARED_BUFFER_GLOBAL_CONFIGURATION_FILE_SIZE);
+				LOG(MAIN_IS_LOGGING_ENABLED, "The global configuration file is too big (file size : %lu, available memory : %lu).", File_Information.Size, Maximum_Size - 2);
+				snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_TOO_BIG_CONTENT), Pointer_File_Name, Maximum_Size - 2);
 				DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), Shared_Buffers.String_Temporary);
 				while (!KeyboardIsMenuKeyPressed());
 				return 1;
 			}
 
 			// Load the file
-			LOG(MAIN_IS_LOGGING_ENABLED, "Loading the global configuration file.");
+			LOG(MAIN_IS_LOGGING_ENABLED, "Loading the configuration file content.");
 			FATReadSectorsStart(&File_Information, &File_Descriptor);
-			if (FATReadSectorsNext(&File_Descriptor, sizeof(Shared_Buffers.Configuration_File) / SD_CARD_BLOCK_SIZE, Shared_Buffers.Configuration_File) > 1) // Keep room for the terminating bytes
+			// Compute the amount of sectors needed
+			Size = File_Information.Size / SD_CARD_BLOCK_SIZE;
+			if ((File_Information.Size % SD_CARD_BLOCK_SIZE) != 0) Size++; // Take into account the potential leftover in the last sector
+			if (FATReadSectorsNext(&File_Descriptor, (unsigned char) Size, Pointer_Memory_Buffer) > 1) // Keep room for the terminating bytes
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "Error : failed to load the configuration file.");
 				DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_CONFIGURATION_FILE_LOADING_ERROR_CONTENT));
@@ -377,9 +383,9 @@ static unsigned char MainLoadConfigurationFile(unsigned short *Pointer_Size)
 
 			// Terminate the INI buffer (see the INI parser documentation for information about the two terminating bytes)
 			Size = File_Information.Size;
-			if (Size > (sizeof(Shared_Buffers.Configuration_File) - 2)) Size = sizeof(Shared_Buffers.Configuration_File) - 2;
-			Shared_Buffers.Configuration_File[Size] = INI_PARSER_END_CHARACTER;
-			Shared_Buffers.Configuration_File[Size + 1] = INI_PARSER_END_CHARACTER;
+			if (Size > (Maximum_Size - 2)) Size = Maximum_Size - 2;
+			Pointer_Memory_Buffer[Size] = INI_PARSER_END_CHARACTER;
+			Pointer_Memory_Buffer[Size + 1] = INI_PARSER_END_CHARACTER;
 			*Pointer_Size = (unsigned short) Size; // A 16-bit value is enough to store this size, as there are only 8KB of RAM in total
 
 			LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
@@ -695,7 +701,7 @@ void main(void)
 				Is_SD_Card_Removed = MainMountSDCard();
 
 				// Block until a valid configuration file is found
-				if (MainLoadConfigurationFile(&Configuration_File_Size) != 0) continue;
+				if (MainLoadConfigurationFile(MAIN_CONFIGURATION_FILE_NAME, Shared_Buffers.Global_Configuration_File, sizeof(Shared_Buffers.Global_Configuration_File), &Configuration_File_Size) != 0) continue;
 
 				// Block until a game is found
 				if (Is_SD_Card_Removed) Last_Played_Game_Index = 0; // Restart displaying the game selection menu from the first one if the card has been changed, as we do not know its content

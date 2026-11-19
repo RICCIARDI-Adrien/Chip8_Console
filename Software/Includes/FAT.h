@@ -10,8 +10,13 @@
 //-------------------------------------------------------------------------------------------------
 // Constants
 //-------------------------------------------------------------------------------------------------
+/** The size in characters of the name part of a short file name. */
+#define FAT_SHORT_FILE_NAME_NAME_SIZE 8
+/** The size in characters of the extension part of a short file name. */
+#define FAT_SHORT_FILE_NAME_EXTENSION_SIZE 3
+
 /** A short file name size in characters. */
-#define FAT_SHORT_FILE_NAME_SIZE 11
+#define FAT_SHORT_FILE_NAME_SIZE (FAT_SHORT_FILE_NAME_NAME_SIZE + FAT_SHORT_FILE_NAME_EXTENSION_SIZE)
 
 //-------------------------------------------------------------------------------------------------
 // Types

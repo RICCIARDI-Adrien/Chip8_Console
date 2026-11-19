@@ -317,7 +317,7 @@ Detect_SD_Card:
  * @param Pointer_File_Name The name of the configuration file to load.
  * @param Pointer_Memory_Buffer The location in memory where to store the file content.
  * @param Maximum_Size The total size of the destination buffer in bytes.
- * @param Pointer_Size On output, contain the size of the configuration file in bytes.
+ * @param Pointer_Size On output, contain the size of the configuration file in bytes. Can be NULL if the size is not needed by the caller.
  * @return 0 when a valid configuration file has been found and loaded,
  * @return 1 if an error occurred.
  */
@@ -386,7 +386,7 @@ static unsigned char MainLoadConfigurationFile(char *Pointer_File_Name, char *Po
 			if (Size > (Maximum_Size - 2)) Size = Maximum_Size - 2;
 			Pointer_Memory_Buffer[Size] = INI_PARSER_END_CHARACTER;
 			Pointer_Memory_Buffer[Size + 1] = INI_PARSER_END_CHARACTER;
-			*Pointer_Size = (unsigned short) Size; // A 16-bit value is enough to store this size, as there are only 8KB of RAM in total
+			if (Pointer_Size != NULL) *Pointer_Size = (unsigned short) Size; // A 16-bit value is enough to store this size, as there are only 8KB of RAM in total
 
 			LOG(MAIN_IS_LOGGING_ENABLED, "The configuration file was successfully loaded.");
 			return 0;
@@ -394,7 +394,8 @@ static unsigned char MainLoadConfigurationFile(char *Pointer_File_Name, char *Po
 	}
 
 	// No configuration file found, tell the user to provide an updated SD card
-	DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_CONFIGURATION_FILE_FOUND_CONTENT));
+	snprintf(Shared_Buffers.String_Temporary, sizeof(Shared_Buffers.String_Temporary), LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_CONFIGURATION_FILE_FOUND_CONTENT), Pointer_File_Name);
+	DisplayDrawTextMessage(Shared_Buffer_Display, LocalizedStringGet(LOCALIZED_STRING_ID_SD_CARD_MESSAGE_TITLE), Shared_Buffers.String_Temporary);
 	while (!KeyboardIsMenuKeyPressed());
 	return 1;
 }
@@ -408,12 +409,12 @@ static unsigned char MainLoadConfigurationFile(char *Pointer_File_Name, char *Po
 static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned char *Pointer_Last_Played_Game_Index)
 {
 	char *Pointer_String_Section, *Pointer_String_Content, String_Line[DISPLAY_TEXT_MODE_WIDTH + 1];
-	unsigned char Games_Count = 0, Current_Game_Index = 0, Is_Games_List_Incrementing = 1, Last_Played_Game_Index = *Pointer_Last_Played_Game_Index;
+	unsigned char Games_Count = 0, Current_Game_Index = 0, Is_Games_List_Incrementing = 1, Last_Played_Game_Index = *Pointer_Last_Played_Game_Index, i, Character;
 	TKeyboardKey Keys_Mask;
 
 	// Count the available games
 	LOG(MAIN_IS_LOGGING_ENABLED, "Counting the available games...");
-	Pointer_String_Section = Shared_Buffers.Configuration_File;
+	Pointer_String_Section = Shared_Buffers.Global_Configuration_File;
 	while (1)
 	{
 		// Locate the next game section
@@ -443,7 +444,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 	else
 	{
 		if (Last_Played_Game_Index > 0) Last_Played_Game_Index--; // Stop just before the game, as the displaying game loop will parse it
-		Pointer_String_Section = Shared_Buffers.Configuration_File;
+		Pointer_String_Section = Shared_Buffers.Global_Configuration_File;
 		while (Current_Game_Index < Last_Played_Game_Index)
 		{
 			Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section);
@@ -467,7 +468,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "Last game reached, looping to the first one.");
 				Current_Game_Index = 1;
-				Pointer_String_Section = Shared_Buffers.Configuration_File;
+				Pointer_String_Section = Shared_Buffers.Global_Configuration_File;
 				Pointer_String_Section = INIParserFindNextSection(Pointer_String_Section); // Make sure to point to the second section next time
 			}
 			else Current_Game_Index++;
@@ -475,27 +476,41 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 		// Go to the previous game
 		else
 		{
-			Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section);
+			Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Global_Configuration_File, Pointer_String_Section);
 			if (Pointer_String_Section == NULL)
 			{
 				LOG(MAIN_IS_LOGGING_ENABLED, "First game reached, looping to the last one.");
 				Current_Game_Index = Games_Count;
-				Pointer_String_Section = (char *) (Shared_Buffers.Configuration_File + Configuration_File_Size);
-				Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Configuration_File, Pointer_String_Section); // Make sure to point to the penultimate section next time
+				Pointer_String_Section = (char *) (Shared_Buffers.Global_Configuration_File + Configuration_File_Size);
+				Pointer_String_Section = INIParserFindPreviousSection(Shared_Buffers.Global_Configuration_File, Pointer_String_Section); // Make sure to point to the penultimate section next time
 			}
 			else Current_Game_Index--;
 		}
 		LOG(MAIN_IS_LOGGING_ENABLED, "Current game index : %u.", Current_Game_Index);
 
-		// Show the game into the display frame buffer
+		// Extract the game configuration file, recycling the String_Line buffer which is big enough (do not the use the temporary string from the shared buffer to avoid overwriting the configuration files)
+		for (i = 0; i < FAT_SHORT_FILE_NAME_NAME_SIZE; i++)
+		{
+			Character = Pointer_String_Section[i];
+			if (Character == ']') break; // If the name is invalid because it is too long, the resulting file to load should not be found and will trigger an error
+			String_Line[i] = Character;
+		}
+		String_Line[i] = 0;
+		strcat(String_Line, ".INI"); // Append the file extension
+
+		// Try to load the game configuration file
+		LOG(MAIN_IS_LOGGING_ENABLED, "Loading the game configuration file \"%s\"...", String_Line);
+		if (MainLoadConfigurationFile(String_Line, Shared_Buffers.Program_Configuration_File, sizeof(Shared_Buffers.Program_Configuration_File), NULL) != 0) return NULL; // The function already displays an error message
+
+		// Display the view title with the current game index
 		memset(Shared_Buffer_Display, 0, sizeof(Shared_Buffer_Display));
-		sprintf(String_Line, LocalizedStringGet(LOCALIZED_STRING_ID_GAME_MENU_VIEW_TITLE), Current_Game_Index, Games_Count);
+		snprintf(String_Line, sizeof(String_Line), LocalizedStringGet(LOCALIZED_STRING_ID_GAME_MENU_VIEW_TITLE), Current_Game_Index, Games_Count);
 		DisplaySetTextCursor((DISPLAY_TEXT_MODE_WIDTH - (unsigned char) strlen(String_Line)) / 2, 0); // Center the text
 		DisplayWriteString(Shared_Buffer_Display, String_Line);
 
 		// Retrieve the game information
 		// Title
-		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Title");
+		Pointer_String_Content = INIParserReadString(Shared_Buffers.Program_Configuration_File, "Title");
 		if (Pointer_String_Content == NULL)
 		{
 			LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game title found.");
@@ -505,7 +520,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 		DisplaySetTextCursor(0, 2);
 		DisplayWriteString(Shared_Buffer_Display, Pointer_String_Content);
 		// Description
-		Pointer_String_Content = INIParserReadString(Pointer_String_Section, "Description");
+		Pointer_String_Content = INIParserReadString(Shared_Buffers.Program_Configuration_File, "Description");
 		if (Pointer_String_Content == NULL) LOG(MAIN_IS_LOGGING_ENABLED, "Warning : no game description found.");
 		// Do not display an error message if no description is provided, just display nothing
 		else
@@ -542,7 +557,7 @@ static char *MainSelectGame(unsigned short Configuration_File_Size, unsigned cha
 				LOG(MAIN_IS_LOGGING_ENABLED, "Selected game %u.", Current_Game_Index);
 				*Pointer_Last_Played_Game_Index = Current_Game_Index;
 				while (KeyboardReadKeysMask() & KEYBOARD_KEY_C); // Wait for key release, otherwise a key press could occur in the game if it was started immediately
-				return Pointer_String_Section; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
+				return Shared_Buffers.Program_Configuration_File; // The actual data is stored in the shared buffer, so a pointer to such data can be returned safely
 			}
 			// Return to main menu
 			if (Keys_Mask & KEYBOARD_KEY_MENU) return NULL;

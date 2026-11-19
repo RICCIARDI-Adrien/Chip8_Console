@@ -123,8 +123,8 @@ static const char *Localized_String_Pointer_Strings[LOCALIZED_STRING_IDS_COUNT][
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_NO_CONFIGURATION_FILE_FOUND_CONTENT
 	{
-		"No configuration filefound. Replace the SDcard and press Menu.",
-		"Fichier de configu-\nration introuvable.\nRemplacez la carte SDpuis appuyez sur\nMenu."
+		"No configuration file%s found.\nReplace the SD card\nand press Menu.",
+		"Fichier de configu-\nration %s\nintrouvable.\nRemplacez la carte SDpuis appuyez sur\nMenu."
 	},
 	// LOCALIZED_STRING_ID_SD_CARD_MESSAGE_GAME_LOADING_ERROR_CONTENT
 	{

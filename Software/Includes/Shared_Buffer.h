@@ -24,8 +24,6 @@ typedef union
 {
 	/** The Chip-8 / SuperChip-8 interpreter memory storing the loaded program. */
 	unsigned char Interpreter_Memory[INTERPRETER_MEMORY_SIZE];
-	/** The INI configuration loaded from the SD card. */
-	char Configuration_File[INTERPRETER_MEMORY_SIZE]; // TODO remove at the end
 	struct
 	{
 		/** An INI configuration file loaded from the SD card, containing the name of each available program. */

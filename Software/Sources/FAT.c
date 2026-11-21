@@ -503,7 +503,7 @@ void FATReadSectorsStart(TFATFileInformation *Pointer_File_Information, TFATFile
 
 	// Cache the file size in clusters
 	File_Size = Pointer_File_Information->Size;
-	Cluster_Size_Bytes = FAT_Information.Cluster_Size_Sectors * SD_CARD_BLOCK_SIZE;
+	Cluster_Size_Bytes = (unsigned long) FAT_Information.Cluster_Size_Sectors * SD_CARD_BLOCK_SIZE;
 	Clusters_Count = File_Size / Cluster_Size_Bytes;
 	if (Clusters_Count * Cluster_Size_Bytes < File_Size) Clusters_Count++; // Add one cluster more if the file size is not a multiple of the cluster size
 	Pointer_File_Descriptor->Size_Clusters = Clusters_Count;

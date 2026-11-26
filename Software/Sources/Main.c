@@ -185,7 +185,7 @@ static TKeyboardKey MainDisplayMainMenu(void)
 	Ticks_Counter_Show_Menu = 250; // Set the counter to its expiring value, so the menu is immediately displayed when the function is called
 	do
 	{
-		// Increment the ticks counters (no need for a real time accuracy here)
+		// Increment the ticks counters (no need for a precise time accuracy here)
 		if (NCO_IS_TICK_ELAPSED())
 		{
 			Ticks_Counter_Samples++;
@@ -698,7 +698,7 @@ void main(void)
 	INTCON0bits.IPEN = 0; // Disable priority, all interrupts are high-priority and use the hardware order
 	INTCON0bits.GIE = 1; // Enable all interrupts
 
-	// The boot was completed, turn the LED off to same some power
+	// The boot was completed, turn the LED off to save some power
 	LED_SET_ENABLED(0);
 
 	while (1)

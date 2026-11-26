@@ -18,9 +18,13 @@
 
 /** The NCO module is configured to generate a specific frequency. Its interrupt flag is then toggling twice faster at this frequency too. Use it as a rendering tick here. */
 #define NCO_IS_TICK_ELAPSED() (PIR4bits.NCO1IF == 1)
+/** This interrupt flag toggles at half the NCO configured frequency. */
+#define NCO_IS_HALF_FREQUENCY_TICK_ELAPSED() (PIR4bits.CLC1IF == 1)
 
 /** Clear the interrupt flag at an appropriate moment chosen by the user (the interrupt flag must be manually cleared). */
 #define NCO_CLEAR_TICK_INTERRUPT_FLAG() PIR4bits.NCO1IF = 0
+/** Clear the half frequency interrupt flag at an appropriate moment chosen by the user (the interrupt flag must be manually cleared). */
+#define NCO_CLEAR_HALF_FREQUENCY_TICK_INTERRUPT_FLAG() PIR4bits.CLC1IF = 0
 
 //-------------------------------------------------------------------------------------------------
 // Functions

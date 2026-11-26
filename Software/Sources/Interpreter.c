@@ -1103,7 +1103,7 @@ unsigned char InterpreterRunProgram(void)
 					else Pointer_Display += Columns_Count_Byte;
 				}
 
-				// The frame buffer must be transferred to the display at 60Hz
+				// The frame buffer must be transferred to the display at 30Hz
 				if (Interpreter_Is_Fast_Rendering_Enabled) Is_Rendering_Needed = 1; // This variable will never be set if Interpreter_Is_Fast_Rendering_Enabled is false
 				// Transfer the frame buffer at each DRW call because some games use this as a delay
 				else
@@ -1184,14 +1184,14 @@ unsigned char InterpreterRunProgram(void)
 							if (KeyboardIsMenuKeyPressed()) goto Exit_Success;
 
 							// Also run the rendering loop in case a DRW instruction was issued just before calling this instruction, and the tick was not present (so the frame buffer could not be transferred to the display before blocking in this instruction)
-							if (Is_Rendering_Needed && NCO_IS_TICK_ELAPSED())
+							if (Is_Rendering_Needed && NCO_IS_HALF_FREQUENCY_TICK_ELAPSED())
 							{
 								// Display the picture according to the emulation mode display
 								if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 								else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 								Is_Rendering_Needed = 0;
-								NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
+								NCO_CLEAR_HALF_FREQUENCY_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
 							}
 
 							Key_Mask = KeyboardReadKeysMask();
@@ -1419,15 +1419,15 @@ unsigned char InterpreterRunProgram(void)
 		Interpreter_Register_PC += 2;
 
 Next_Instruction:
-		// Transfer the frame buffer to the display only when it has changed and not faster than 60 times per second
-		if (Is_Rendering_Needed && NCO_IS_TICK_ELAPSED())
+		// Transfer the frame buffer to the display only when it has changed and not faster than 30 times per second
+		if (Is_Rendering_Needed && NCO_IS_HALF_FREQUENCY_TICK_ELAPSED())
 		{
 			// Display the picture according to the emulation mode display
 			if (Is_High_Resolution_Enabled) DisplayDrawFullSizeBuffer(Shared_Buffer_Display);
 			else DisplayDrawHalfSizeBuffer(Shared_Buffer_Display);
 
 			Is_Rendering_Needed = 0;
-			NCO_CLEAR_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
+			NCO_CLEAR_HALF_FREQUENCY_TICK_INTERRUPT_FLAG(); // The interrupt flag must be manually cleared
 
 			// Wait the configured delay (if any)
 			for (unsigned char i = 0; i < Interpreter_Rendering_Delay; i++) __delay_ms(1);
